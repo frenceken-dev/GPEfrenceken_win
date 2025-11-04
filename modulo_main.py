@@ -242,7 +242,7 @@ class PantallaPrincipal:
         alertas = verificar_stock_bajo()
         
         # Se modifica el título con el usuario y su rol
-        self.root.title(f"Sistema de Inventario - usuario: {self.usuario}-{self.rol}")
+        self.root.title(f" usuario: {self.usuario}-{self.rol}")
         
         # Frame para los botones (lado izquierdo)
         frame_botones = tk.Frame(self.root, bg="#2C3E50", width=200, height=800, bd=3, borderwidth=3, relief="solid")
