@@ -1,19 +1,19 @@
-name: Build macOS Executable
+name: Build Windows Executable
 
 on:
   push:
     branches: [master]
 
 jobs:
-  build-macos:
-    runs-on: macos-latest
+  build-windows:
+    runs-on: windows-latest  # Usamos un entorno de Windows
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Usamos Python 3.12 como en el desarrollo original
+          python-version: '3.12'  # Usamos Python 3.12
 
       - name: Install dependencies
         run: |
@@ -21,13 +21,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller for x86_64
+      - name: Build with PyInstaller for Windows
         run: |
-          arch -x86_64 python -m PyInstaller Gestion_frenceken.spec
+          pyinstaller Gestion_frenceken.spec  # Usamos el archivo .spec para Windows
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-executable-x86_64
-          path: dist/
+          name: windows-executable
+          path: dist/  # Carpeta donde PyInstaller genera el ejecutable
+
 
