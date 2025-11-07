@@ -1,4 +1,5 @@
 # modulo_db.py
+# modulo_db.py
 """Modulo Base de Datos de las Películas"""
 import os
 import sqlite3
@@ -9,7 +10,9 @@ import pytz
 from tkinter import messagebox, Toplevel
 from recursos import DB_PATH
 
-db_path = DB_PATH
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, DB_PATH) # agregado ayer
+
 # database
 def init_db():
     pass
@@ -96,9 +99,7 @@ def insertar_material(codigo, nombre, tipo, tamaño, color, stock, precio, costo
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor))
         conn.commit()
-        print(f"Material guardado con id_proveedor: {id_proveedor}")  # Depuración
     except Exception as e:
-        print(f"Error al guardar material: {e}")  # Depuración
         conn.rollback()
     finally:
         conn.close()
@@ -131,12 +132,17 @@ def insertar_factura(numero_factura, fecha, nombre_proveedor):
     conn.close()
     
 
-#  Obtener los detalles de una factura.
+#  Insertar los detalles de una factura.
 def insertar_detalle_factura(id_factura, id_material, stock,  precio, costo_unitario):
+    print("id: ", id_factura)
+    print("id-materia: ", id_material)
+    print("stock: ", stock)
+    print("Precio: ", precio)
+    print("Costo Uni.: ", costo_unitario)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO Detalle_Factura (id_factura, id_material, stock, Precio, costo_unitario)
+        INSERT INTO Detalle_Factura (id_factura, id_material, stock, precio, costo_unitario)
         VALUES (?, ?, ?, ?, ?)
     ''', (id_factura, id_material, stock, precio, costo_unitario))
     conn.commit()
@@ -191,7 +197,6 @@ def obtener_nombre_material_por_codigo(codigo_material):
 
 # Obtener código del materia por su nombre
 def obtener_codigo_material_por_nombre(nombre_material):
-    print("Nombre para obtener el código del material: ", nombre_material)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('SELECT codigo FROM Materiales WHERE nombre = ?', (nombre_material,))
@@ -216,7 +221,6 @@ def obtener_codigo_material_por_nombre_color_tipo_tamaño(nombre, color, tipo, t
 
 # Obtener el costo Unitario del material
 def obtener_costo_unitario_material(codigo_material):
-    print("Código para obtener costo unitario del material: ",codigo_material)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('SELECT costo_unitario FROM Materiales WHERE codigo = ?', (codigo_material,))
@@ -287,7 +291,6 @@ def obtener_tamaños_por_material_color_tipo(nombre_material, color_material, ti
     ''', (nombre_material, color_material, tipo_material))
     resultados = cursor.fetchall()
     conn.close()
-    print(f"Tamaños para {nombre_material}. color {color_material} y tipo {tipo_material}: {resultados}")  # Depuración
     return [resultado[0] for resultado in resultados]
 
 
@@ -433,13 +436,12 @@ def obtener_nombres_proveedores(texto):
 def buscar_en_bd(tipo_busqueda, valor_busqueda):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
     if tipo_busqueda == "Todos los Materiales":
        cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
     
     elif tipo_busqueda == "Proveedor":
         cursor.execute('''
-             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
+            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Proveedores
             JOIN Facturas ON Proveedores.id_proveedor = Facturas.id_proveedor
             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
@@ -447,7 +449,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
             WHERE Proveedores.nombre LIKE ?
         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Factura":
+    elif tipo_busqueda == "Factura Proveedor":
         cursor.execute('''
             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Facturas
@@ -456,6 +458,24 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
             JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
             WHERE Facturas.numero_factura LIKE ?
         ''', (f"%{valor_busqueda}%",))
+    
+    elif tipo_busqueda == "Facturas Ventas":
+        print("El tipo de busqueda es FActuras Ventas") # aqui llega
+        cursor.execute("""
+            SELECT 
+                Ventas.id_venta AS NumeroFactura,
+                Clientes.nombre AS Cliente,
+                Ventas.fecha,
+                Ventas.subtotal,
+                Ventas.descuento,
+                Ventas.impuesto,
+                Ventas.total
+            FROM Ventas
+            JOIN Clientes ON Ventas.id_cliente = Clientes.id_cliente
+            WHERE Ventas.tipo_documento = 'factura'
+            ORDER BY Ventas.fecha DESC;
+        """)
+        
         
     elif tipo_busqueda == "Notas de Entregas":
         cursor.execute('''
@@ -499,13 +519,133 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
 
 
     resultados = cursor.fetchall()
+    print(resultados)
     conn.close()
-    print(f"Resultados encontrados en la db: {resultados}")
+    
     return resultados
 
+# def buscar_en_bd(tipo_busqueda, valor_busqueda):
+#     # Aseguramos que la ruta a la base sea absoluta y válida
+#     db_absoluta = os.path.abspath(db_path)
 
-# Busaca las notas de entrega para mostrar en la busqueda.
-def encotrar_notas_entrega():
+#     if not os.path.exists(db_absoluta):
+#         print(f"⚠️ La base de datos no existe en la ruta: {db_absoluta}")
+#         return []
+
+#     conn = sqlite3.connect(db_absoluta)
+#     cursor = conn.cursor()
+
+#     # Limpiamos el valor de búsqueda
+#     valor_busqueda = (valor_busqueda or "").strip()
+#     if not valor_busqueda:
+#         valor_busqueda = "%"
+
+#     print(f"🔍 Tipo de búsqueda: {tipo_busqueda}")
+#     print(f"🧩 Valor de búsqueda: {valor_busqueda}")
+
+#     try:
+#         if tipo_busqueda == "Todos los Materiales":
+#             cursor.execute('''
+#                 SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario
+#                 FROM Materiales
+#             ''')
+
+#         elif tipo_busqueda == "Proveedor":
+#             cursor.execute('''
+#                 SELECT p.nombre, f.numero_factura, f.fecha,
+#                        m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+#                 FROM Proveedores p
+#                 LEFT JOIN Facturas f ON p.id_proveedor = f.id_proveedor
+#                 LEFT JOIN OUTER Detalle_Factura df ON f.id_factura = df.id_factura
+#                 LEFT JOIN Materiales m ON df.id_material = m.id_material
+#                 WHERE p.nombre LIKE ?
+#             ''', (f"%{valor_busqueda}%",))
+
+#         elif tipo_busqueda == "Factura":
+#             cursor.execute('''
+#                 SELECT p.nombre, f.numero_factura, f.fecha,
+#                        m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+#                 FROM Facturas f
+#                 LEFT JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
+#                 LEFT JOIN Detalle_Factura df ON f.id_factura = df.id_factura
+#                 LEFT JOIN Materiales m ON df.id_material = m.id_material
+#                 WHERE f.numero_factura LIKE ?
+#             ''', (f"%{valor_busqueda}%",))
+
+#         elif tipo_busqueda == "Notas de Entregas":
+#             cursor.execute('''
+#                 SELECT p.nombre, f.numero_factura, f.fecha,
+#                        m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+#                 FROM Facturas f
+#                 LEFT JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
+#                 LEFT JOIN Detalle_Factura df ON f.id_factura = df.id_factura
+#                 LEFT JOIN Materiales m ON df.id_material = m.id_material
+#                 WHERE f.numero_factura LIKE ?
+#             ''', (f"%{valor_busqueda}%",))
+
+#         elif tipo_busqueda == "Código":
+#             cursor.execute('''
+#                 SELECT p.nombre, f.numero_factura, f.fecha,
+#                        m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+#                 FROM Materiales m
+#                 LEFT JOIN Detalle_Factura df ON m.id_material = df.id_material
+#                 LEFT JOIN Facturas f ON df.id_factura = f.id_factura
+#                 LEFT JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
+#                 WHERE m.codigo LIKE ?
+#             ''', (f"%{valor_busqueda}%",))
+
+#         elif tipo_busqueda == "Material":
+#             cursor.execute('''
+#                 SELECT p.nombre, f.numero_factura, f.fecha,
+#                        m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+#                 FROM Materiales m
+#                 LEFT JOIN Detalle_Factura df ON m.id_material = df.id_material
+#                 LEFT JOIN Facturas f ON df.id_factura = f.id_factura
+#                 LEFT JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
+#                 WHERE m.nombre LIKE ?
+#             ''', (f"%{valor_busqueda}%",))
+
+#         elif tipo_busqueda == "Producto":
+#             cursor.execute('''
+#                 SELECT p.codigo, p.tipo, p.costo_producto, p.precio_venta,
+#                        p.materiales_usados, p.tiempo_fabricacion,
+#                        p.cantidad, p.fecha_registro, p.descripcion
+#                 FROM Productos p
+#                 WHERE p.codigo LIKE ? OR p.nombre LIKE ?
+#             ''', (f"%{valor_busqueda}%", f"%{valor_busqueda}%"))
+
+#         elif tipo_busqueda == "Todos los Productos":
+#             cursor.execute('''
+#                 SELECT codigo, tipo, costo_producto, precio_venta,
+#                        materiales_usados, tiempo_fabricacion,
+#                        cantidad, fecha_registro, descripcion
+#                 FROM Productos
+#             ''')
+
+#         else:
+#             print(f"⚠️ Tipo de búsqueda desconocido: {tipo_busqueda}")
+#             conn.close()
+#             return []
+
+#         resultados = cursor.fetchall()
+#         print(f"📦 Resultados encontrados: {len(resultados)}")
+#         if len(resultados) == 0:
+#             print("⚠️ No se encontraron resultados con ese criterio.")
+#         else:
+#             for fila in resultados:
+#                 print("   ➜", fila)
+
+#         conn.close()
+#         return resultados
+
+#     except sqlite3.Error as e:
+#         print(f"❌ Error al ejecutar la consulta: {e}")
+#         conn.close()
+#         return []
+
+
+# Busca las notas de entrega para mostrar en la busqueda.
+def encontrar_notas_entrega():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("""SELECT ne.id_nota_entrega, ne.fecha, c.nombre, ne.total, ne.estado
@@ -514,37 +654,60 @@ def encotrar_notas_entrega():
     notas_entregas = cursor.fetchall()
     conn.close()
     return notas_entregas
-    
+
+def encontrar_facturas():
+    print("Buscado factura...")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            v.id_venta, 
+            v.fecha, 
+            c.nombre, 
+            v.subtotal, 
+            v.descuento, 
+            v.impuesto, 
+            v.total
+        FROM Ventas v
+        JOIN Clientes c ON v.id_cliente = c.id_cliente
+        WHERE v.tipo_documento = 'factura'
+        ORDER BY v.fecha DESC
+    """)
+    facturas = cursor.fetchall()
+    conn.close()
+    print("Resultados de la Busqueda en encontrar_factura: ", facturas)
+    return facturas
+
     
 def verificar_datos():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    print("=== Facturas ===")
+    # Facturas  
     cursor.execute('SELECT * FROM Facturas')
     facturas = cursor.fetchall()
     for factura in facturas:
         print(factura)
 
-    print("\n=== Materiales ===")
+    # Materiales
     cursor.execute('SELECT * FROM Materiales')
     materiales = cursor.fetchall()
     for material in materiales:
         print(material)
 
-    print("\n=== Detalle_Factura ===")
+    # Detalle_Factura
     cursor.execute('SELECT * FROM Detalle_Factura')
     detalle_factura = cursor.fetchall()
     for detalle in detalle_factura:
         print(detalle)
 
-    print("\n=== Productos ===")
+    # Productos
     cursor.execute('SELECT * FROM Productos')
     productos = cursor.fetchall()
     for producto in productos:
         print(producto)
 
-    print("\n=== Detalle_Producto ===")
+    # Detalle_Producto
     cursor.execute('SELECT * FROM Detalle_Producto')
     detalle_producto = cursor.fetchall()
     for detalle in detalle_producto:
@@ -901,8 +1064,7 @@ def guarda_venta_bd(id_venta, id_cliente, fecha_actual, tipo_documento, subtotal
 
 
 # Insertar datos en detalle factura.
-def agregar_detalle_factura(id_venta, id_producto, cantidad, precio_unitario, subtotal):
-    print("DETALLE FACTURA: ", id_venta, id_producto,cantidad, precio_unitario, subtotal)
+def agregar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal):
     conn = sqlite3.connect("ikigai_inventario.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -1066,7 +1228,6 @@ def datos_registrados_tienda():
     cursor.execute("SELECT id_tienda, direccion, telefono, email FROM Tienda WHERE id_tienda = 1")
     datos_tienda = cursor.fetchall()
     conn.close()
-    print(datos_tienda)
     return datos_tienda
 
 
@@ -1082,9 +1243,14 @@ def obtener_estado_nota_entrega(id_nota_entrega):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT estado FROM NotasEntrega WHERE id_nota_entrega = ?", (id_nota_entrega,))
-    estado = cursor.fetchone()[0] if cursor.fetchone() else None
+    estado = cursor.fetchone()
     conn.close()
-    return estado
+
+    if estado:
+        return estado[0]
+    else:
+        return None
+    
 
 def obtener_datos_nota_entrega(id_nota_entrega):
     conn = sqlite3.connect(db_path)
@@ -1131,7 +1297,7 @@ def obtener_detalles_nota_entrega(id_nota_entrega):
     conn.close()
     return detalles
 
-def insertar_detalle_factura(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle):
+def insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("""
@@ -1163,7 +1329,11 @@ def datos_de_la_venta(id_venta):
                 v.fecha,
                 c.nombre,
                 c.direccion,
+                c.casa_num,
+                c.zona_postal,
                 c.identificacion_fiscal,
+                c.email,
+                c.telefono,
                 v.total,
                 v.tipo_documento,
                 t.nombre AS tienda_nombre,
@@ -1212,7 +1382,11 @@ def datos_nota_entrega(id_nota_entrega):
             ne.fecha,
             c.nombre,
             c.direccion,
+            c.casa_num,
+            c.zona_postal,
             c.identificacion_fiscal,
+            c.email,
+            c.telefono,
             ne.total,
             ne.subtotal,
             ne.descuento,
@@ -1438,3 +1612,4 @@ if __name__ == "__main__":
     #agregar_campo_()
     #verificar_datos()
     #limpiar_base_datos()
+    #buscar_en_bd("Proveedores", "ronald")

@@ -10,7 +10,7 @@ from db import (
     cargador_productos, 
     validar_stock_del_producto, 
     detalle_producto_venta, 
-    guarda_venta_bd, agregar_detalle_factura, 
+    guarda_venta_bd, agregar_detalle_venta, 
     actualizar_stock_producto_venta, 
     nuevo_cliente,
     obtener_estado_nota_entrega,
@@ -437,7 +437,7 @@ class VentanaVentas:
 
             # Guardar los detalles de la factura y actualizar el stock
             for item in self.lista_productos_venta:
-                agregar_detalle_factura(
+                agregar_detalle_venta(
                     id_venta,
                     item["id_producto"],
                     item["cantidad"],
@@ -682,7 +682,7 @@ def imprimir_factura(id_venta, es_copia=False):
         messagebox.showerror("Error", "No se encontró la venta.")
         return
 
-    (id_venta, fecha, nombre_cliente, direccion_cliente, identificacion_fiscal_cliente,
+    (id_venta, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
     total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal,
     descuento, subtotal, impuesto) = venta_data
 
@@ -773,7 +773,11 @@ def imprimir_factura(id_venta, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde:  {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse:  {direccion_cliente}", left_aligned_style)],
+        [Paragraph(f"Hausnummer:  {casa_numero}", left_aligned_style)],
+        [Paragraph(f"Postleitzahl:  {zona_postal}", left_aligned_style)],
         [Paragraph(f"Identifikationsnummer:  {identificacion_fiscal_cliente}", left_aligned_style)],
+        [Paragraph(f"Email:  {email}", left_aligned_style)],
+        [Paragraph(f"Telefonnummer:  {telefono}", left_aligned_style)],
         [Paragraph(f"Ausgabedatum:  {fecha}", left_aligned_style)],
         [Paragraph(f"Dokumenttyp:  Rechnung", left_aligned_style)]
     ]
@@ -782,7 +786,7 @@ def imprimir_factura(id_venta, es_copia=False):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
     ]))
     story.append(tabla_factura_cliente)
-    story.append(Spacer(1, 30))
+    story.append(Spacer(1, 10))
 
     # Detalles de la venta
     titulo_detalles = [[Paragraph("Verkaufsdetails", left_aligned_style_detalle)]]
@@ -874,7 +878,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
         messagebox.showerror("Error", "No se encontró la nota de entrega.")
         return
 
-    (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, identificacion_fiscal_cliente,
+    (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
     total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal) = nota_data
 
     # Detalles de la nota de entrega
@@ -960,16 +964,20 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde:  {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse:  {direccion_cliente}", left_aligned_style)],
+        [Paragraph(f"Hausnummer:  {casa_numero}", left_aligned_style)],
+        [Paragraph(f"Postleitzahl:  {zona_postal}", left_aligned_style)],
         [Paragraph(f"Identifikationsnummer:  {identificacion_fiscal_cliente}", left_aligned_style)],
+        [Paragraph(f"Email:  {email}", left_aligned_style)],
+        [Paragraph(f"Telefonnummer:  {telefono}", left_aligned_style)],
         [Paragraph(f"Ausgabedatum:  {fecha}", left_aligned_style)],
-        [Paragraph(f"Dokumenttyp:  Lieferschein", left_aligned_style)]
+        [Paragraph(f"Dokumenttyp:  Rechnung", left_aligned_style)]
     ]
     tabla_factura_cliente = Table(info_factura_cliente, colWidths=[465])
     tabla_factura_cliente.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
     ]))
     story.append(tabla_factura_cliente)
-    story.append(Spacer(1, 30))
+    story.append(Spacer(1, 10))
 
     # Detalles de la venta
     titulo_detalles = [[Paragraph("Verkaufsdetails", left_aligned_style_detalle)]]

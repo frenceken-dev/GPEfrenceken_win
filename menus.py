@@ -61,7 +61,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-            command=lambda: ingresar_inventario(frame_contenido, frame_botones, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk)),
+            command=lambda: ingresar_inventario(frame_contenido, frame_botones, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
             width=18
         ).pack(pady=15)
         tk.Button(
@@ -74,7 +74,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-            command=lambda: crear_producto(frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk)),
+            command=lambda: crear_producto(frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
             width=18
         ).pack(pady=15)
         tk.Button(
@@ -87,7 +87,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-            command=lambda: nuevo_proveedor(frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal)),
+            command=lambda: nuevo_proveedor(frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal, rol, imagen_tk)),
             width=18
         ).pack(pady=15)
         tk.Button(
@@ -100,7 +100,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-            command=lambda: VentanaIncrementarStock(root, frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal)),
+            command=lambda: VentanaIncrementarStock(root, frame_contenido, lambda: menu_gestion_inventario(root, mostrar_menu_principal, rol, imagen_tk)),
             width=18
         ).pack(pady=15)
         tk.Button(

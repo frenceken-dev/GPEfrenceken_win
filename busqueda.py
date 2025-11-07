@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
-from db import buscar_en_bd, obtener_materiales, encotrar_notas_entrega
+from db import buscar_en_bd, obtener_materiales, encontrar_notas_entrega, encontrar_facturas
 from recursos import LOGO_PATH
 
 
@@ -63,7 +63,7 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
 
     # Campo para seleccionar el tipo de búsqueda
     tk.Label(form_frame, text="Buscar por:", bg="#8e98f5").grid(row=0, column=0, sticky="e")
-    tipo_busqueda = ttk.Combobox(form_frame, values=["Todos los Materiales", "Proveedor", "Factura", "Notas de Entregas" ,"Código", "Material", "Todos los Productos", "Producto"], width=28)
+    tipo_busqueda = ttk.Combobox(form_frame, values=["Todos los Materiales", "Proveedor", "Factura Proveedor", "Notas de Entregas" ,"Código", "Material", "Todos los Productos", "Producto", "Facturas Ventas"], width=28)
     tipo_busqueda.grid(row=0, column=1, pady=5)
 
     # Campo para ingresar el valor de búsqueda
@@ -111,7 +111,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
     resultados_window = tk.Toplevel()
     resultados_window.title("Resultados de la Búsqueda")
     
-    if tipo_busqueda in ["Proveedor", "Factura", "Código", "Material"]:
+    if tipo_busqueda in ["Proveedor", "Factura Proveedor", "Código", "Material"]:
         # Crear un Treeview para mostrar los resultados de materiales/facturas/proveedores
         tree = ttk.Treeview(resultados_window, columns=("Proveedor", "Factura N°", "Fecha", "Código", "Artículo", "Stock", "Costo", "Costo Unit."), show="headings")
 
@@ -244,13 +244,15 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             
             for item in tree.get_children():
                 tree.delete(item)
-            notas_entrega = encotrar_notas_entrega()
+            notas_entrega = encontrar_notas_entrega()
             
             for row in notas_entrega:
                 tree.insert("", tk.END, values=row)
 
         # Botón para cargar las notas de entrega
-        tk.Button(resultados_window, text="Cargar Notas de Entrega", command=cargar_notas).pack(side="left", padx=5, pady=5)
+        tk.Button(resultados_window, 
+                  text="Cargar Notas de Entrega", 
+                  command=cargar_notas).pack(side="left", padx=5, pady=5)
 
         # Función para convertir a factura
         def convertir_a_factura_seleccionada():
@@ -285,12 +287,56 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                 messagebox.showerror("Error", f"Ocurrió un error: {e}")
 
         # Botón para imprimir la nota de entrega
-        tk.Button(resultados_window, text="Imprimir Nota de Entrega", command=imprimir_nota_seleccionada).pack(side="left", padx=5, pady=5)
+        tk.Button(resultados_window, 
+                  text="Imprimir Nota de Entrega", 
+                  command=imprimir_nota_seleccionada).pack(side="left", padx=5, pady=5)
         
+       
+    elif tipo_busqueda == "Facturas Ventas":
+        from crea_factura_nota_entrega import imprimir_factura
+        print("Llamando a encontrar factura desde busqueda")
+
+        tree = ttk.Treeview(resultados_window, columns=("N° Factura", "Fecha", "Cliente", "Subtotal", "Descuento", "Impuesto", "Total"), show="headings")
+        tree.heading("N° Factura", text="Factura N°")
+        tree.heading("Fecha", text="Fecha")
+        tree.heading("Cliente", text="Cliente")
+        tree.heading("Subtotal", text="Subtotal")
+        tree.heading("Descuento", text="Descuento")
+        tree.heading("Impuesto", text="Impuesto")
+        tree.heading("Total", text="Total")
+        tree.pack(fill=tk.BOTH, expand=True)
+
+        def cargar_facturas():
+            for item in tree.get_children():
+                tree.delete(item)
+            facturas = encontrar_facturas()
+            for row in facturas:
+                tree.insert("", tk.END, values=row)
+
+        tk.Button(resultados_window, 
+                  text="Cargar Facturas", 
+                  command=cargar_facturas).pack(side="left", padx=5, pady=5)
+
+        # Botón para imprimir una factura seleccionada
+        def imprimir_factura_seleccionada():
+            try:
+                selected_item = tree.selection()
+                if not selected_item:
+                    messagebox.showerror("Error", "Selecciona una factura para imprimir.")
+                    return
+                id_factura = tree.item(selected_item)["values"][0]
+                imprimir_factura(id_factura, es_copia=True)
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo imprimir la factura: {e}")
+
+        tk.Button(resultados_window, 
+                  text="Imprimir Factura", 
+                  command=imprimir_factura_seleccionada).pack(side="left", padx=5, pady=5)
+
+    
     # Agregar un Scrollbar
     scrollbar = ttk.Scrollbar(resultados_window, orient="vertical", command=tree.yview)
     tree.configure(yscroll=scrollbar.set)
-    
 
     # Función para imprimir los resultados
     def imprimir_resultados():
