@@ -229,6 +229,19 @@ def obtener_costo_unitario_material(codigo_material):
     return resultado[0] if resultado else 0.0
 
 
+# Función para verificar si el código ya existe en la base de datos
+def codigo_existe(codigo):
+    # Aquí debes implementar la consulta a tu base de datos
+    # Ejemplo con SQLite:
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo FROM materiales WHERE codigo=?", (codigo,))
+    existe = cursor.fetchone() is not None
+    conn.close()
+    return existe
+
+
 # Función para actualizar el stock de un material en la base de datos
 def actualizar_stock_material(codigo, cantidad):
     conn = sqlite3.connect(db_path)

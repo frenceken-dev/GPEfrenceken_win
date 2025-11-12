@@ -9,9 +9,10 @@ from db import (
     obtener_id_proveedor_por_nombre, 
     obtener_id_factura_por_numero, 
     obtener_id_material_por_codigo, 
-    insertar_detalle_factura
+    insertar_detalle_factura,
+    codigo_existe
 )
-
+import copy 
 
 # Variables globales para almacenar datos temporales
 materiales_temporales = []  # Lista para almacenar los materiales antes de guardar
@@ -186,11 +187,39 @@ def ingresar_inventario(frame_contenido, frame_botones, imagen_panel_tk, volver_
         precio_entry = tk.Entry(material_window)
         precio_entry.grid(row=6, column=1, padx=10, pady=5)
 
+        
+        # Comprobar que el codigo no este en la lista temporal
+        def existe_codigo_lista_temporales(codigo):
+            for material in materiales_temporales:
+                if codigo == material["codigo"]:
+                    return True
+                else:
+                    return False
+            
+        
         # Función para guardar el material temporalmente
         def guardar_material():
+            
+            codigo = codigo_entry.get()
             precio = convertir_a_float(precio_entry.get())
             cantidad = convertir_a_float(stock_entry.get())
             costo_unitario = precio / cantidad
+            
+            codigo_db = codigo_existe(codigo)
+            # Verificar si el código ya existe
+            if codigo_db or existe_codigo_lista_temporales(codigo):
+                messagebox.showerror("ERROR", "El Código ya existe. Por favor, usa un código único.")
+                material_window.lift()  # Traer la ventana al frente
+                material_window.focus_force()  # Forzar el foco en la ventana
+                return  # No cerrar la ventana
+
+            # Validar que cantidad y precio sean números
+            try:
+                cantidad_float = float(cantidad)
+                precio_float = float(precio)
+            except ValueError:
+                messagebox.showerror("ERROR", "La cantidad y el precio deben ser números válidos.")
+                return  # No cerrar la ventana            
             
             material = {
                 "codigo": codigo_entry.get(),
@@ -202,8 +231,9 @@ def ingresar_inventario(frame_contenido, frame_botones, imagen_panel_tk, volver_
                 "precio": precio_entry.get(),
                 "costo_unitario": costo_unitario
             }
+           
             materiales_temporales.append(material)
-            messagebox.showinfo("Éxito", "Material agregado temporalmente.")
+            messagebox.showinfo("Éxito", "Material agregado a la lista. ")
             material_window.destroy()
 
         # Botón para guardar el material
@@ -316,46 +346,210 @@ def convertir_a_float(valor_str):
         return None
     
     
+# def mostrar_datos_ingresados():
+#     if not materiales_temporales:
+#         messagebox.showwarning("Advertencia", "No hay materiales ingresados.")
+#         return
+
+#     id_proveedor = obtener_id_proveedor_por_nombre(datos_factura["proveedor"])
+    
+#     datos = f"""
+#     == DATOS INGRESADOS EN LA FACTURA ==
+#     Proveedor: {datos_factura["proveedor"]}
+#     Factura N°: {datos_factura["numero_factura"]}
+#     Fecha: {datos_factura["fecha"]}
+
+#     == MATERIALES INGRESADOS ==
+#     """
+#     for material in materiales_temporales:
+#         precio = convertir_a_float(material["precio"])
+#         cantidad = convertir_a_float(material["stock"])
+        
+#         if precio is not None and cantidad is not None and cantidad != 0:
+#             precio_uni = precio / cantidad
+#             datos += f"""
+#             Código: {material["codigo"]}
+#             Nombre: {material["nombre"]}
+#             Tipo: {material["tipo"]}
+#             Tamaño: {material["tamaño"]}
+#             Color: {material["color"]}
+#             Cantidad: {material["stock"]}
+#             Precio: {material["precio"]}
+#             Precio_unitario: {precio_uni:.2f}
+#             ID Proveedor: {id_proveedor}
+#             ----------------------------
+#             """
+#         else:
+#             datos += f"""
+#             Código: {material["codigo"]}
+#             Nombre: {material["nombre"]}
+#             Error: No se pudo calcular el precio unitario.
+#             ----------------------------
+#             """
+
+#     messagebox.showinfo("Datos Ingresados", datos)
+
+total_actual = []
 def mostrar_datos_ingresados():
+    global materiales_temporales
+    
     if not materiales_temporales:
         messagebox.showwarning("Advertencia", "No hay materiales ingresados.")
         return
 
-    id_proveedor = obtener_id_proveedor_por_nombre(datos_factura["proveedor"])
-    
-    datos = f"""
-    == DATOS INGRESADOS EN LA FACTURA ==
-    Proveedor: {datos_factura["proveedor"]}
-    Factura N°: {datos_factura["numero_factura"]}
-    Fecha: {datos_factura["fecha"]}
+    ventana_datos = tk.Toplevel()
+    ventana_datos.title("Datos Ingresados")
+    ventana_datos.geometry("800x500")
 
-    == MATERIALES INGRESADOS ==
-    """
-    for material in materiales_temporales:
-        precio = convertir_a_float(material["precio"])
-        cantidad = convertir_a_float(material["stock"])
+    frame_principal = ttk.Frame(ventana_datos, padding="10")
+    frame_principal.pack(fill=tk.BOTH, expand=True)
+
+    # Crear Treeview
+    tree = ttk.Treeview(frame_principal, columns=("Código", "Nombre", "Tipo", "Tamaño", "Color", "Cantidad", "Precio", "Precio Unitario"), show="headings")
+
+    # Configurar encabezados
+    tree.heading("Código", text="Código")
+    tree.heading("Nombre", text="Nombre")
+    tree.heading("Tipo", text="Tipo")
+    tree.heading("Tamaño", text="Tamaño")
+    tree.heading("Color", text="Color")
+    tree.heading("Cantidad", text="Cantidad")
+    tree.heading("Precio", text="Precio")
+    tree.heading("Precio Unitario", text="Precio Unitario")
+
+    # Configurar columnas
+    tree.column("Código", width=80, anchor=tk.CENTER)
+    tree.column("Nombre", width=100, anchor=tk.CENTER)
+    tree.column("Tipo", width=80, anchor=tk.CENTER)
+    tree.column("Tamaño", width=80, anchor=tk.CENTER)
+    tree.column("Color", width=80, anchor=tk.CENTER)
+    tree.column("Cantidad", width=80, anchor=tk.CENTER)
+    tree.column("Precio", width=80, anchor=tk.CENTER)
+    tree.column("Precio Unitario", width=100, anchor=tk.CENTER)
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+    # Función para cargar datos en el Treeview
+    def cargar_datos():
+        for item in tree.get_children():
+            tree.delete(item)
         
-        if precio is not None and cantidad is not None and cantidad != 0:
-            precio_uni = precio / cantidad
-            datos += f"""
-            Código: {material["codigo"]}
-            Nombre: {material["nombre"]}
-            Tipo: {material["tipo"]}
-            Tamaño: {material["tamaño"]}
-            Color: {material["color"]}
-            Cantidad: {material["stock"]}
-            Precio: {material["precio"]}
-            Precio_unitario: {precio_uni:.2f}
-            ID Proveedor: {id_proveedor}
-            ----------------------------
-            """
-        else:
-            datos += f"""
-            Código: {material["codigo"]}
-            Nombre: {material["nombre"]}
-            Error: No se pudo calcular el precio unitario.
-            ----------------------------
-            """
+        id_proveedor = obtener_id_proveedor_por_nombre(datos_factura["proveedor"])
 
-    messagebox.showinfo("Datos Ingresados", datos)
-       
+        for material in materiales_temporales:
+            precio = convertir_a_float(material["precio"])
+            cantidad = convertir_a_float(material["stock"])
+            precio_uni = precio / cantidad if precio is not None and cantidad is not None and cantidad != 0 else 0
+            total_actual.append(precio) # Calcular el total para mostrar en pantalla.
+            
+            tree.insert("", tk.END, values=(
+                material["codigo"],
+                material["nombre"],
+                material["tipo"],
+                material["tamaño"],
+                material["color"],
+                material["stock"],
+                material["precio"],
+                f"{precio_uni:.2f}"
+            ))
+        # Configura el Frame para mostrar el total actual
+        frame_total.config(text=f"{sum(total_actual):.2f}", font=("Arial", 12, "bold"))
+        
+    # Función para editar una celda
+    def editar_celda(event):
+        region = tree.identify_region(event.x, event.y)
+        if region == "cell":
+            columna = tree.identify_column(event.x)
+            fila = tree.identify_row(event.y)
+
+            if fila and columna:
+                columna_idx = int(columna[1:]) - 1  # Obtener índice de columna
+                columna_nombre = tree["columns"][columna_idx]
+
+                item = tree.selection()[0]
+                valores = tree.item(item, "values")
+
+                # Crear una entrada para editar el valor
+                entrada = tk.Entry(frame_principal, width=15)
+                entrada.place(x=event.x_root - ventana_datos.winfo_rootx(), y=event.y_root - ventana_datos.winfo_rooty())
+
+                def guardar_cambio(event=None):
+                    nuevo_valor = entrada.get()
+                    nuevos_valores = list(valores)
+                    nuevos_valores[columna_idx] = nuevo_valor
+                    tree.item(item, values=nuevos_valores)
+                    entrada.destroy()
+
+                entrada.insert(0, valores[columna_idx])
+                entrada.bind("<Return>", guardar_cambio)
+                entrada.bind("<FocusOut>", guardar_cambio)
+                entrada.focus_set()
+
+    # Vincular el evento de doble clic para editar
+    tree.bind("<Double-1>", editar_celda)
+
+    # Función para guardar los cambios
+    def guardar_cambios():
+        for item in tree.get_children():
+            valores = tree.item(item, "values")
+            codigo, nombre, tipo, tamaño, color, cantidad, precio, _ = valores
+            
+            material = {
+                "codigo": codigo,
+                "nombre": nombre,
+                "tipo": tipo,
+                "tamaño": tamaño,
+                "color": color,
+                "stock": cantidad,
+                "precio": precio,
+                "costo_unitario": convertir_a_float(precio) / convertir_a_float(cantidad) if convertir_a_float(cantidad) != 0 else 0
+            }
+                
+            # Actualizar materiales_temporales
+            for i, mat in enumerate(materiales_temporales):
+                if mat["codigo"] == codigo:
+                    materiales_temporales[i] = material
+                    print(i)
+                     # Actualizar el precio en total_actual usando el mismo índice
+                    if i < len(total_actual):
+                        
+                        print(total_actual[i])
+                        total_actual[i] = convertir_a_float(precio)
+                    break
+
+        # Actualizar el label del total
+        frame_total.config(text=f"{sum(total_actual):.2f}", font=("Arial", 12, "bold"))
+        #messagebox.showinfo("Éxito", "Los cambios se han guardado correctamente.")
+        
+
+    # Función para cerrar la ventana
+    def cerrar_ventana():
+        ventana_datos.destroy()
+        total_actual.clear()
+    
+    # Vincular el evento de cierre de la ventana (con la "X")
+    def on_closing():
+        total_actual.clear()  # Limpiar la lista al cerrar con la "X"
+        ventana_datos.destroy()
+
+    ventana_datos.protocol("WM_DELETE_WINDOW", on_closing)  # Asociar el evento de cierre
+    
+    # Botones ojo ttk falla para la función crear_boton() en recursos.
+    frame_botones = ttk.Frame(ventana_datos)
+    frame_botones.pack(fill=tk.X, padx=10, pady=10)
+
+    boton_guardar = ttk.Button(frame_botones, text="Guardar Cambios", command=guardar_cambios)
+    boton_guardar.pack(side=tk.LEFT, padx=5)
+
+    boton_cerrar = ttk.Button(frame_botones, text="Cerrar", command=cerrar_ventana)
+    boton_cerrar.pack(side=tk.LEFT, padx=5)
+    
+    frame_total = ttk.Label(frame_botones)
+    frame_total.pack(side=tk.RIGHT, padx=30)
+    
+    frame_label_total = ttk.Label(frame_botones, text="Total Factura: ")
+    frame_label_total.pack(side=tk.RIGHT, padx=7)
+    
+    cargar_datos()
+
+
