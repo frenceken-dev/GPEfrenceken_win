@@ -194,7 +194,7 @@ def eliminar_material(root, volver_menu, imagen_tk, imagen_panel_tk):
 
     # Obtener los nombres de los materiales
     materiales = obtener_materiales()
-    nombres_materiales = [material[2] for material in materiales]
+    nombres_materiales = [material[1:6] for material in materiales]  # quite [2]
 
     material_combobox = ttk.Combobox(eliminar_material_frame, values=nombres_materiales, width=30)
     material_combobox.pack(pady=5)

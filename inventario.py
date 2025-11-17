@@ -12,7 +12,8 @@ from db import (
     insertar_detalle_factura,
     codigo_existe
 )
-import copy 
+import copy
+from recursos import configurar_toplevel
 
 # Variables globales para almacenar datos temporales
 materiales_temporales = []  # Lista para almacenar los materiales antes de guardar
@@ -398,9 +399,8 @@ def mostrar_datos_ingresados():
         return
 
     ventana_datos = tk.Toplevel()
-    ventana_datos.title("Datos Ingresados")
-    ventana_datos.geometry("800x500")
-
+    configurar_toplevel(ventana_datos, titulo="Datos Ingresados", ancho_min=800, alto_min=500)
+    
     frame_principal = ttk.Frame(ventana_datos, padding="10")
     frame_principal.pack(fill=tk.BOTH, expand=True)
 
@@ -520,8 +520,37 @@ def mostrar_datos_ingresados():
         # Actualizar el label del total
         frame_total.config(text=f"{sum(total_actual):.2f}", font=("Arial", 12, "bold"))
         #messagebox.showinfo("Éxito", "Los cambios se han guardado correctamente.")
-        
 
+    def eliminar_dato():
+        item = tree.selection()
+        if not item:
+            messagebox.showwarning("Advertencia", "Selecciona un ítem para eliminar.")
+            return
+
+        item_id = item[0]
+        valores = tree.item(item_id, "values")
+        codigo_a_eliminar = valores[0]
+
+        # 1. Eliminar del Treeview
+        tree.delete(item_id)
+
+        # 2. Eliminar de materiales_temporales
+        for i, material in enumerate(materiales_temporales):
+            if material["codigo"] == codigo_a_eliminar:
+                materiales_temporales.pop(i)
+                break
+
+        # 3. Eliminar del total_actual
+        for i, material in enumerate(total_actual):
+            # total_actual está alineado con materiales_temporales
+            # pero como ya sacamos un índice arriba, aquí queda más fácil:
+            total_actual.pop(i)
+            break
+
+        # 4. Actualizar total en pantalla
+        frame_total.config(text=f"{sum(total_actual):.2f}")
+        
+        
     # Función para cerrar la ventana
     def cerrar_ventana():
         ventana_datos.destroy()
@@ -541,6 +570,9 @@ def mostrar_datos_ingresados():
     boton_guardar = ttk.Button(frame_botones, text="Guardar Cambios", command=guardar_cambios)
     boton_guardar.pack(side=tk.LEFT, padx=5)
 
+    boton_eliminar = ttk.Button(frame_botones, text="Eliminar", command=eliminar_dato    )
+    boton_eliminar.pack(side=tk.LEFT, padx=5)
+    
     boton_cerrar = ttk.Button(frame_botones, text="Cerrar", command=cerrar_ventana)
     boton_cerrar.pack(side=tk.LEFT, padx=5)
     

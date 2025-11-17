@@ -1162,9 +1162,11 @@ def eliminar_proveedor_bd(nombre_proveedor):
     
 # Eliminar materiales de la base de datos
 def eliminar_material_bd(nombre_material):
+    codigo_material = nombre_material.split(" ")
+    # print("El Codigo a eliminar es: ", codigo_material[0])
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute('DELETE FROM Materiales WHERE nombre = ?', (nombre_material,))
+    cursor.execute('DELETE FROM Materiales WHERE codigo = ?', (codigo_material[0],))
     conn.commit()
     conn.close()
     

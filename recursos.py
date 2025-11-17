@@ -224,7 +224,20 @@ def configurar_toplevel(ventana, titulo="Ventana", ancho_min=400, alto_min=300):
         pass
 
     ventana.resizable(False, False)
-    ventana.grab_set()
+
+    # --- CLAVE 1: hacer modal real ---
+    padre = ventana.master            # obtiene root o el contenedor
+    ventana.transient(padre)          # el padre siempre queda detrás
+    ventana.grab_set()                # bloquea clics fuera del modal
+    ventana.lift()                    # trae al frente
+    ventana.focus_force()             # enfoca el modal sí o sí
+
+    # --- CLAVE 2: evitar que se vaya atrás en macOS ---
+    ventana.attributes("-topmost", True)
+    ventana.after(100, lambda: ventana.attributes("-topmost", False))
+    # Esto fuerza a macOS a respetar la jerarquía
+
+
     ventana.update_idletasks()  # Calcula el tamaño real
 
     ancho = max(ventana.winfo_reqwidth(), ancho_min)
@@ -234,3 +247,19 @@ def configurar_toplevel(ventana, titulo="Ventana", ancho_min=400, alto_min=300):
 
     ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
 
+
+def redimensionar_imagen(ruta, ancho_max, alto_max):
+    from PIL import Image, ImageTk
+    """Redimensiona una imagen manteniendo su proporción sin deformarla."""
+    try:
+        imagen = Image.open(ruta)
+        ancho_original, alto_original = imagen.size
+        proporcion = min(ancho_max / ancho_original, alto_max / alto_original)
+        nuevo_ancho = int(ancho_original * proporcion)
+        nuevo_alto = int(alto_original * proporcion)
+        imagen_redimensionada = imagen.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+        return ImageTk.PhotoImage(imagen_redimensionada)
+    except Exception as e:
+        print(f"Error al redimensionar {ruta}: {e}")
+        return None
+    
