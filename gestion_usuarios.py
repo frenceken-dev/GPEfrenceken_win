@@ -276,7 +276,7 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu):
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-              ).pack(pady=5)
+            ).pack(pady=5)
     
 # Editar datos de usuario.
 def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol):
@@ -332,7 +332,7 @@ def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-              ).grid(row=3, column=0, columnspan=2, pady=10)
+            ).grid(row=3, column=0, columnspan=2, pady=10)
 
     # Botón para volver al menú
     tk.Button(frame_botones, 
@@ -345,4 +345,4 @@ def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol
             relief=tk.FLAT,
             activebackground="#2ECC71",
             activeforeground="white",
-              ).pack(side=tk.LEFT, padx=30, pady=40)
+            ).pack(side=tk.LEFT, padx=30, pady=40)

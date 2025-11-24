@@ -345,50 +345,6 @@ def convertir_a_float(valor_str):
     except ValueError:
         print(f"Error: '{valor_str}' no es un número válido.")
         return None
-    
-    
-# def mostrar_datos_ingresados():
-#     if not materiales_temporales:
-#         messagebox.showwarning("Advertencia", "No hay materiales ingresados.")
-#         return
-
-#     id_proveedor = obtener_id_proveedor_por_nombre(datos_factura["proveedor"])
-    
-#     datos = f"""
-#     == DATOS INGRESADOS EN LA FACTURA ==
-#     Proveedor: {datos_factura["proveedor"]}
-#     Factura N°: {datos_factura["numero_factura"]}
-#     Fecha: {datos_factura["fecha"]}
-
-#     == MATERIALES INGRESADOS ==
-#     """
-#     for material in materiales_temporales:
-#         precio = convertir_a_float(material["precio"])
-#         cantidad = convertir_a_float(material["stock"])
-        
-#         if precio is not None and cantidad is not None and cantidad != 0:
-#             precio_uni = precio / cantidad
-#             datos += f"""
-#             Código: {material["codigo"]}
-#             Nombre: {material["nombre"]}
-#             Tipo: {material["tipo"]}
-#             Tamaño: {material["tamaño"]}
-#             Color: {material["color"]}
-#             Cantidad: {material["stock"]}
-#             Precio: {material["precio"]}
-#             Precio_unitario: {precio_uni:.2f}
-#             ID Proveedor: {id_proveedor}
-#             ----------------------------
-#             """
-#         else:
-#             datos += f"""
-#             Código: {material["codigo"]}
-#             Nombre: {material["nombre"]}
-#             Error: No se pudo calcular el precio unitario.
-#             ----------------------------
-#             """
-
-#     messagebox.showinfo("Datos Ingresados", datos)
 
 total_actual = []
 def mostrar_datos_ingresados():
@@ -510,7 +466,7 @@ def mostrar_datos_ingresados():
                 if mat["codigo"] == codigo:
                     materiales_temporales[i] = material
                     print(i)
-                     # Actualizar el precio en total_actual usando el mismo índice
+                    # Actualizar el precio en total_actual usando el mismo índice
                     if i < len(total_actual):
                         
                         print(total_actual[i])

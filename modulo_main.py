@@ -235,7 +235,7 @@ class PantallaPrincipal:
             width=10
         ).pack(pady=10)
             
-     
+    
     def mostrar_menu_principal(self):
         # Limpiar ventana
         for widget in self.root.winfo_children():

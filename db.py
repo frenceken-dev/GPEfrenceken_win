@@ -49,6 +49,7 @@ def obtener_id_proveedor_por_nombre(nombre_proveedor):
         WHERE nombre = ?
     ''', (nombre_proveedor,))
     resultado = cursor.fetchone()
+    conn.commit()
     conn.close()
     return resultado[0] if resultado else None
 
@@ -450,11 +451,11 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     if tipo_busqueda == "Todos los Materiales":
-       cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
+        cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
     
     elif tipo_busqueda == "Proveedor":
         cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
+            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Proveedores
             JOIN Facturas ON Proveedores.id_proveedor = Facturas.id_proveedor
             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
@@ -463,8 +464,9 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
         ''', (f"%{valor_busqueda}%",))
 
     elif tipo_busqueda == "Factura Proveedor":
+        print("El Valor de la Busqueda es: ", valor_busqueda)
         cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
+            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, Materiales.precio, Materiales.costo_unitario
             FROM Facturas
             JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
@@ -502,7 +504,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
 
     elif tipo_busqueda == "Código":
         cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
+            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Materiales
             JOIN Detalle_Factura ON Materiales.id_material = Detalle_Factura.id_material
             JOIN Facturas ON Detalle_Factura.id_factura = Facturas.id_factura
@@ -512,7 +514,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
 
     elif tipo_busqueda == "Material":
         cursor.execute('''
-            SELECT p.nombre, f.numero_factura, f.fecha, m.codigo, m.nombre, m.stock, m.precio, m.costo_unitario
+            SELECT p.nombre, f.numero_factura, f.fecha, m.codigo, m.nombre, m.tipo, m.tamaño, m.color, m.stock, m.precio, m.costo_unitario
             FROM Materiales m
             JOIN Detalle_Factura df ON m.id_material = df.id_material
             JOIN Facturas f ON df.id_factura = f.id_factura
@@ -528,11 +530,12 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
         ''', (f"%{valor_busqueda}%", f"%{valor_busqueda}%"))
         
     elif tipo_busqueda == "Todos los Productos":
-       cursor.execute('SELECT codigo, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion FROM Productos')
+        cursor.execute('SELECT codigo, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion FROM Productos')
 
 
     resultados = cursor.fetchall()
-    print(resultados)
+    print("Resultado de buscar_en_db: ", resultados)
+    conn.commit()
     conn.close()
     
     return resultados
@@ -655,6 +658,159 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
 #         print(f"❌ Error al ejecutar la consulta: {e}")
 #         conn.close()
 #         return []
+
+
+def obtener_codigo_por_id(codigo_actual):
+    print("EL CODIGO ACTUAL ES: ", codigo_actual)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT id_material FROM Materiales WHERE codigo = ?""", (codigo_actual,))
+    id_material_tupla = cursor.fetchone()
+    conn.commit()
+    conn.close()
+    print("EL ID MATERIAL ES: ", id_material_tupla)
+    return id_material_tupla
+
+
+def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
+    id_factura = None
+    valor_actual_str = str(factura_actual)
+    print("EL ID DEL PROVEEDOR ES: ", id_proveedor)
+    print("EL VALOR ACTUAL DE LA FACTURA ES: ", factura_actual)
+    
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT numero_factura FROM Facturas WHERE id_proveedor = ?""", (id_proveedor,))
+    facturas_tupla = cursor.fetchall()
+    conn.commit()
+    conn.close()
+    
+    facturas = [x[0] for x in facturas_tupla]
+    
+    for i, factura in enumerate(facturas):
+        if valor_actual_str == factura:
+            id_factura = i + 1
+    
+    return id_factura
+    
+
+def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    try:
+        if tipo_busqueda == "Todos los Materiales":
+            # Usar valores originales si no se editaron.
+            codigo = nuevos_valores.get("Código", valores_originales[0])
+            nombre = nuevos_valores.get("Nombre", valores_originales[1])
+            tipo = nuevos_valores.get("Tipo", valores_originales[2])
+            tamaño = nuevos_valores.get("Tamaño", valores_originales[3])
+            color = nuevos_valores.get("Color", valores_originales[4])
+            stock = nuevos_valores.get("Stock", valores_originales[5])
+            precio = nuevos_valores.get("Costo", valores_originales[6])
+            costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[7])
+            print("DATOS QUE LLEGAN Todos los Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
+            cursor.execute("""
+                UPDATE Materiales
+                SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
+                WHERE codigo=?
+            """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
+            
+        elif tipo_busqueda == "Material":
+            # Usar valores originales si no se editaron
+            codigo = nuevos_valores.get("Código", valores_originales[3])
+            nombre = nuevos_valores.get("Nombre", valores_originales[4])
+            tipo = nuevos_valores.get("Tipo", valores_originales[5])
+            tamaño = nuevos_valores.get("Tamaño", valores_originales[7])
+            color = nuevos_valores.get("Color", valores_originales[7])
+            stock = nuevos_valores.get("Stock", valores_originales[8])
+            precio = nuevos_valores.get("Costo", valores_originales[9])
+            costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[10])
+            print("DATOS QUE LLEGAN Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
+            
+            cursor.execute("""
+                UPDATE Materiales
+                SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
+                WHERE codigo=?
+            """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
+
+        elif tipo_busqueda == "Código":
+            proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
+            codigo = nuevos_valores.get("Código", valores_originales[3])
+            
+            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+            if isinstance(id_proveedor, tuple):
+                id_proveedor = id_proveedor[0]
+
+            id_material = obtener_codigo_por_id(valores_originales[3])
+            if isinstance(id_material, tuple):
+                id_material = id_material[0]
+
+            cursor.execute("""
+                UPDATE Materiales
+                SET codigo=?
+                WHERE id_material=?
+            """, (codigo, id_material))
+        
+        elif tipo_busqueda == "Proveedor":
+            proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
+            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+            if isinstance(id_proveedor, tuple):
+                id_proveedor = id_proveedor[0]
+
+            cursor.execute("""
+                UPDATE Proveedores
+                SET nombre=?
+                WHERE id_proveedor=?
+            """, (proveedor, id_proveedor))
+
+        elif tipo_busqueda == "Factura Proveedor":
+            factura_n = nuevos_valores.get("Factura N°", valores_originales[1])
+            fecha = nuevos_valores.get("Fecha", valores_originales[2])
+
+            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+            if isinstance(id_proveedor, tuple):
+                id_proveedor = id_proveedor[0]
+
+            id_factura = obtener_id_factura_por_proveedor(id_proveedor, valores_originales[1])
+            if isinstance(id_factura, tuple):
+                id_factura = id_factura[0]
+                print("El ID DE LA FACTURA ES: ", id_factura)
+            cursor.execute("""
+                UPDATE Facturas
+                SET numero_factura=?, fecha=?
+                WHERE id_factura=?
+            """, (factura_n, fecha, id_factura))
+
+        elif tipo_busqueda in ["Todos los Productos", "Producto"]:
+            id_producto = obtener_id_producto_por_codigo(valores_originales[0])
+            print("EL ID DEL PRODUCTO ES: ", id_producto)
+            cursor.execute("""
+                UPDATE Productos
+                SET codigo=?, tipo=?, costo_producto=?, precio_venta=?, materiales_usados=?, tiempo_fabricacion=?, cantidad=?, fecha_registro=?, descripcion=?
+                WHERE id_producto=?
+            """, (
+                nuevos_valores.get("Código", valores_originales[0]),
+                nuevos_valores.get("Tipo", valores_originales[1]),
+                nuevos_valores.get("Costo Venta", valores_originales[2]),
+                nuevos_valores.get("Precio Venta", valores_originales[3]),
+                nuevos_valores.get("Materiales Usados", valores_originales[4]),
+                nuevos_valores.get("Tiempo Fabricación", valores_originales[5]),
+                nuevos_valores.get("Cantidad", valores_originales[6]),
+                nuevos_valores.get("Fecha R", valores_originales[7]),
+                nuevos_valores.get("Descripción", valores_originales[8]),
+                id_producto
+            ))
+            
+        conn.commit()
+
+    except sqlite3.Error as e:
+        print(f"Error al actualizar la base de datos: {e}")
+        conn.rollback()
+        messagebox.showerror("Error", f"No se pudo actualizar la base de datos: {e}")
+
+    finally:
+        conn.close()
 
 
 # Busca las notas de entrega para mostrar en la busqueda.
@@ -1232,7 +1388,7 @@ def guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO Tienda (nombre, direccion, identificacion_fiscal, telefono, email) VALUES (?, ?, ?, ?, ?)",
-                   (tienda, direccion, id_fiscal, telefono, correo))
+                (tienda, direccion, id_fiscal, telefono, correo))
     conn.commit()
     conn.close()
     
