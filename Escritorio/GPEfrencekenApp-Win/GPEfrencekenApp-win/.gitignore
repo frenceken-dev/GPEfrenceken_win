@@ -1,0 +1,26 @@
+Ignorar entorno virtual
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+
+
+# Ignorar archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignorar archivos de configuración local
+.env
+.vscode/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
