@@ -20,6 +20,54 @@ __pycache__/
 # Ignorar archivos de configuración local
 .env
 .vscode/
+../logo_ikigai.png
+../../Leito y Princesa.png
+../../Lista 50 Verbos Irregulares Ingles.odt
+../../Lista 50 Verbos Regulares Ingles.odt
+../../Logo mas QR/
+../../Logos/
+../../Programa_IkigaiDesigns_v1.1/
+../../Proyecto Ikigai Designs/
+../../ikigai_inventario.sqbpro
+../../logo_etiquetas.xcf
+../../rutina_#.odt
+../../verbos-irregulares-en-ingles-50-basicos.pdf
+../../../GPEfrenceken_win/
+"../../../Im\303\241genes/"
+../../../MEGA/
+"../../../M\303\272sica/"
+../../../Plantillas/
+"../../../V\303\255deos/"
+../../../megasync-x86_64.pkg.tar.zst
+../../../megasync-xUbuntu_22.04_amd64.deb
+../../../megasync-xUbuntu_22.04_amd64.deb.1
+../../../snap/
+../../../.ICEauthority
+../../../.Xauthority
+../../../.Xdefaults
+../../../.bash_history
+../../../.bash_logout
+../../../.bashrc
+../../../.cache/
+../../../.clamtk/
+../../../.config/
+../../../.dmrc
+../../../.dotnet/
+../../../.gitconfig
+../../../.gnome/
+../../../.lesshst
+../../../.local/
+../../../.pki/
+../../../.profile
+../../../.pseint/
+../../../.sudo_as_admin_successful
+../../../.vscode/
+../../../.xscreensaver
+../../../.xsession-errors
+../../../.xsession-errors.old
+../../../Descargas/
+../../../Documentos/
+../../GPEfrencekenApp-MacOS/
 
 # Ignorar archivos de sistema
 .DS_Store
