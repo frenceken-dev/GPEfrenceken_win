@@ -1,74 +1,45 @@
-Ignorar entorno virtual
-venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-.venv/
-
-
-# Ignorar archivos de Python compilados
+# Archivos de Python compilados y caché
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Entorno virtual de Python
+venv/
+.env/
+.venv/
+env/
+venv_win/
+
+# Archivos de configuración del editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos del sistema operativo Linux
+.DS_Store
+*.bak
+*.tmp
+*.log
+
+# Archivos de base de datos locales (si usas SQLite o similar)
 *.db
 *.sqlite
 *.sqlite3
 
-# Ignorar archivos de configuración local
-.env
-.vscode/
-../logo_ikigai.png
-../../Leito y Princesa.png
-../../Lista 50 Verbos Irregulares Ingles.odt
-../../Lista 50 Verbos Regulares Ingles.odt
-../../Logo mas QR/
-../../Logos/
-../../Programa_IkigaiDesigns_v1.1/
-../../Proyecto Ikigai Designs/
-../../ikigai_inventario.sqbpro
-../../logo_etiquetas.xcf
-../../rutina_#.odt
-../../verbos-irregulares-en-ingles-50-basicos.pdf
-../../../GPEfrenceken_win/
-"../../../Im\303\241genes/"
-../../../MEGA/
-"../../../M\303\272sica/"
-../../../Plantillas/
-"../../../V\303\255deos/"
-../../../megasync-x86_64.pkg.tar.zst
-../../../megasync-xUbuntu_22.04_amd64.deb
-../../../megasync-xUbuntu_22.04_amd64.deb.1
-../../../snap/
-../../../.ICEauthority
-../../../.Xauthority
-../../../.Xdefaults
-../../../.bash_history
-../../../.bash_logout
-../../../.bashrc
-../../../.cache/
-../../../.clamtk/
-../../../.config/
-../../../.dmrc
-../../../.dotnet/
-../../../.gitconfig
-../../../.gnome/
-../../../.lesshst
-../../../.local/
-../../../.pki/
-../../../.profile
-../../../.pseint/
-../../../.sudo_as_admin_successful
-../../../.vscode/
-../../../.xscreensaver
-../../../.xsession-errors
-../../../.xsession-errors.old
-../../../Descargas/
-../../../Documentos/
-../../GPEfrencekenApp-MacOS/
+# Archivos de configuración local (claves, contraseñas, etc.)
+config.ini
+secrets.json
+*.env
 
-# Ignorar archivos de sistema
-.DS_Store
-Thumbs.db
+# Archivos generados por PSEINT (si los guardas en la misma carpeta)
+*.psc
+
+# Archivos de MEGA o carpetas personales (por si acaso)
+MEGA/
+Descargas/
+Documentos/
+
+# Archivos de log y resultados de pruebas
+*.log
+test_results/
