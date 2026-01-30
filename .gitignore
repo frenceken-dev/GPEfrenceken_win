@@ -1,0 +1,18 @@
+# Ignorar el entorno virtual
+venv/
+env/
+.venv
+ikigai-venv/
+
+# Ignorar archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar archivos de configuración local
+.env
+.vscode/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
