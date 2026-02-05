@@ -17,13 +17,29 @@ from db import (
     obtener_tamaños_por_material_color_tipo, 
     obtener_color_por_material,
     obtener_codigo_materiales,
-    obtener_material_por_codigo
+    obtener_material_por_codigo,
+    guardar_borrador_db,
+    id_usuario_nombre_actual,
+    borradores_pendientes,
+    cargar_borrador_db,
+    marcar_borrador_como_creado,
 )
 from tkinter import ttk
 from inventario import convertir_a_float
 from recursos import crear_boton, configurar_toplevel
 
+id_usuario_creador = None
+nombre_usuario_creador = None
 
+# función que obtiene al usuario actual.
+def usuario_actual(usuario):
+    global id_usuario_creador, nombre_usuario_creador
+    # Obtener el id del usuario por medio de nombre
+    nombre_usuario_creador = usuario
+    if nombre_usuario_creador:
+        id_usuario_creador = id_usuario_nombre_actual(nombre_usuario_creador)
+        return id_usuario_creador, nombre_usuario_creador
+    
 # productos.py
 def crear_producto(root, imagen_panel_tk, volver_menu):
     # Limpiar el frame de contenido
@@ -59,14 +75,39 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
     
     # Función para registrar el producto en la base de datos
     def registrar_producto():
+        global materiales_usados # Colocada para pruebas.
         nonlocal codigo_producto, nombre_producto, tipo_producto, tiempo_fabricacion, precio_venta
+        
+        codigo_producto = codigo_entry.get()
+        tipo_producto = tipo_combobox.get() # nueva
+        tiempo_fabricacion = tiempo_entry.get().strip() # strip para evitar error con float
+        cantidad_creada = cantidad_creada_entry.get().strip() # strip para evitar error con float
+        descripcion_producto = descripcion_entry.get()
+        #codigo_producto, tipo_producto, tiempo_fabricacion, cantidad_creada, descripcion_producto = obtener_valores()
+        print(f"CODIGO: {codigo_producto}")
+        print(f"TIPO: {tipo_producto}")
+        print(f"TIEMPO: {tiempo_fabricacion}")
+        print(f"CANTIDAD: {cantidad_creada}")
+        print(f"DESCRIPCION: {descripcion_producto}")
         # Validar que los campos obligatorios estén completos
-        if not codigo_producto or not tipo_producto or tiempo_fabricacion <= 0:
-            messagebox.showerror("Error", "Faltan datos obligatorios del producto.")
+        if not codigo_producto or not tipo_producto or not tiempo_fabricacion or not descripcion_producto:
+            messagebox.showerror("⚠️ Error", "Faltan datos obligatorios del producto.")
             return
+        
+        # Validar campos numéricos.
+        if cantidad_creada == "":
+            messagebox.showerror("⚠️ Error", "La cantidad creada debe ser de almenos un producto.")
+            return
+        else:
+            cantidad_creada = int(cantidad_creada_entry.get())
+            
+        if cantidad_creada <= 0:
+            messagebox.showerror("⚠️ Error", "La cantidad creada debe ser de almenos un producto.")
+            return
+        
         # Validar que se hayan ingresado materiales
         if not materiales_usados:
-            messagebox.showerror("Error", "No se han ingresado materiales para el producto.")
+            messagebox.showerror("⚠️ Error", "No se han ingresado materiales para el producto.")
             return
 
         # Calcular el costo del producto
@@ -104,7 +145,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
             try:
                 precio_venta = round(float(precio_entry.get()), 2)
             except ValueError:
-                messagebox.showerror("Error", "Introduce un número válido para el precio")
+                messagebox.showerror("⚠️ Error", "Introduce un número válido para el precio")
                 return
 
             materiales_reales = []
@@ -139,6 +180,8 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
             # Actualizar el stock de los materiales en la base de datos
             for material in materiales_usados:
                 actualizar_stock_material(material["codigo"], material["cantidad"])
+                
+            marcar_borrador_como_creado(codigo_entry.get())
 
             # Mostrar mensaje de éxito
             messagebox.showinfo("Éxito", "Producto creado y guardado correctamente.")
@@ -170,9 +213,10 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
                 #activeforeground="black",
                 #bg=0,
                 comando=resumen_window.destroy).pack(pady=5)
-
+        
     # Función para ingresar materiales
     def ingresar_materiales():
+        global materiales_usados # Colocado para pruebas
         nonlocal costo_produccion
         material_window = tk.Toplevel(root)
         configurar_toplevel(material_window, titulo="Ingresar Materiales", ancho_min=380, alto_min=300, color_fondo="#101113")
@@ -275,7 +319,8 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         material_entry.bind("<<ComboboxSelected>>", actualizar_color)
         color_entry.bind("<<ComboboxSelected>>", actualizar_tipos)
         tipo_entry.bind("<<ComboboxSelected>>", actualizar_tamaños)
-
+    
+            
         def agregar_material():
             nonlocal costo_produccion
             material_actual = material_entry.get()
@@ -286,7 +331,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
             try:
                 cantidad_necesaria = convertir_a_float(cantidad_entry.get())
             except ValueError:
-                messagebox.showerror("Error", "La cantidad debe ser un número entero.")
+                messagebox.showerror("⚠️ Error", "La cantidad debe ser un número entero.")
                 return
             print("MATERIAL ACTUAL ES: ", material_actual)
             codigo_material = obtener_codigo_material_por_nombre_color_tipo_tamaño(material_actual, color_material_actual, tipo_material_actual, tamaño_material_actual)
@@ -295,7 +340,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
                 try:
                     indice = articulos.index(material_actual)
                 except ValueError:
-                    messagebox.showerror("Error", f"Material {material_actual} no encontrado.")
+                    messagebox.showerror("⚠️ Error", f"Material {material_actual} no encontrado.")
                     return
 
                 if cantidades[indice] >= cantidad_necesaria:
@@ -310,10 +355,42 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
                     # Mesanje de Agregado con exito.
                     messagebox.showinfo("Éxito", f"Material {material_actual} registrado correctamente.")
                 else:
-                    messagebox.showerror("Error", f"No hay suficiente stock de {material_actual}. Stock disponible: {cantidades[indice]}")
+                    messagebox.showerror("⚠️ Error", f"No hay suficiente stock de {material_actual}. Stock disponible: {cantidades[indice]}")
             else:
-                messagebox.showerror("Error", f"No se encontró el material {material_actual} con tipo {tipo_material_actual} y tamaño {tamaño_material_actual}.")
+                messagebox.showerror("⚠️ Error", f"No se encontró el material {material_actual} con tipo {tipo_material_actual} y tamaño {tamaño_material_actual}.")
 
+
+        # Guardar la creación de un producto como un borrador para continuar creandolo en otro momento.
+        def guardar_borrador():
+            global materiales_usados # Colocado para pruebas.
+            id_creador = id_usuario_creador[0][0]
+            nombre_creador = str(nombre_usuario_creador)
+            
+            print(f"El Id en Guardar borrador: {id_usuario_creador} y el nombre Guardar borrador: {nombre_usuario_creador}")
+            
+            # Obtener código y descripción del nuevo producto
+            codigo_producto = codigo_entry.get()
+            tipo_producto = tipo_combobox.get() # nueva
+            tiempo_invertido = tiempo_entry.get() # nueva
+            cantida_producidas = cantidad_entry.get() # nueva
+            descripcion_producto = descripcion_entry.get()
+            materiales_actuales = materiales_usados.copy()
+            
+            
+            # Validar que exista al menos un dato para guardar.
+            if not codigo_producto and not descripcion_producto and not materiales_actuales:
+                messagebox.showwarning("Advertencia", "No hay datos para guardar como borrador.")
+                return
+            else:
+                guardar_borrador_db(id_creador,
+                                    nombre_creador,
+                                    codigo_producto,
+                                    tipo_producto,
+                                    tiempo_invertido,
+                                    cantida_producidas,
+                                    descripcion_producto,
+                                    materiales_actuales)
+                
         crear_boton(material_window, 
                 texto="Agregar Material", 
                 ancho=30,
@@ -338,30 +415,120 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
                 #relief=tk.FLAT,
                 hover_color="#2ECC71",
                 #activeforeground="black",
-                #comando=agregar_material
-                ).grid(row=6, column=0, columnspan=2, pady=10)       
+                comando=guardar_borrador
+                ).grid(row=6, column=0, columnspan=2, pady=10)
+
     
+    # Cargar los borradores pendientes.
+    def cargar_borrador(borrador_id, borradores_window):
+        borrador = cargar_borrador_db(borrador_id)
+
+        if borrador:
+            # Limpiar campos antes de cargar
+            codigo_entry.delete(0, tk.END)
+            descripcion_entry.delete(0, tk.END)
+            tipo_combobox.set('')  # Limpiar el Combobox
+            tiempo_entry.delete(0, tk.END)
+            cantidad_creada_entry.delete(0, tk.END)
+
+            # Cargar los datos  #codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, materiales, descripcion
+            codigo_entry.insert(0, borrador[0])
+            descripcion_entry.insert(0, borrador[4])
+            tipo_combobox.set(borrador[1])  # Cargar tipo de producto
+            tiempo_entry.insert(0, borrador[2])  # Cargar tiempo invertido
+            cantidad_creada_entry.insert(0, borrador[3])  # Cargar cantidad producida
+
+            # Cargar materiales
+            global materiales_usados
+            materiales_usados = eval(borrador[5])  # Convertir string a lista
+            
+            if materiales_usados:
+                print(f"Los materiales cargados del borrador son: {materiales_usados}")
+                
+                crear_boton(form_frame, 
+                    texto="Resumen Materiales", 
+                    ancho=30,
+                    alto=30,
+                    color_fondo="#DEE90D",                
+                    color_texto="white",
+                    font=("Arial", 11, "bold"),
+                    #bd=0,
+                    #relief=tk.FLAT,
+                    hover_color="#2ECC71",
+                    #activeforeground="black",
+                    comando=lambda : mostrar_resumen_materiales(materiales_usados, root) # Ajuste para editar materiales
+                ).grid(row=13, column=0, padx=5, pady=5)
+                
+                # Cierra la ventana de borradores.
+                borradores_window.destroy()
+                
+                messagebox.showinfo("Éxito", f"Borrador {borrador_id} cargado correctamente.")
+            else:
+                # Cierra la ventana de borradores.
+                borradores_window.destroy()
+                messagebox.showinfo("Información", "El Borrador se cargo pero no se han agregado Materiales aún en este Borrador.")
+        else:
+            messagebox.showerror("⚠️ Error", "No se encontró el borrador.")
+
+    
+    # Muestra la cantidad de borradores pendientes.
+    def mostrar_borradores_pendientes():
+        borradores_window = tk.Toplevel(root)
+        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=1100, alto_min=300, color_fondo="#101113")
+        
+        #Borradores pendientes.
+        borradores = borradores_pendientes()
+        # Encabezados
+        tk.Label(borradores_window, text="ID", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Código", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Creador", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Tipo", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=3, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Tiempo Fab.", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=4, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Cantidad", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=5, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Descripcón", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=6, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Fecha ini.", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=7, padx=5, pady=5, sticky="nsew")
+        tk.Label(borradores_window, text="Acciones", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=8, padx=5, pady=5, sticky="nsew")
+
+        # Listar borradores
+        for i, borrador in enumerate(borradores):
+            tk.Label(borradores_window, text=borrador[0], bg="#101113", fg="#ffffff").grid(row=i+1, column=0, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[1], bg="#101113", fg="#ffffff").grid(row=i+1, column=1, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[2], bg="#101113", fg="#ffffff").grid(row=i+1, column=2, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[3], bg="#101113", fg="#ffffff").grid(row=i+1, column=3, padx=5, pady=5)  # Nombre del usuario
+            tk.Label(borradores_window, text=borrador[4], bg="#101113", fg="#ffffff").grid(row=i+1, column=4, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[5], bg="#101113", fg="#ffffff").grid(row=i+1, column=5, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[6], bg="#101113", fg="#ffffff").grid(row=i+1, column=6, padx=5, pady=5)
+            tk.Label(borradores_window, text=borrador[7], bg="#101113", fg="#ffffff").grid(row=i+1, column=7, padx=5, pady=5)
+            tk.Button(borradores_window, text="Cargar", bg="#4B82F0", fg="#101113", command=lambda id=borrador[0]: cargar_borrador(id, borradores_window)).grid(row=i+1, column=8, padx=5, pady=5)
+        
 
     def mostrar_resumen_materiales(materiales_usados, ventana_padre):
         resumen = tk.Toplevel(ventana_padre)
-        configurar_toplevel(resumen, titulo="Resumen de Materiales", ancho_min=400, alto_min=350)
-        resumen.configure(bg="#a0b9f0")
+        configurar_toplevel(resumen, titulo="Resumen de Materiales", ancho_min=400, alto_min=350, color_fondo="#101113")
+        #resumen.configure(bg="#a0b9f0")
 
         # 🔒 Ventana MODAL (muy importante)
         resumen.transient(ventana_padre)
         resumen.grab_set()
         resumen.focus_set()
 
-        frame = tk.Frame(resumen)
+        frame = tk.Frame(resumen, bg="#101113")
         frame.pack(fill=tk.BOTH, expand=True)
 
         columnas = ("codigo", "color", "tipo", "tamaño", "cantidad")
+        
+        style = ttk.Style()
+        style.configure("mystyle.Treeview", background="#101113",  # Fondo oscuro
+            fieldbackground="#101113",  # Fondo de las celdas
+            foreground="#ffffff"  # Color del texto (blanco)
+        )
 
         tree = ttk.Treeview(
             frame,
             columns=columnas,
             show="headings",
-            height=10
+            height=10,
+            style="mystyle.Treeview"
         )
 
         encabezados = {
@@ -382,14 +549,14 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         # ─────────────────────────────────────────
         # 🧾 Editor embebido debajo del Treeview
         # ─────────────────────────────────────────
-        editor = ttk.LabelFrame(frame, text="Editar material seleccionado", padding=10)
+        editor = tk.LabelFrame(frame, text="Editar material seleccionado", background="#101113", foreground="#ffffff", padx=10)
         editor.pack(fill=tk.X, padx=10, pady=8)
 
-        ttk.Label(editor, text="Código").grid(row=0, column=0, padx=5, pady=5)
-        ttk.Label(editor, text="Color").grid(row=0, column=2, padx=5, pady=5)
-        ttk.Label(editor, text="Tipo").grid(row=1, column=0, padx=5, pady=5)
-        ttk.Label(editor, text="Tamaño").grid(row=1, column=2, padx=5, pady=5)
-        ttk.Label(editor, text="Cantidad").grid(row=2, column=0, padx=5, pady=5)
+        ttk.Label(editor, text="Código", background="#101113", foreground="#ffffff").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(editor, text="Color", background="#101113", foreground="#ffffff").grid(row=0, column=2, padx=5, pady=5)
+        ttk.Label(editor, text="Tipo", background="#101113", foreground="#ffffff").grid(row=1, column=0, padx=5, pady=5)
+        ttk.Label(editor, text="Tamaño", background="#101113", foreground="#ffffff").grid(row=1, column=2, padx=5, pady=5)
+        ttk.Label(editor, text="Cantidad", background="#101113", foreground="#ffffff").grid(row=2, column=0, padx=5, pady=5)
 
         codigo_var = tk.StringVar()
         color_var = tk.StringVar()
@@ -419,7 +586,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         # 📥 Cargar datos
         def cargar():
             tree.delete(*tree.get_children())
-            for mat in materiales_usados:
+            for mat in materiales_usados:  # Se pasa como parametro de función
                 tree.insert("", tk.END, values=(
                     mat["codigo"],
                     mat["color"],
@@ -545,11 +712,11 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
             resumen.destroy()
 
         # 🔘 BOTONES (sin romper tu helper)
-        frame_btn = ttk.Frame(resumen, padding=10)
+        frame_btn = ttk.Frame(resumen, style="mystyle.Treeview", padding=10)
         frame_btn.pack(fill=tk.X)
 
         crear_boton(frame_btn, texto="Actualizar",
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#1B3E84",                
         color_texto="white",
@@ -561,7 +728,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         comando=actualizar_desde_editor).pack(side=tk.LEFT, padx=5)
 
         crear_boton(frame_btn, texto="Guardar", 
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#1B3E84",          
         color_texto="white",
@@ -573,7 +740,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         comando=guardar).pack(side=tk.LEFT, padx=5)
 
         crear_boton(frame_btn, texto="Eliminar",  
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#913131",           
         color_texto="white",
@@ -585,7 +752,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         comando=eliminar).pack(side=tk.LEFT, padx=5)
 
         crear_boton(frame_btn, texto="Cerrar",  
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#555555",            
         color_texto="white",
@@ -685,10 +852,12 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
     tk.Label(form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
     tiempo_entry = tk.Entry(form_frame, width=30)
     tiempo_entry.grid(row=5, column=0, pady=5)
+    tiempo_entry.insert(0, "5")
     
     tk.Label(form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=6, column=0, sticky="w", pady=1)
     cantidad_creada_entry = tk.Entry(form_frame, width=30)
     cantidad_creada_entry.grid(row=7, column=0, pady=5)
+    cantidad_creada_entry.insert(0, "1")
 
     # Función para obtener los valores de los campos
     def obtener_valores():
@@ -699,6 +868,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         descripcion_producto = descripcion_entry.get()
         tiempo_fabricacion = convertir_a_float(tiempo_entry.get())
         cantidad_creada = int(cantidad_creada_entry.get())
+        return codigo_producto, tipo_producto, tiempo_fabricacion, cantidad_creada, descripcion_producto
 
     # Botones
     crear_boton(
@@ -718,7 +888,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
             ingresar_materiales()
         ],
         
-    ).grid(row=12, column=0, pady=5)
+    ).grid(row=12, column=0, padx=5, pady=5)
 
     crear_boton(
         form_frame,
@@ -732,29 +902,44 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         #relief=tk.FLAT,
         hover_color="#2ECC71",
         #activeforeground="black",
-        comando=registrar_producto,
+        comando=lambda : registrar_producto(),
         
     ).grid(row=12, column=1, pady=5)
 
     crear_boton(form_frame, 
-                texto="Resumen Materiales", 
-                ancho=30,
-                alto=30,
-                color_fondo="#DEE90D",                
-                color_texto="white",
-                font=("Arial", 11, "bold"),
-                #bd=0,
-                #relief=tk.FLAT,
-                hover_color="#2ECC71",
-                #activeforeground="black",
-                comando=lambda : mostrar_resumen_materiales(materiales_usados, root) # Ajuste para editar materiales
-                    ).grid(row=13, column=0, pady=5)
+        texto="Resumen Materiales", 
+        ancho=30,
+        alto=30,
+        color_fondo="#DEE90D",                
+        color_texto="white",
+        font=("Arial", 11, "bold"),
+        #bd=0,
+        #relief=tk.FLAT,
+        hover_color="#2ECC71",
+        #activeforeground="black",
+        comando=lambda : mostrar_resumen_materiales(materiales_usados, root) # Ajuste para editar materiales
+            ).grid(row=13, column=0, padx=5, pady=5)
     
-
+    crear_boton(
+        form_frame,
+        texto="Borradores Pendientes",
+        ancho=30,
+        alto=30,
+        color_fondo="#F83403",                
+        color_texto="white",
+        font=("Arial", 11, "bold"),
+        #bd=0,
+        #relief=tk.FLAT,
+        hover_color="#15221A",
+        #activeforeground="black",
+        comando=mostrar_borradores_pendientes,
+        
+    ).grid(row=13, column=1, pady=5)
+    
+# Calcula el costo de un producto.
 def calcular_costo_producto(materiales_usados):
     costo_total = 0.0
     for material in materiales_usados:
         costo_unitario = obtener_costo_unitario_material(material["codigo"])
         costo_total += material["cantidad"] * costo_unitario
     return round(costo_total, 2)
-

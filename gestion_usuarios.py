@@ -92,7 +92,7 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
             else:
                 print(f"Hubo un problema al intentar guardar el usuario")
         else:
-            messagebox.showerror("Error", "Todos los campos son obligatorios.")
+            messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
 
     # Botón para agregar usuario
     crear_boton(center_frame, 
@@ -283,7 +283,7 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu):
             usuario = item['values']
             formulario_editar_usuario(root, volver_menu, usuario[0], usuario[1], usuario[2])
         else:
-            messagebox.showerror("Error", "Selecciona un usuario para editar.")
+            messagebox.showerror("⚠️ Error", "Selecciona un usuario para editar.")
 
     # Botón para eliminar usuario
     def eliminar_usuario():
@@ -298,7 +298,7 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu):
                 resultados_window.destroy()
                 formulario_buscar_usuario(root, volver_menu)
         else:
-            messagebox.showerror("Error", "Selecciona un usuario para eliminar.")
+            messagebox.showerror("⚠️ Error", "Selecciona un usuario para eliminar.")
 
     # Botones para editar y eliminar
     crear_boton(resultados_window, 
@@ -373,7 +373,7 @@ def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol
             messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
             volver_menu()
         else:
-            messagebox.showerror("Error", "El nombre de usuario y el rol son obligatorios.")
+            messagebox.showerror("⚠️ Error", "El nombre de usuario y el rol son obligatorios.")
 
     # Botón para actualizar el usuario
     crear_boton(form_frame,
@@ -425,9 +425,9 @@ def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
                 if nueva_clave:
                     guardar_nueva_clave(frame, usuario, clave1)
             else:
-                messagebox.showerror("Error", "Las claves deben ser iguales en ambos campos.")
+                messagebox.showerror("⚠️ Error", "Las claves deben ser iguales en ambos campos.")
         else:
-            messagebox.showerror("Error", "Por favor, completa ambos campos.")
+            messagebox.showerror("⚠️ Error", "Por favor, completa ambos campos.")
     
     def guardar_nueva_clave(frame, usuario, nueva_clave):
         
@@ -438,9 +438,9 @@ def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
                 messagebox.showinfo("Proceso exitoso", mensaje)
                 cerrar_toplevels(frame)
             else:
-                messagebox.showerror("ERROR", "UPPS Algo salío mal, intenta mas tarde.")
+                messagebox.showerror("⚠️ Error", "UPPS Algo salío mal, intenta mas tarde.")
         else:
-            messagebox.showerror("Error", "No se pudo guardar la clave, contacte al servicio técnico")
+            messagebox.showerror("⚠️ Error", "No se pudo guardar la clave, contacte al servicio técnico")
             return
         
         

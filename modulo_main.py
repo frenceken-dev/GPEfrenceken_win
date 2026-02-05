@@ -17,6 +17,7 @@ from eliminar_datos import eliminar_datos
 from info_tienda import info_tienda
 from recursos import LOGO_PATH, IMAGEN_BUSQUEDA_PATH, crear_boton, configurar_toplevel, redimensionar_imagen
 from alerta_stock import VentanaConfigurarUmbrales
+from productos import usuario_actual
 
 
 class PantallaPrincipal:
@@ -139,7 +140,8 @@ class PantallaPrincipal:
                 self.usuario = usuario_combobox.get()
                 self.contraseña = contrasena_entry.get()
                 es_valido, self.rol, mensaje = validar_clave(self.usuario, self.contraseña)
-                
+                # Enviar el usuario actual a producto para guardar borrador de creación de producto
+                usuario_actual(self.usuario)
             except tk.TclError:
                 print("⚠️ El combobox ya no existe. No se puede leer el usuario.")
                 return

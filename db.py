@@ -167,7 +167,7 @@ def insertar_detalle_factura(id_factura, id_material, stock,  precio, costo_unit
     conn.close()
     
     
-# Se registra un nuevo producto creado por Ikigai GmbH.
+# Se registra un nuevo producto creado por Ikigai.
 def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -179,6 +179,98 @@ def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materi
     conn.commit()
     conn.close()
     
+
+def id_usuario_nombre_actual(nombre_usuario):
+    # Recupera el id del usuario.
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id_usuario
+        FROM Usuarios
+        WHERE nombre_usuario LIKE ?
+    ''', (nombre_usuario,))
+    resultados = cursor.fetchall()
+    conn.close()
+    return resultados
+
+
+def guardar_borrador_db(usuario_actual_id, nombre_usuario_actual, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales_actuales):
+    # Guardar en la base de datos
+    print(f"Esto es lo que llega para guardar en el borrador: {usuario_actual_id}--{nombre_usuario_actual}")
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO productos_borrador
+            (usuario_creador_id, nombre_usuario_creador, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
+        ''', (
+            usuario_actual_id,
+            nombre_usuario_actual,
+            codigo_producto,
+            tipo_producto,
+            tiempo_invertido,
+            cantidad_producida,
+            descripcion,
+            str(materiales_actuales)
+        ))
+        conn.commit()
+        messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo guardar el borrador: {e}")
+    finally:
+        conn.close()
+
+
+# Mostrar cantidad de Borradores Pendientes.
+def borradores_pendientes():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, codigo_producto, nombre_usuario_creador, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, fecha_creacion
+        FROM productos_borrador
+        WHERE estado = 'pendiente'
+        ORDER BY fecha_creacion
+    ''') #  ORDER BY fecha_creacion DESC 
+    borradores = cursor.fetchall()
+    conn.close()
+    return borradores
+
+
+def marcar_borrador_como_creado(codigo_borrador):
+    """Actualiza el estado de un borrador a 'creado' y registra la fecha de finalización."""
+    print(f"El Código del Borrador Culminado es: {codigo_borrador}, se cambia estatus a Creado. DB")
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE productos_borrador
+            SET estado = 'creado',
+                fecha_finalizacion = CURRENT_TIMESTAMP
+            WHERE codigo_producto = ?
+        ''', (codigo_borrador,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error al actualizar el borrador: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+# Carga el borrador seleccionado.
+def cargar_borrador_db(borrador_id):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales
+        FROM productos_borrador
+        WHERE id = ?
+    ''', (borrador_id,))
+    borrador = cursor.fetchone()
+    conn.close()
+    return borrador
+
 
 # Obtener los materiales empleados en un producto creado.
 def insertar_detalle_producto(id_producto, id_material, cantidad, tipo, tamaño):
