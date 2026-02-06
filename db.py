@@ -593,7 +593,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
     if tipo_busqueda == "Todos los Materiales":
         cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
     
-    elif tipo_busqueda == "Proveedor":
+    elif tipo_busqueda == "Proveedor especifico":
         cursor.execute('''
             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Proveedores
@@ -642,7 +642,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
             WHERE Facturas.numero_factura LIKE ?
         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Código":
+    elif tipo_busqueda == "Código especifico":
         cursor.execute('''
             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
             FROM Materiales
@@ -652,7 +652,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
             WHERE Materiales.codigo LIKE ?
         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Material":
+    elif tipo_busqueda == "Material especifico":
         cursor.execute('''
             SELECT p.nombre, f.numero_factura, f.fecha, m.codigo, m.nombre, m.tipo, m.tamaño, m.color, m.stock, m.precio, m.costo_unitario
             FROM Materiales m
@@ -662,7 +662,7 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
             WHERE m.nombre LIKE ?
         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Producto":
+    elif tipo_busqueda == "Producto especifico":
         cursor.execute('''
             SELECT p.codigo, p.tipo, p.costo_producto, p.precio_venta, p.materiales_usados, p.tiempo_fabricacion, p.cantidad, p.fecha_registro, p.descripcion
             FROM Productos p
@@ -672,6 +672,14 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
     elif tipo_busqueda == "Todos los Productos":
         cursor.execute('SELECT codigo, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion FROM Productos')
 
+    elif tipo_busqueda == "Borradores Nuevos Productos":
+        cursor.execute("""SELECT nombre_usuario_creador, 
+                    codigo_producto, 
+                    tipo_producto, 
+                    cantidad_producida, 
+                    fecha_creacion, 
+                    fecha_finalizacion, 
+                    estado FROM productos_borrador""")
 
     resultados = cursor.fetchall()
     print("Resultado de buscar_en_db: ", resultados)

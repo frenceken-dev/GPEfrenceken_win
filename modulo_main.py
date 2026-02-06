@@ -58,7 +58,7 @@ class PantallaPrincipal:
             nuevo_alto = int(alto * 0.25)
             self.imagen_tk_login = redimensionar_imagen(LOGO_PATH, nuevo_ancho, nuevo_alto)
         except Exception as e:
-            print(f"Error al ajustar imágenes: {e}")
+            print(f"⚠️ Error al ajustar imágenes: {e}")
 
 
     def pantalla_login(self):
@@ -118,7 +118,7 @@ class PantallaPrincipal:
                         widget.destroy()
                     actualizar_clave(frame_clave_olvidada, usuario)
                 else:
-                    messagebox.showerror("Erro", mensaje)
+                    messagebox.showerror("⚠️ Erro", mensaje)
                     
             crear_boton(frame_clave_olvidada, 
                     texto="Enviar respuesta",
@@ -149,7 +149,7 @@ class PantallaPrincipal:
                 print(f"{mensaje}")
                 self.mostrar_menu_principal()
             else:
-                messagebox.showerror("Error", "Nombre de usuario o contraseña incorrectos.")
+                messagebox.showerror("⚠️ Error", "Nombre de usuario o contraseña incorrectos.")
             
         crear_boton(login_frame, 
                     texto="Iniciar Sesión",

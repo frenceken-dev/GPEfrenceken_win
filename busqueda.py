@@ -63,7 +63,16 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
 
     # Campo para seleccionar el tipo de búsqueda
     tk.Label(form_frame, text="Buscar por:", bg="#8e98f5").grid(row=0, column=0, sticky="e")
-    tipo_busqueda = ttk.Combobox(form_frame, values=["Todos los Materiales", "Proveedor", "Factura Proveedor", "Notas de Entregas" ,"Código", "Material", "Todos los Productos", "Producto", "Facturas Ventas"], width=28)
+    tipo_busqueda = ttk.Combobox(form_frame, values=["Todos los Materiales",
+                                                    "Proveedor especifico", 
+                                                    "Factura Proveedor",
+                                                    "Notas de Entregas" ,
+                                                    "Código especifico",
+                                                    "Material especifico",
+                                                    "Todos los Productos",
+                                                    "Producto especifico",
+                                                    "Facturas Ventas",
+                                                    "Borradores Nuevos Productos"], width=28)  # Nuevo Agregado
     tipo_busqueda.grid(row=0, column=1, pady=5)
 
     # Campo para ingresar el valor de búsqueda
@@ -76,7 +85,7 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
         tipo = tipo_busqueda.get()
         valor = valor_busqueda_entry.get()
         if not tipo:#or not valor:
-            messagebox.showerror("Error", "Debe seleccionar un tipo de búsqueda")# y proporcionar un valor.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un tipo de búsqueda")# y proporcionar un valor.")
             return
 
         resultados = buscar_en_bd(tipo, valor)
@@ -133,7 +142,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
     frame_datos= tk.Frame(resultados_window, pady="5")
     frame_datos.pack(fill=tk.BOTH, expand=True)
     
-    if tipo_busqueda in ["Proveedor", "Factura Proveedor", "Código", "Material"]:
+    if tipo_busqueda in ["Proveedor especifico", "Factura Proveedor", "Código especifico", "Material especifico"]:
         
         # Configurar el estilo del Treeview
         style = ttk.Style()
@@ -175,7 +184,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         for resultado in resultados:
             tree.insert("", tk.END, values=resultado)
 
-    elif tipo_busqueda == "Producto":
+    elif tipo_busqueda == "Producto especifico":
         
         # Configurar el estilo del Treeview
         style = ttk.Style()
@@ -342,18 +351,18 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             try:
                 selected_item = tree.selection()
                 if not selected_item:
-                    messagebox.showerror("Error", "Selecciona una nota de entrega.")
+                    messagebox.showerror("⚠️ Error", "Selecciona una nota de entrega.")
                     return
                 id_nota_entrega = tree.item(selected_item)["values"][0]
                 estado = tree.item(selected_item)["values"][4]
                 if estado == "Facturado":
-                    messagebox.showerror("Error", "Esta nota de entrega ya ha sido facturada.")
+                    messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
                     return
 
                 # llamada desde crea_factura_nota_entrega.py
                 convertir_nota_a_factura(id_nota_entrega)
             except Exception as e:
-                messagebox.showerror("Error", f"Ocurrió un error: {e}")
+                messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
 
         # Botón para convertir a factura
         crear_boton(resultados_window, 
@@ -382,7 +391,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                 # llamada desde crea_factura_nota_entrega.py
                 imprimir_nota_entrega(id_nota_entrega, es_copia=True)  # Ajuste Para intentar que solo sea una copia.
             except Exception as e:
-                messagebox.showerror("Error", f"Ocurrió un error: {e}")
+                messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
 
         # Botón para imprimir la nota de entrega
         crear_boton(resultados_window, 
@@ -453,7 +462,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                 id_factura = tree.item(selected_item)["values"][0]
                 imprimir_factura(id_factura, es_copia=True)
             except Exception as e:
-                messagebox.showerror("Error", f"No se pudo imprimir la factura: {e}")
+                messagebox.showerror("⚠️ Error", f"No se pudo imprimir la factura: {e}")
 
         crear_boton(
             resultados_window,
@@ -470,7 +479,40 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             #activeforeground="black",
             comando=imprimir_factura_seleccionada
         ).pack(side="left", padx=5, pady=5)
+        
 
+    elif tipo_busqueda in ["Borradores Nuevos Productos"]:
+        # Configurar el estilo del Treeview
+        style = ttk.Style()
+        style.configure("mystyle.Treeview", background="#101113", fieldbackground="#101113", foreground="#ffffff")
+        style.configure("mystyle.Treeview.Heading", background="#ffffff", foreground="#101113")
+        
+        # Crear un Treeview para mostrar los resultados de productos (Se elimino el campo Nombre)
+        tree = ttk.Treeview(frame_datos, columns=("Usuario Creador", "Código Producto", "Tipo Producto", "Cantidad creada", "Fecha Creación", "Fecha Culminación", "Estado Actual"),
+                            show="headings",
+                            style="mystyle.Treeview")
+
+        # Configurar las columnas
+        tree.heading("Usuario Creador", text="Usuario Creador")
+        tree.heading("Código Producto", text="Código Producto")
+        tree.heading("Tipo Producto", text="Tipo Producto")
+        tree.heading("Cantidad creada", text="Cantidad creada")
+        tree.heading("Fecha Creación", text="Fecha Creación")
+        tree.heading("Fecha Culminación", text="Fecha Culminación")
+        tree.heading("Estado Actual", text="Estado Actual")
+
+        # Ajustar el ancho de las columnas
+        tree.column("Usuario Creador", width=70)
+        tree.column("Código Producto", width=70)
+        tree.column("Tipo Producto", width=60)
+        tree.column("Cantidad creada", width=60)
+        tree.column("Fecha Creación", width=60)
+        tree.column("Fecha Culminación", width=62)
+        tree.column("Estado Actual", width=50)
+
+        # Insertar los resultados en el Treeview
+        for resultado in resultados:
+            tree.insert("", tk.END, values=resultado)
 
     # Agregar un Scrollbar
     scrollbar = ttk.Scrollbar(resultados_window, orient="vertical", command=tree.yview)
@@ -481,7 +523,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         # Obtener el ítem seleccionado en el Treeview
         selected_item = tree.selection()
         if not selected_item:
-            messagebox.showerror("Error", "Selecciona un ítem para editar.")
+            messagebox.showerror("⚠️ Error", "Selecciona un ítem para editar.")
             return
 
         # Obtener los valores del ítem seleccionado
@@ -501,7 +543,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         frame_edicion.pack()
         
         # Crear campos de edición según el tipo de búsqueda
-        if tipo_busqueda =="Proveedor":
+        if tipo_busqueda =="Proveedor especifico":
             campos = ["Proveedor"]
             campo_indice = {"Proveedor": 0}
             
@@ -511,11 +553,11 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                 "Factura N°": 1,
                 "Fecha": 2,
             }
-        elif tipo_busqueda == "Código":
+        elif tipo_busqueda == "Código especifico":
             campos = ["Código"]
             campo_indice = {"Código": 3}
             
-        elif tipo_busqueda == "Material":
+        elif tipo_busqueda == "Material especifico":
             campos = ["Nombre", "Tipo", "Tamaño", "Color", "Stock", "Costo", "Costo Unit."]
             campo_indice = {"Nombre": 4,
                             "Tipo": 5,
@@ -536,7 +578,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                             "Costo": 6,
                             "Costo Unit.": 7}
             
-        elif tipo_busqueda in ["Producto", "Todos los Productos"]:
+        elif tipo_busqueda in ["Producto especifico", "Todos los Productos"]:
             campos = ["Código", "Tipo", "Costo Venta", "Precio Venta", "Materiales Usados", "Tiempo Fabricación", "Cantidad", "Fecha R", "Descripción"]
             campo_indice = {"Código": 0,
                             "Tipo": 1,
@@ -548,9 +590,13 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                             "Fecha R": 7,
                             "Descripción": 8}
             
+        # elif tipo_busqueda == Borradores Nuevos Productos:
+            #pass
+            
         else:
-            messagebox.showerror("Error", "Tipo de búsqueda no soportado para edición.")
-            return
+            messagebox.showerror("⚠️ Error", "Tipo de búsqueda no soportado para edición.")
+            # Cerrar la ventana de edición
+            ventana_editar.destroy()
     
     
         # Crear etiquetas y campos de entrada para cada campo
@@ -590,7 +636,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                         idx = campo_indice["Costo Unit."]  # Usar el índice correcto de campo_indice
                         nuevos_valores_tree[idx] = nuevos_valores["Costo Unit."]
                 except ValueError:
-                    messagebox.showerror("Error", "El precio o la cantidad no son valores numéricos válidos.")
+                    messagebox.showerror("⚠️ Error", "El precio o la cantidad no son valores numéricos válidos.")
                     
             # Llamar a la función para actualizar la base de datos
             actualizar_en_bd(tipo_busqueda, valores[0], nuevos_valores, valores)
