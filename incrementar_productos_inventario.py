@@ -103,11 +103,11 @@ class VentanaIncrementarStock:
         cantidad = self.entry_cantidad.get()
 
         if not producto_seleccionado:
-            messagebox.showerror("Error", "Debe seleccionar un producto.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un producto.")
             return
 
         if not cantidad or not cantidad.isdigit() or int(cantidad) <= 0:
-            messagebox.showerror("Error", "Debe ingresar una cantidad válida.")
+            messagebox.showerror("⚠️ Error", "Debe ingresar una cantidad válida.")
             return
 
         id_producto = int(producto_seleccionado.split(" - ")[0])

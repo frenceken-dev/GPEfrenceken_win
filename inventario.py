@@ -261,7 +261,7 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
             codigo_db = codigo_existe(codigo)
             # Verificar si el código ya existe
             if codigo_db or existe_codigo_lista_temporales(codigo):
-                messagebox.showerror("ERROR", "El Código ya existe. Por favor, usa un código único.")
+                messagebox.showerror("⚠️ Error", "El Código ya existe. Por favor, usa un código único.")
                 material_window.lift()  # Traer la ventana al frente
                 material_window.focus_force()  # Forzar el foco en la ventana
                 return  # No cerrar la ventana
@@ -271,7 +271,7 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
                 cantidad_float = float(cantidad)
                 precio_float = float(precio)
             except ValueError:
-                messagebox.showerror("ERROR", "La cantidad y el precio deben ser números válidos.")
+                messagebox.showerror("⚠️ Error", "La cantidad y el precio deben ser números válidos.")
                 return  # No cerrar la ventana            
             
             material = {
@@ -349,12 +349,12 @@ def limpiar_campos(frame_contenido):
 def guardar_factura_y_materiales(frame_contenido):
     # Validar que los datos de la factura estén completos
     if not datos_factura["proveedor"] or not datos_factura["numero_factura"] or not datos_factura["fecha"]:
-        messagebox.showerror("Error", "Faltan datos de la factura (proveedor, número o fecha).")
+        messagebox.showerror("⚠️ Error", "Faltan datos de la factura (proveedor, número o fecha).")
         return
 
     # Validar que haya al menos un material ingresado
     if not materiales_temporales:
-        messagebox.showerror("Error", "No se han ingresado materiales.")
+        messagebox.showerror("⚠️ Error", "No se han ingresado materiales.")
         return
     
     try:
@@ -377,7 +377,7 @@ def guardar_factura_y_materiales(frame_contenido):
             try:
                 material["costo_unitario"] = round(material["costo_unitario"], 2)
             except:
-                print(f"Error: El valor {material['costo_unitario']} no es un número válido.")
+                print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
                 material["costo_unitario"]
                 
             insertar_material(
@@ -413,7 +413,7 @@ def guardar_factura_y_materiales(frame_contenido):
         materiales_temporales.clear()        
 
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo guardar: {e}")
+        messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
         
         
 # Esta función cambia la coma por el punto si el usuario usa coma.
@@ -422,7 +422,7 @@ def convertir_a_float(valor_str):
         valor_str = str(valor_str).replace(",", ".")
         return float(valor_str)
     except ValueError:
-        print(f"Error: '{valor_str}' no es un número válido.")
+        print(f"⚠️ Error: '{valor_str}' no es un número válido.")
         return None
         
 total_actual = []

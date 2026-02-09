@@ -620,7 +620,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             for campo in campos:
                 nuevos_valores_tree[campo_indice[campo]] = nuevos_valores[campo]  # Actualizar en la posición correcta
 
-            print("DATOS QUE SE ENVIAN A DB: ", nuevos_valores_tree)
+            #print("DATOS QUE SE ENVIAN A DB: ", nuevos_valores_tree)
             # Para reajustar el precio unitario si el precio total cambia
             if "Costo" in nuevos_valores and "Stock" in nuevos_valores:
                 try:
@@ -709,9 +709,9 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         comando=imprimir_resultados
     )
     boton_imprimir.pack(side="left", padx=5, pady=5)
-    
+    print(f"El Usuario es: {usuario_actual} en la busqueda")
     # Dar acceso si es admin
-    if usuario_actual == "admin":
+    if usuario_actual == "administrador":
         # Botón para editar
         boton_editar = crear_boton(
         resultados_window,

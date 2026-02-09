@@ -129,6 +129,6 @@ def comprobacion_registro(nombre, frame_contenido, volver_menu):
         messagebox.showinfo("Guardado", "El proveedor se guardo correctamente.")
         ingresar_inventario(frame_contenido, volver_menu)
     else:
-        messagebox.showinfo("Error", "El proveedor no se guardo...Error")
+        messagebox.showinfo("⚠️ Error", "El proveedor no se guardo...Error")
         ingresar_inventario(frame_contenido, volver_menu)
     

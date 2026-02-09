@@ -167,7 +167,7 @@ def ingresar_datos_tienda(frame_contenido, frame_imagen_panel, imagen_panel_tk, 
             messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
             mostrar_menu_principal()
         else:
-            messagebox.showerror("Error", "Todos los campos son obligatorios.")
+            messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
 
     # Botón para agregar usuario
     crear_boton(center_frame, 
@@ -255,7 +255,7 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
             messagebox.showinfo("Éxito", "Datos actualizados correctamente.")
             mostrar_menu_principal()
         else:
-            messagebox.showerror("Error", "No se encontraron datos para actualizar.")
+            messagebox.showerror("⚠️ Error", "No se encontraron datos para actualizar.")
 
     # Botón para agregar usuario
     crear_boton(center_frame, 

@@ -162,7 +162,7 @@ def eliminar_proveedor(root, volver_menu, imagen_tk, imagen_panel_tk):
     def confirmar_eliminar_proveedor():
         proveedor_seleccionado = proveedor_combobox.get()
         if not proveedor_seleccionado:
-            messagebox.showerror("Error", "Debes seleccionar un proveedor.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar un proveedor.")
             return
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al proveedor {proveedor_seleccionado}?")
@@ -238,7 +238,7 @@ def eliminar_material(root, volver_menu, imagen_tk, imagen_panel_tk):
     def confirmar_eliminar_material():
         material_seleccionado = material_combobox.get()
         if not material_seleccionado:
-            messagebox.showerror("Error", "Debes seleccionar un material.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar un material.")
             return
         # print("El material seleccionado es: ",material_seleccionado)
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar el material {material_seleccionado}?")
@@ -313,7 +313,7 @@ def eliminar_producto(root, volver_menu, imagen_tk, imagen_panel_tk):
     def confirmar_eliminar_producto():
         producto_seleccionado = producto_combobox.get()
         if not producto_seleccionado:
-            messagebox.showerror("Error", "Debes seleccionar un producto.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar un producto.")
             return
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar el producto {producto_seleccionado}?")
@@ -386,7 +386,7 @@ def eliminar_usuario(root, volver_menu, imagen_tk, imagen_panel_tk):
     def confirmar_eliminar_usuario():
         usuario_seleccionado = usuario_combobox.get()
         if not usuario_seleccionado:
-            messagebox.showerror("Error", "Debes seleccionar un usuario.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar un usuario.")
             return
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al usuario {usuario_seleccionado}?")

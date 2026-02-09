@@ -316,5 +316,5 @@ def redimensionar_imagen(ruta, ancho_max, alto_max):
         imagen_redimensionada = imagen.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
         return ImageTk.PhotoImage(imagen_redimensionada)
     except Exception as e:
-        print(f"Error al redimensionar {ruta}: {e}")
+        print(f"⚠️ Error al redimensionar {ruta}: {e}")
         return None

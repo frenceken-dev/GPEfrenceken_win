@@ -10,23 +10,23 @@ usuarios = {}  # Formato: {usuario: {"hash_clave": "...", "pregunta": "...", "re
 def validar_clave_segura(clave):
     """Verifica que la clave cumpla con los requisitos."""
     if len(clave) < 8 or len(clave) > 16:
-        messagebox.showerror("Error", "La clave debe tener entre 10 y 16 caracteres.")
+        messagebox.showerror("⚠️ Error", "La clave debe tener entre 10 y 16 caracteres.")
         return False, "La clave debe tener entre 10 y 16 caracteres."
     
     if not any(c.isupper() for c in clave):
-        messagebox.showerror("Error", "Debe incluir al menos una mayúscula.")
+        messagebox.showerror("⚠️Error", "Debe incluir al menos una mayúscula.")
         return False, "Debe incluir al menos una mayúscula."
     
     if not any(c.islower() for c in clave):
-        messagebox.showerror("Error", "Debe incluir al menos una minúscula.")
+        messagebox.showerror("⚠️ Error", "Debe incluir al menos una minúscula.")
         return False, "Debe incluir al menos una minúscula."
     
     if not any(c.isdigit() for c in clave):
-        messagebox.showerror("Error", "Debe incluir al menos un número.")
+        messagebox.showerror("⚠️ Error", "Debe incluir al menos un número.")
         return False, "Debe incluir al menos un número."
     
     if not any(c in "!@#$%^&*,.?=:;'¿¡" for c in clave):
-        messagebox.showerror("Error", "Debe incluir al menos un carácter especial (!@#$%^&*,.?=:;'¿¡).")
+        messagebox.showerror("⚠️ Error", "Debe incluir al menos un carácter especial (!@#$%^&*,.?=:;'¿¡).")
         return False, "Debe incluir al menos un carácter especial (!@#$%^&*,.?=:;'¿¡)."
     
     return True, "Clave válida."
@@ -71,7 +71,7 @@ def recuperar_clave(usuario, respuesta):
             usuarios[usuario]["hash_clave"] = cifrar_clave(nueva_clave)
             return True, "Clave restablecida con éxito."
         else:
-            return False, f"Error: {mensaje}"
+            return False, f"⚠️ Error: {mensaje}"
     else:
         return False, "Respuesta incorrecta."
     
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # clave = getpass.getpass("Crea tu clave (10-16 caracteres, con mayúsculas, minúsculas, números y !@#$%^&*,.?=:;'¿¡): ")
     # valido, mensaje = validar_clave_segura(clave)
     # if not valido:
-    #     print(f"Error: {mensaje}")
+    #     print(f"⚠️ Error: {mensaje}")
     # else:
     #     pregunta = input("Ingresa una pregunta de seguridad (ejemplo: '¿Cuál es el nombre de tu primera mascota?'): ")
     #     respuesta = input("Ingresa la respuesta a tu pregunta de seguridad: ")

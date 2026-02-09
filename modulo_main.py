@@ -140,6 +140,7 @@ class PantallaPrincipal:
                 self.usuario = usuario_combobox.get()
                 self.contraseña = contrasena_entry.get()
                 es_valido, self.rol, mensaje = validar_clave(self.usuario, self.contraseña)
+                print(f"El ROL es: {self.rol}")
                 # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 usuario_actual(self.usuario)
             except tk.TclError:
@@ -391,7 +392,7 @@ class PantallaPrincipal:
                 #relief=tk.FLAT,
                 hover_color="#2ECC71",
                 #activeforeground="black",
-                comando=lambda: busqueda_articulos(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.imagen_buscar_tk, self.usuario),
+                comando=lambda: busqueda_articulos(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.imagen_buscar_tk, self.rol),
                 
             ).pack(pady=10)
             crear_boton(

@@ -130,7 +130,7 @@ class ImpresorPDF:
                 # fallback universal
                 webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
         else:
-            messagebox.showerror("Error", "No se pudo generar el PDF.")
+            messagebox.showerror("⚠️ Error", "No se pudo generar el PDF.")
 
         return ruta_pdf
     

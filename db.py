@@ -217,7 +217,7 @@ def guardar_borrador_db(usuario_actual_id, nombre_usuario_actual, codigo_product
         conn.commit()
         messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo guardar el borrador: {e}")
+        messagebox.showerror("⚠️ Error", f"No se pudo guardar el borrador: {e}")
     finally:
         conn.close()
 
@@ -252,7 +252,7 @@ def marcar_borrador_como_creado(codigo_borrador):
         conn.commit()
         return True
     except Exception as e:
-        print(f"Error al actualizar el borrador: {e}")
+        print(f"⚠️ Error al actualizar el borrador: {e}")
         return False
     finally:
         conn.close()
@@ -953,9 +953,9 @@ def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales)
         conn.commit()
 
     except sqlite3.Error as e:
-        print(f"Error al actualizar la base de datos: {e}")
+        print(f"⚠️ Error al actualizar la base de datos: {e}")
         conn.rollback()
-        messagebox.showerror("Error", f"No se pudo actualizar la base de datos: {e}")
+        messagebox.showerror("⚠️ Error", f"No se pudo actualizar la base de datos: {e}")
 
     finally:
         conn.close()
@@ -1317,7 +1317,7 @@ def datos_costo_d_producto_actualizar(codigo_producto):
     producto = cursor.fetchone()
 
     if not producto:
-        messagebox.showerror("Error", f"No se encontró el producto seleccionado con código {codigo_producto}")
+        messagebox.showerror("⚠️ Error", f"No se encontró el producto seleccionado con código {codigo_producto}")
     return producto
 
 
@@ -1371,7 +1371,7 @@ def incrementar_stock_producto(id_producto, cantidad):
         resultado = cursor.fetchone()
 
         if not resultado:
-            messagebox.showerror("Error", "Producto no encontrado en la base de datos.")
+            messagebox.showerror("⚠️ Error", "Producto no encontrado en la base de datos.")
             return False
 
         stock_actual = resultado[0]
@@ -1384,7 +1384,7 @@ def incrementar_stock_producto(id_producto, cantidad):
         return True
 
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo actualizar el stock: {e}")
+        messagebox.showerror("⚠️ Error", f"No se pudo actualizar el stock: {e}")
         conn.rollback()
         return False
 
@@ -2086,7 +2086,7 @@ def agregar_en_usuarios():
         ''')
         print("Columna 'pregunta_seguridad' agregada correctamente.")
     except sqlite3.OperationalError as e:
-        print(f"Error al agregar 'pregunta_seguridad': {e}")
+        print(f"⚠️ Error al agregar 'pregunta_seguridad': {e}")
 
     # Agregar la columna respuesta_seguridad si no existe
     try:
@@ -2096,7 +2096,7 @@ def agregar_en_usuarios():
         ''')
         print("Columna 'respuesta_seguridad' agregada correctamente.")
     except sqlite3.OperationalError as e:
-        print(f"Error al agregar 'respuesta_seguridad': {e}")
+        print(f"⚠️ Error al agregar 'respuesta_seguridad': {e}")
 
     conn.commit()
     conn.close()

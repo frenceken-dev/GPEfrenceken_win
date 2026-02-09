@@ -67,14 +67,14 @@ class VentanaConfigurarUmbrales:
         umbral = self.entry_umbral.get()
 
         if not tipo or not item_str or not umbral:
-            messagebox.showerror("Error", "Todos los campos son obligatorios.")
+            messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
             return
 
         try:
             id_item = int(item_str.split(" - ")[0])
             umbral = int(umbral)
         except ValueError:
-            messagebox.showerror("Error", "ID de item o umbral no válido.")
+            messagebox.showerror("⚠️ Error", "ID de item o umbral no válido.")
             return
 
         configurar_umbral_alerta(tipo, id_item, umbral)
