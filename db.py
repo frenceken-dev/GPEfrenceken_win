@@ -1,12 +1,8 @@
 # modulo_db.py
 """Modulo Base de Datos de las Películas"""
-import os
 import sqlite3
-import subprocess
 from datetime import datetime
-from zoneinfo import ZoneInfo
-import pytz
-from tkinter import messagebox, Toplevel
+from tkinter import messagebox
 from recursos import DB_PATH
 import hashlib
 
@@ -18,15 +14,15 @@ def init_db():
     
 
 # Registrar un nuevo Proveedor.
-def insertar_proveedor(nombre, contacto, telefono, email, direccion):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO Proveedores (nombre, contacto, telefono, email, direccion)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (nombre, contacto, telefono, email, direccion))
-    conn.commit()
-    conn.close()
+# def insertar_proveedor(nombre, contacto, telefono, email, direccion):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         INSERT INTO Proveedores (nombre, contacto, telefono, email, direccion)
+#         VALUES (?, ?, ?, ?, ?)
+#     ''', (nombre, contacto, telefono, email, direccion))
+#     conn.commit()
+#     conn.close()
     
 
 # Obtener todos los Proveedores .
@@ -50,7 +46,7 @@ def obtener_id_proveedor_por_nombre(nombre_proveedor):
     resultado = cursor.fetchone()
     conn.commit()
     conn.close()
-    return resultado[0] if resultado else None
+    return resultado if resultado else None
 
 
 # Obtener ID de la Factura por su numero. 
@@ -845,7 +841,7 @@ def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
 def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
+# Actualiza los materiales en la base de datos.
     try:
         if tipo_busqueda == "Todos los Materiales":
             # Usar valores originales si no se editaron.
@@ -864,7 +860,7 @@ def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales)
                 WHERE codigo=?
             """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
             
-        elif tipo_busqueda == "Material":
+        elif tipo_busqueda == "Material especifico":
             # Usar valores originales si no se editaron
             codigo = nuevos_valores.get("Código", valores_originales[3])
             nombre = nuevos_valores.get("Nombre", valores_originales[4])
@@ -882,7 +878,7 @@ def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales)
                 WHERE codigo=?
             """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
 
-        elif tipo_busqueda == "Código":
+        elif tipo_busqueda == "Código especifico":
             proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
             codigo = nuevos_valores.get("Código", valores_originales[3])
             
@@ -900,7 +896,7 @@ def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales)
                 WHERE id_material=?
             """, (codigo, id_material))
         
-        elif tipo_busqueda == "Proveedor":
+        elif tipo_busqueda == "Proveedor especifico":
             proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
             id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
             if isinstance(id_proveedor, tuple):
@@ -930,7 +926,7 @@ def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales)
                 WHERE id_factura=?
             """, (factura_n, fecha, id_factura))
 
-        elif tipo_busqueda in ["Todos los Productos", "Producto"]:
+        elif tipo_busqueda in ["Todos los Productos", "Producto especifico"]:
             id_producto = obtener_id_producto_por_codigo(valores_originales[0])
             print("EL ID DEL PRODUCTO ES: ", id_producto)
             cursor.execute("""
@@ -1097,120 +1093,120 @@ def registrar_usuario(usuario, clave, rol, pregunta, respuesta):
 
 
 
-# Validar entrada de un usuario.
-def validar_credenciales(usuario, contrasena):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT clave, rol FROM Usuarios WHERE nombre_usuario = ?', (usuario,))
-    resultado = cursor.fetchone()
-    conn.close()
+# Validar entrada de un usuario. NO ESTA SIENDO USADO EN SISTEMA AL PARECER.
+# def validar_credenciales(usuario, contrasena):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT clave, rol FROM Usuarios WHERE nombre_usuario = ?', (usuario,))
+#     resultado = cursor.fetchone()
+#     conn.close()
 
-    if resultado and resultado[0] == contrasena:
-        return True, resultado[1]  # Retorna True y el rol del usuario
-    else:
-        return False, None
-
-
-
-# Asegúrate de que esta ruta sea correcta
-def verificar_hash():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    # Consulta directa para ver qué hay en la columna `clave`
-    cursor.execute("SELECT clave FROM Usuarios WHERE nombre_usuario = ?", ("admin",))
-    resultado = cursor.fetchone()
-    conn.close()
-
-    print(f"Contenido REAL de la columna 'clave': {resultado[0]}")
+#     if resultado and resultado[0] == contrasena:
+#         return True, resultado[1]  # Retorna True y el rol del usuario
+#     else:
+#         return False, None
 
 
 
-# Valida clave Hash
-def validar_clave(usuario, clave):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# NO ESTA SIENDO USADO EN SISTEMA AL PARECER.
+# def verificar_hash():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     # Consulta directa para ver qué hay en la columna `clave`
+#     cursor.execute("SELECT clave FROM Usuarios WHERE nombre_usuario = ?", ("admin",))
+#     resultado = cursor.fetchone()
+#     conn.close()
+
+#     print(f"Contenido REAL de la columna 'clave': {resultado[0]}")
+
+
+
+# Valida clave Hash SE HA INTEGRADO EN LA NUEVO MODULO.
+# def validar_clave(usuario, clave):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
     
-    # Buscar el usuario
-    cursor.execute("SELECT clave , rol FROM Usuarios WHERE nombre_usuario = ?", (usuario,))
-    resultado = cursor.fetchone()
-    conn.close()
+#     # Buscar el usuario
+#     cursor.execute("SELECT clave , rol FROM Usuarios WHERE nombre_usuario = ?", (usuario,))
+#     resultado = cursor.fetchone()
+#     conn.close()
     
-    if resultado is None:
-        return False, "Usuario no registrado."
+#     if resultado is None:
+#         return False, "Usuario no registrado."
 
-    hash_almacenado = resultado[0]
-    hash_ingresado = hashlib.sha256(clave.encode()).hexdigest()
-    rol = resultado[-1]
+#     hash_almacenado = resultado[0]
+#     hash_ingresado = hashlib.sha256(clave.encode()).hexdigest()
+#     rol = resultado[-1]
     
-    if hash_ingresado == hash_almacenado:
-        return True, rol, "Acceso concedido."
-    else:
-        rol = ""
-        return False, rol, "Clave incorrecta."
+#     if hash_ingresado == hash_almacenado:
+#         return True, rol, "Acceso concedido."
+#     else:
+#         rol = ""
+#         return False, rol, "Clave incorrecta."
 
 
-# Recuperar la pregunta de seguridad
-def recuperar_pregunta_seguridad(usuario):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# Recuperar la pregunta de seguridad SE HA INTEGRADO AL NUEVO MODULO.
+# def recuperar_pregunta_seguridad(usuario):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Buscar el usuario y su respuesta de seguridad
-    cursor.execute('''
-        SELECT pregunta_seguridad FROM Usuarios
-        WHERE nombre_usuario = ?
-    ''', (usuario,))
-    resultado = cursor.fetchone()
-    conn.close()
+#     # Buscar el usuario y su respuesta de seguridad
+#     cursor.execute('''
+#         SELECT pregunta_seguridad FROM Usuarios
+#         WHERE nombre_usuario = ?
+#     ''', (usuario,))
+#     resultado = cursor.fetchone()
+#     conn.close()
     
-    if resultado is None:
-        return False, "Indica tu Usuario"
-    print(f"La Pregunta de seguridad es: {resultado}")
-    return resultado, "Usuario encontrado"
+#     if resultado is None:
+#         return False, "Indica tu Usuario"
+#     print(f"La Pregunta de seguridad es: {resultado}")
+#     return resultado, "Usuario encontrado"
 
     
-# Validar Pregunta de seguridad
-def recuperar_clave(usuario, respuesta):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    print(f"Se ha recibido el usuario {usuario} con la respuesta {respuesta} se procede a comprobar")
-    # Buscar el usuario y su respuesta de seguridad
-    cursor.execute('''
-        SELECT respuesta_seguridad FROM Usuarios
-        WHERE nombre_usuario = ?
-    ''', (usuario,))
-    resultado = cursor.fetchone()
-    conn.close()
+# Validar Pregunta de seguridad SE HA INTEGRADO AL MODULO NUEVO.
+# def recuperar_clave(usuario, respuesta):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     print(f"Se ha recibido el usuario {usuario} con la respuesta {respuesta} se procede a comprobar")
+#     # Buscar el usuario y su respuesta de seguridad
+#     cursor.execute('''
+#         SELECT respuesta_seguridad FROM Usuarios
+#         WHERE nombre_usuario = ?
+#     ''', (usuario,))
+#     resultado = cursor.fetchone()
+#     conn.close()
 
-    if resultado is None:
-        return False, "Usuario no registrado."
+#     if resultado is None:
+#         return False, "Usuario no registrado."
 
-    respuesta_almacenada = resultado[0]
-    if respuesta.lower() == respuesta_almacenada:
-        return True, f"Respuesta correcta. {usuario}, puedes restablecer tu clave."
-    else:
-        return False, "Respuesta incorrecta."
+#     respuesta_almacenada = resultado[0]
+#     if respuesta.lower() == respuesta_almacenada:
+#         return True, f"Respuesta correcta. {usuario}, puedes restablecer tu clave."
+#     else:
+#         return False, "Respuesta incorrecta."
 
 
-# restablecer la clave
-def restablecer_clave(usuario, nueva_clave):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    clave_str = str(nueva_clave)
-    print(type(clave_str), clave_str)
-    # Cifrar la nueva clave
-    nuevo_hash = hashlib.sha256(clave_str.encode()).hexdigest()
+# restablecer la clave SE HA INTEGRADA AL NUEVO MODULO.
+# def restablecer_clave(usuario, nueva_clave):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     clave_str = str(nueva_clave)
+#     print(type(clave_str), clave_str)
+#     # Cifrar la nueva clave
+#     nuevo_hash = hashlib.sha256(clave_str.encode()).hexdigest()
 
-    # Actualizar el hash en la base de datos
-    cursor.execute('''
-        UPDATE Usuarios
-        SET clave = ?
-        WHERE nombre_usuario = ?
-    ''', (nuevo_hash, usuario))
+#     # Actualizar el hash en la base de datos
+#     cursor.execute('''
+#         UPDATE Usuarios
+#         SET clave = ?
+#         WHERE nombre_usuario = ?
+#     ''', (nuevo_hash, usuario))
 
-    conn.commit()
-    conn.close()
-    return True, "Clave restablecida con éxito."
+#     conn.commit()
+#     conn.close()
+#     return True, "Clave restablecida con éxito."
 
 
 # Buscar usuarios en la base de datos.

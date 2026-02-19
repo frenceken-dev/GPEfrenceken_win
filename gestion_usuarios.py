@@ -1,11 +1,12 @@
 # gestion_usuario.py
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import registrar_usuario, buscar_usuarios, actualizar_usuario, eliminar_usuario_bd, restablecer_clave
+from db import registrar_usuario, buscar_usuarios, actualizar_usuario, eliminar_usuario_bd
 from recursos import crear_boton, configurar_toplevel
 from keygen_user import validar_clave_segura
+from databasemanager import DataBaseManager
 
-
+db_connect = DataBaseManager()
 def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
     # Limpiar el frame principal
     for widget in root.winfo_children():
@@ -83,14 +84,17 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
         rol = rol_combobox.get()
 
         if usuario and pregunta_seguridad and respuesta_seguridad and clave and rol:
-            clave_valida, mensaje = validar_clave_segura(clave)
-            print(f"{mensaje}")
+            clave_valida, mensaje_clave = validar_clave_segura(clave)
+            print(f"{mensaje_clave}")
             if clave_valida:                
-                registrar_usuario(usuario, clave,  rol, pregunta_seguridad, respuesta_seguridad.lower())
-                messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
-                mostrar_menu_principal
+                exito, mensaje_registro = db_connect.registrar_usuario(usuario, clave,  rol, pregunta_seguridad, respuesta_seguridad.lower())
+                if exito:
+                    messagebox.showinfo("Registro Exitoso", f"{mensaje_registro}")
+                    mostrar_menu_principal
+                else:
+                    messagebox.showerror("Error de Registro", f"{mensaje_registro}")
             else:
-                print(f"Hubo un problema al intentar guardar el usuario")
+                print(f"Hubo un problema de esturctura de la clave")
         else:
             messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
 
@@ -419,20 +423,22 @@ def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
         clave1 = clave_1_entry.get().strip()
         clave2 = clave_2_entry.get().strip()
         
-        if clave1 and clave2:
-            if clave2 == clave1:
-                nueva_clave = validar_clave_segura(clave1)
-                if nueva_clave:
+        clave_valida_recuperada, mensaje_clave_r = validar_clave_segura(clave1)
+        if clave_valida_recuperada:
+            
+            if clave1 and clave2:
+                if clave2 == clave1:
                     guardar_nueva_clave(frame, usuario, clave1)
+                else:
+                    messagebox.showerror("⚠️ Error", "Las claves deben ser iguales en ambos campos.")
             else:
-                messagebox.showerror("⚠️ Error", "Las claves deben ser iguales en ambos campos.")
-        else:
-            messagebox.showerror("⚠️ Error", "Por favor, completa ambos campos.")
-    
+                messagebox.showerror("⚠️ Error", "Por favor, completa ambos campos.")
+            
+            
     def guardar_nueva_clave(frame, usuario, nueva_clave):
         
         if nueva_clave:
-            recuperada, mensaje = restablecer_clave(usuario, nueva_clave)
+            recuperada, mensaje = db_connect.restablecer_clave(usuario, nueva_clave)
             
             if recuperada:
                 messagebox.showinfo("Proceso exitoso", mensaje)

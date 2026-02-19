@@ -122,7 +122,7 @@ class VentanaVentas:
         self.boton_nueva_venta = crear_boton(
             self.frame_botones,
             texto="Limpiar Ventana",
-            ancho=30,
+            ancho=20,
             alto=30,
             color_fondo="#C73208",                
             color_texto="white",
@@ -139,7 +139,7 @@ class VentanaVentas:
         self.boton_eliminar = crear_boton(
             self.frame_botones,
             texto="Eliminar Producto",
-            ancho=30,
+            ancho=20,
             alto=30,
             color_fondo="#913131",                
             color_texto="white",
@@ -258,7 +258,7 @@ class VentanaVentas:
         # Botón para generar factura
         self.boton_generar_factura = crear_boton(self.frame_botones, 
                     texto="Generar Factura",
-                    ancho=30,
+                    ancho=20,
                     alto=30,
                     color_fondo="#EC631F",                
                     color_texto="white",
@@ -273,7 +273,7 @@ class VentanaVentas:
         # Botón para generar nota de entrega
         self.boton_generar_nota_entrega = crear_boton(self.frame_botones, 
                     texto="Generar Nota de Entrega", 
-                    ancho=30,
+                    ancho=20,
                     alto=30,
                     color_fondo="#E6A345",                
                     color_texto="white",
@@ -288,7 +288,7 @@ class VentanaVentas:
         self.boton_cancelar = crear_boton(
             self.frame_botones,
             texto="Cancelar",
-            ancho=30,
+            ancho=20,
             alto=30,
             color_fondo="#913131",                
             color_texto="white",

@@ -1,12 +1,14 @@
 # registrar_nuevo_proveedor.py
 
-from db import insertar_proveedor, obtener_id_proveedor_por_nombre
+from db import obtener_id_proveedor_por_nombre
 from menus import ingresar_inventario
 import tkinter as tk
 from tkinter import messagebox
 from recursos import crear_boton
+from databasemanager import DataBaseManager
 
 
+db_connect = DataBaseManager()
 def nuevo_proveedor(root, imagen_panel_tk, volver_menu):
     # Limpiar ventana
     for widget in root.winfo_children():
@@ -94,13 +96,14 @@ def nuevo_proveedor(root, imagen_panel_tk, volver_menu):
 
     def guardar_y_comprobar():
         # 1. Primero, inserta el proveedor
-        insertar_proveedor(
+        id_nuevo_proveedor = db_connect.insertar_proveedor(
             nombre_entry.get(),
             contacto_entry.get(),
             telefono_entry.get(),
             email_entry.get(),
             direccion_entry.get(),
         )
+        print(f"El ID del nuevo Proveedor es: {id_nuevo_proveedor}")
         # 2. Luego, comprueba si se guardó
         comprobacion_registro(nombre_entry.get(), frame, volver_menu)
 

@@ -3,15 +3,25 @@
 import tkinter as tk
 from tkinter import messagebox
 from inventario import ingresar_inventario
-from productos import crear_producto
+#from productos import crear_producto
 from busqueda import busqueda_articulos #menu_buscar_articulo, formulario_buscar_por_proveedor, formulario_buscar_por_factura, formulario_buscar_por_codigo, formulario_buscar_por_articulo
 from registrar_nuevo_proveedor import nuevo_proveedor
 from incrementar_productos_inventario import VentanaIncrementarStock
 from recursos import crear_boton
-
+from productManager import ProductoManager
 
 # menus.py
-def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
+def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario):
+    crear_producto = ProductoManager(root, imagen_panel_tk, mostrar_menu_principal)
+    
+    def usuario_actual_main(usuario):
+        """Obtiene el usuario actual y su ID."""
+        nombre_usuario_creador = usuario
+        print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
+        if nombre_usuario_creador:
+            crear_producto.usuario_actual(nombre_usuario_creador)
+    
+    usuario_actual_main(usuario)
     
     # Limpiar el frame de cualquier contenido
     for widget in root.winfo_children():
@@ -65,7 +75,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
         
         ).pack(pady=15)
         crear_boton(
@@ -80,7 +90,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: crear_producto(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: crear_producto.crear_producto()#(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
         
         ).pack(pady=15)
         crear_boton(
@@ -95,7 +105,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
         ).pack(pady=15)
         crear_boton(
@@ -110,7 +120,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: VentanaIncrementarStock(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: VentanaIncrementarStock(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
         ).pack(pady=15)
         crear_boton(
@@ -156,7 +166,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
         ).pack(pady=15)
         
@@ -188,7 +198,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
         ).pack(pady=15)
         
@@ -206,6 +216,6 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             #bg=0,
             comando=mostrar_menu_principal,
-           
+            
         ).pack(side=tk.LEFT, padx=30, pady=40)
-    
+            

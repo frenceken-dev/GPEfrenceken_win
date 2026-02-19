@@ -2,7 +2,7 @@
 from tkinter import messagebox
 import hashlib
 import getpass  # Para ocultar la clave al ingresarla
-from db import validar_credenciales
+#from db import validar_credenciales  # No Esta en uso
 
 # Base de datos simulada (en un programa real, usa SQLite o un archivo cifrado)
 usuarios = {}  # Formato: {usuario: {"hash_clave": "...", "pregunta": "...", "respuesta": "..."}}

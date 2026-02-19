@@ -75,7 +75,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
     
     # Función para registrar el producto en la base de datos
     def registrar_producto():
-        global materiales_usados # Colocada para pruebas.
+        #global materiales_usados # Colocada para pruebas.
         nonlocal codigo_producto, nombre_producto, tipo_producto, tiempo_fabricacion, precio_venta
         
         codigo_producto = codigo_entry.get()
@@ -216,7 +216,7 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         
     # Función para ingresar materiales
     def ingresar_materiales():
-        global materiales_usados # Colocado para pruebas
+        #global materiales_usados # Colocado para pruebas
         nonlocal costo_produccion
         material_window = tk.Toplevel(root)
         configurar_toplevel(material_window, titulo="Ingresar Materiales", ancho_min=380, alto_min=300, color_fondo="#101113")
@@ -936,6 +936,8 @@ def crear_producto(root, imagen_panel_tk, volver_menu):
         
     ).grid(row=13, column=1, pady=5)
     
+    
+        
 # Calcula el costo de un producto.
 def calcular_costo_producto(materiales_usados):
     costo_total = 0.0

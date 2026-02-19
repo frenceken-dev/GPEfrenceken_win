@@ -9,7 +9,7 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
 from menus import menu_gestion_inventario
 from busqueda import busqueda_articulos
-from db import validar_clave, obtener_nombres_usuarios, verificar_stock_bajo, recuperar_clave, recuperar_pregunta_seguridad
+from db import obtener_nombres_usuarios, verificar_stock_bajo
 from gestion_usuarios import gestion_usuarios, actualizar_clave
 from costos_ganancias import abrir_modulo_costos_ganancias
 from crea_factura_nota_entrega import VentanaVentas
@@ -17,14 +17,16 @@ from eliminar_datos import eliminar_datos
 from info_tienda import info_tienda
 from recursos import LOGO_PATH, IMAGEN_BUSQUEDA_PATH, crear_boton, configurar_toplevel, redimensionar_imagen
 from alerta_stock import VentanaConfigurarUmbrales
-from productos import usuario_actual
+#from productos import usuario_actual
+from databasemanager import DataBaseManager
 
 
+db_connect = DataBaseManager()
 class PantallaPrincipal:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistema de Inventario")
-
+        
         # Configuración de ventana
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -45,7 +47,7 @@ class PantallaPrincipal:
 
         # Mostrar pantalla de login
         self.pantalla_login()
-
+        
         # Vincular ajuste dinámico de imágenes
         #self.root.bind("<Configure>", self.ajustar_imagenes)
 
@@ -63,6 +65,7 @@ class PantallaPrincipal:
 
     def pantalla_login(self):
         """Pantalla de inicio de sesión."""
+
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -89,7 +92,7 @@ class PantallaPrincipal:
         def recupera_clave():
             self.usuario = usuario_combobox.get()
             
-            pregunta, mensaje = recuperar_pregunta_seguridad(self.usuario)
+            pregunta, mensaje = db_connect.recuperar_pregunta_seguridad(self.usuario)
             if pregunta is False:
                 messagebox.showinfo("Información", mensaje)
                 return 
@@ -112,7 +115,8 @@ class PantallaPrincipal:
             respuesta_entry.grid(row=2, column=0, padx=5, pady=5)
             
             def mediador(frame, usuario, respuesta):
-                respuesta_seguridad, mensaje = recuperar_clave(usuario, respuesta)
+                respuesta_seguridad, mensaje = db_connect.recuperar_clave(usuario, respuesta)
+                
                 if respuesta_seguridad:
                     for widget in frame.winfo_children():
                         widget.destroy()
@@ -122,7 +126,7 @@ class PantallaPrincipal:
                     
             crear_boton(frame_clave_olvidada, 
                     texto="Enviar respuesta",
-                    ancho=30,
+                    ancho=20,
                     alto=30,
                     color_fondo="#4B82F0",                
                     color_texto="white",
@@ -139,10 +143,10 @@ class PantallaPrincipal:
             try:
                 self.usuario = usuario_combobox.get()
                 self.contraseña = contrasena_entry.get()
-                es_valido, self.rol, mensaje = validar_clave(self.usuario, self.contraseña)
+                es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
                 print(f"El ROL es: {self.rol}")
                 # Enviar el usuario actual a producto para guardar borrador de creación de producto
-                usuario_actual(self.usuario)
+                
             except tk.TclError:
                 print("⚠️ El combobox ya no existe. No se puede leer el usuario.")
                 return
@@ -287,6 +291,16 @@ class PantallaPrincipal:
         ).pack(pady=10)
             
     
+    def salir_programa(self):
+        db_connect.close()
+        self.root.quit()
+        
+        
+    def on_closing(self):
+        if messagebox.askokcancel("Salir", "¿Deseas salir del programa?"):
+            self.salir_programa()  # Reutilizar la función salir_programa
+            
+            
     def mostrar_menu_principal(self):
         self.root.unbind("<Return>")
 
@@ -350,7 +364,7 @@ class PantallaPrincipal:
                 font=("Arial", 11, "bold"),
                 hover_color="#2ECC71",
                 #activeforeground="white",
-                comando=lambda: menu_gestion_inventario(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk),
+                comando=lambda: menu_gestion_inventario(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk, self.usuario),
             ).pack(pady=10)
             crear_boton(
                 frame_botones,
@@ -408,7 +422,7 @@ class PantallaPrincipal:
                 hover_color="#222423",
                 #activeforeground="black",
                 #bg=0,
-                comando=self.root.quit,
+                comando=self.on_closing
                 
             ).pack(pady=100)
         
@@ -490,7 +504,9 @@ class PantallaPrincipal:
         else:
             tk.Label(frame_imagen, text="Ikigai Designs", font=("Arial", 24), bg="#a0b9f0").pack(pady=20)
         
-
+        # Asociar la función on_closing al evento de cierre de la ventana
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
 # Inicializador de la App.
 if __name__ == "__main__":
     root = tk.Tk()
