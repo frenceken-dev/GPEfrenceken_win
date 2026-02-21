@@ -1,11 +1,14 @@
 # eliminar_datos.py
 import tkinter as tk
 from tkinter import messagebox, ttk
-from db import obtener_proveedores, eliminar_proveedor_bd, obtener_materiales, eliminar_material_bd, obtener_productos, eliminar_producto_bd
+from db import eliminar_proveedor_bd, obtener_materiales, eliminar_material_bd, obtener_productos, eliminar_producto_bd
 from db import obtener_nombres_usuarios, eliminar_usuario_bd_nombre
 from PIL import Image, ImageTk
 from recursos import crear_boton
+from databasemanager import DataBaseManager
 
+# instacia de base de datos.
+db_connect = DataBaseManager()
 
 # Menu de selección para la eliminación
 def eliminar_datos(root, volver_menu, imagen_tk, imagen_panel_tk):
@@ -154,7 +157,7 @@ def eliminar_proveedor(root, volver_menu, imagen_tk, imagen_panel_tk):
     tk.Label(eliminar_proveedor_frame, text="Selecciona el proveedor a eliminar:", bg="#a0b9f0", font=("Arial", 12)).pack(pady=10)
 
     # Obtener los nombres de los proveedores
-    proveedores = obtener_proveedores()
+    proveedores = db_connect.obtener_proveedores()
 
     proveedor_combobox = ttk.Combobox(eliminar_proveedor_frame, values=proveedores, width=30)
     proveedor_combobox.pack(pady=5)

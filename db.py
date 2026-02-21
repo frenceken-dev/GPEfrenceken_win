@@ -13,7 +13,7 @@ def init_db():
     pass
     
 
-# Registrar un nuevo Proveedor.
+# Registrar un nuevo Proveedor. INCORPORADO AL NUMEVO MODULO.
 # def insertar_proveedor(nombre, contacto, telefono, email, direccion):
 #     conn = sqlite3.connect(db_path)
 #     cursor = conn.cursor()

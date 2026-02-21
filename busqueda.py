@@ -659,7 +659,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             #relief=tk.FLAT,
             hover_color="#75EC57",
             #activeforeground="black",
-            comando=imprimir_resultados
+            comando=actualizar_datos
         )
         boton_guardar.pack(pady=20)
 

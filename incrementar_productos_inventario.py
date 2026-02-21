@@ -1,7 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import obtener_productos, incrementar_stock_producto
+from db import obtener_productos#, incrementar_stock_producto
 from recursos import LOGO_PATH, crear_boton
+from databasemanager import DataBaseManager
+
+# instacia db
+db_connect = DataBaseManager()
 
 class VentanaIncrementarStock:
     def __init__(self, root, imagen_panel_tk, volver_menu):
@@ -96,7 +100,9 @@ class VentanaIncrementarStock:
 
     def cargar_productos(self):
         productos = obtener_productos()
-        self.combobox_productos['values'] = [f"{producto[0]} - {producto[1]}" for producto in productos]
+        self.combobox_productos['values'] = [f"{producto[2]} - {producto[1]}" for producto in productos]
+        # Asumiendo que producto[2] es el código único y producto[1] es el nombre
+        
 
     def incrementar_stock(self):
         producto_seleccionado = self.combobox_productos.get()
@@ -110,7 +116,34 @@ class VentanaIncrementarStock:
             messagebox.showerror("⚠️ Error", "Debe ingresar una cantidad válida.")
             return
 
-        id_producto = int(producto_seleccionado.split(" - ")[0])
+        # Extraer el código único del producto
+        print(f"DEBUG ANTES DE .split() Producto Seleccionado: {producto_seleccionado}")
+        codigo_unico = producto_seleccionado.split("-")[1].strip()
+        print(f"DEBUG DESPUES DE .split() Producto Seleccionado: '{producto_seleccionado}' de tipo {type(producto_seleccionado)}")
+        id_producto = db_connect.obtener_id_producto_por_codigo(codigo_unico)
         cantidad = int(cantidad)
 
-        incrementar_stock_producto(id_producto, cantidad)
+        # Obtener materiales requeridos (usando tu tabla "detalle")
+        print(f"DEBUG id producto enviado a obtener materiales: {id_producto}")
+        materiales_requeridos = db_connect.obtener_materiales_por_producto(id_producto)
+
+        # Verificar stock suficiente
+        print(f"DEBUG: material = {materiales_requeridos}")  # Verifica si es un diccionario o una lista/tupla
+
+        for material in materiales_requeridos:
+            stock_disponible = material["stock"]  # Stock actual del material
+            cantidad_requerida_por_producto = material["cantidad"]  # Cantidad necesaria por producto
+            cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad  # Cantidad total a descontar
+
+            print(f"DEBUG: Material {material['nombre']} - Stock disponible: {stock_disponible}, Cantidad a descontar: {cantidad_total_a_descontar}")
+
+            if stock_disponible < cantidad_total_a_descontar:
+                messagebox.showerror("⚠️ Error", f"No hay suficiente stock del material {material['nombre']} Código -> {material["codigo"]}.")
+                return
+
+        # Descontar materiales
+        db_connect.descontar_materiales(materiales_requeridos, cantidad)
+
+        # Incrementar stock del producto
+        db_connect.incrementar_stock_producto(id_producto, cantidad)
+        messagebox.showinfo("✅ Éxito", "Stock incrementado y materiales descontados correctamente.")

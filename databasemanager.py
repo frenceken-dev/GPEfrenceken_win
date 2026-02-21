@@ -465,9 +465,8 @@ class DataBaseManager():
         Returns:
             Union[int, None]: ID de la factura o None si no se encuentra.
         """
-        query = """
-            SELECT numero_factura FROM Facturas WHERE id_proveedor = ?
-        """
+        query = "SELECT numero_factura FROM Facturas WHERE id_proveedor = ?"
+        
         resultado = self.select(query, (id_proveedor, f"%{numero_factura}%"), fetch_one=True)
         return resultado.get("id_factura") if resultado else None
 
@@ -704,3 +703,161 @@ class DataBaseManager():
         id_nuevo_usuario = self.insert("Proveedores", nuevo_proveedor)
         
         return id_nuevo_usuario
+    
+    
+    def obtener_proveedores(self) -> List[Dict[str, any]]:
+        """Devuelve los proveedores existentes.
+
+        Returns:
+            list[dict[str, any]]: 
+            - Devuelve una lista con los proveedores en un dict.
+        """
+        query = 'SELECT nombre FROM Proveedores'
+        proveedores_db = self.select(query)
+        
+        # Iteración para recuperar a todos los proveedores
+        proveedores = [proveedor["nombre"] for proveedor in proveedores_db]
+        
+        return proveedores
+    
+    #######################################################################################################################
+    ############################################ SECCIÓN INCREMENTO DE PRODUCTOS ##########################################
+    #######################################################################################################################
+
+    
+    def obtener_id_producto_por_codigo(self, codigo_unico) -> List[Dict[str, any]]:
+        """
+        Se obtiene el Id del producto que se quiere incrementar.
+
+        Args:
+            codigo_unico (str): 
+            - ID del producto 
+
+        Returns:
+            List[Dict[str, any]]: 
+            - Devuelve una lista de diccionarios
+        """
+        print(f"DEBUG Código del producto recibido: {codigo_unico}")
+        query = "SELECT id_producto FROM Productos WHERE codigo = ?"
+        
+        resultado = self.select(query, (codigo_unico,))
+        
+        # Extraer el primer id_producto (asumiendo que hay solo uno)
+        if resultado:
+            id_producto = resultado[0]["id_producto"]
+            print(f"DEBUG ID del producto obtenido: {id_producto}")
+            return id_producto
+        else:
+            print("DEBUG: No se encontró ningún producto con ese código.")
+            return None
+    
+    
+    def obtener_materiales_por_producto(self, id_producto):
+        """Devuelve los materiales asociados a un producto específico.
+
+        Args:
+            id_producto (int): ID del producto.
+
+        Returns:
+            list[dict[str, any]]:
+            - Devuelve una lista de diccionarios con los materiales del producto.
+        """
+        query = """
+            SELECT m.id_material, m.codigo, m.nombre, d.cantidad, m.stock
+            FROM Materiales m
+            JOIN Detalle_Producto d ON m.id_material = d.id_material
+            WHERE d.id_producto = ?
+        """
+        print(f"DEBUG: id_producto recibido = {id_producto}")  # Verificar el valor de id_producto
+        materiales = self.select(query, (id_producto,))
+        return materiales
+    
+    
+    def descontar_materiales(self, materiales_requeridos, cantidad_a_fabricar) -> bool:
+        """
+        Descarta la cantidad de material del inventario.
+
+        Args:
+            materiales_requeridos (list): Lista de materiales usados en un producto.
+            cantidad_a_fabricar (int): Cantidad de productos nuevos a fabricar.
+
+        Returns:
+            bool:
+                - Retorna True si todas las actualizaciones fueron exitosas.
+                - Retorna False si existe algún error en alguna actualización.
+        """
+        print(f"DEBUG: materiales_requeridos = {materiales_requeridos}")
+        print(f"DEBUG: cantidad_a_fabricar = {cantidad_a_fabricar}")
+
+        try:
+            for material in materiales_requeridos:
+                id_material = material["id_material"]
+                cantidad_requerida_por_producto = material["cantidad"]
+                cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
+                stock_actual = material["stock"]  # Usar el stock obtenido en la consulta inicial
+
+                print(f"DEBUG: Descontando {cantidad_total_a_descontar} unidades del material {material['nombre']} (Stock actual: {stock_actual})")
+
+                # Verificar que no se vaya a valores negativos
+                if stock_actual < cantidad_total_a_descontar:
+                    print(f"Error: No hay suficiente stock del material {material['nombre']}.")
+                    return False
+
+                nuevo_stock = stock_actual - cantidad_total_a_descontar
+
+                # Actualizar el stock del material
+                exito = self.update(
+                    table="Materiales",
+                    updates={"stock": nuevo_stock},
+                    where_condition="id_material = ?",
+                    where_params=(id_material,)
+                )
+
+                if not exito:
+                    print(f"Error al actualizar el stock del material {material['nombre']}.")
+                    return False
+
+            return True  # Retornar True solo después de procesar todos los materiales
+
+        except Exception as e:
+            print(f"Error al descontar materiales: {e}")
+            return False
+
+        
+    def incrementar_stock_producto(self, id_producto, cantidad) -> bool:
+        """
+        Realiza el incremento del stock de un producto.
+
+        Args:
+            id_producto (int): ID único del producto.
+            cantidad (int): Cantidad a incrementar.
+
+        Returns:
+            bool:
+                - Retorna True si la actualización fue exitosa.
+                - Retorna False si existe algún error.
+        """
+        # Obtener la cantidad actual del producto
+        cantidad_actual = self.select(
+            "SELECT cantidad FROM Productos WHERE id_producto = ?",
+            (id_producto,),
+            fetch_one=True
+        )
+
+        if cantidad_actual is None:
+            return False
+
+        nueva_cantidad = cantidad_actual["cantidad"] + cantidad
+
+        # Actualizar la cantidad del producto
+        exito = self.update(
+            table="Productos",
+            updates={"cantidad": nueva_cantidad},
+            where_condition="id_producto = ?",
+            where_params=(id_producto,)
+        )
+
+        return exito
+
+
+

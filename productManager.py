@@ -464,10 +464,39 @@ class ProductoManager:
         crear_boton(frame_btn, texto="Eliminar", ancho=20, alto=30, color_fondo="#913131", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=eliminar).pack(side=tk.LEFT, padx=5)
         crear_boton(frame_btn, texto="Cerrar", ancho=20, alto=30, color_fondo="#555555", color_texto="white", font=("Arial", 11, "bold"), hover_color="#777777", comando=cerrar).pack(side=tk.RIGHT, padx=5)
 
+
+    def limitar_texto(self, texto, limite=20):
+        """Limitara la cantidad de caracteres dentro de una columna de borradores pendientes."""
+        if len(texto) > limite:
+            return texto[:limite] + "..."
+        return texto
+    
+    
+    def mostrar_contenido_completo(self, texto, titulo="Información completa"):
+        """Mostrará el contenido completo en una ventana emergente si es mayor que el límite al hacer clic."""
+        informacion_completa = tk.Toplevel(self.root)
+        informacion_completa.title(titulo)
+        informacion_completa.geometry("400x200")
+
+        def cerrar_toplevel():
+            informacion_completa.grab_release() 
+            informacion_completa.destroy()
+
+        texto_label = tk.Label(informacion_completa, text=texto, wraplength=380, justify=tk.LEFT)
+        texto_label.pack(padx=10, pady=10)
+
+        btn_cerrar = tk.Button(informacion_completa, text="Cerrar", command=cerrar_toplevel)
+        btn_cerrar.pack(pady=10)
+        
+        # Forzar a Tkinter a dibujar la ventana antes de establecer el grab
+        informacion_completa.update_idletasks()
+        informacion_completa.grab_set()
+
+
     def mostrar_borradores_pendientes(self):
         """Muestra una ventana con los borradores pendientes."""
         borradores_window = tk.Toplevel(self.root)
-        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=1100, alto_min=300, color_fondo="#101113")
+        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=840, alto_min=300, color_fondo="#101113")
         
         # Crear un frame principal para el Canvas y el Scrollbar
         borradores_main = tk.Frame(borradores_window)
@@ -489,28 +518,30 @@ class ProductoManager:
         canvas.create_window((0,0), window=borradores_frame, anchor="nw")
         
         borradores = borradores_pendientes()
-
-        tk.Label(borradores_frame, text="ID", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Código", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Creador", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Tipo", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=3, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Tiempo Fab.", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=4, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Cantidad", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=5, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Descripción", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=6, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Fecha ini.", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=7, padx=5, pady=5, sticky="nsew")
-        tk.Label(borradores_frame, text="Acciones", font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=8, padx=5, pady=5, sticky="nsew")
+        
+        # Encabezados
+        encabezados = ["ID", "Código", "Creador", "Tipo", "Tiempo Fab.", "Cantidad", "Descripción", "Fecha ini.", "Acciones"]
+        for col, encabezado in enumerate(encabezados):
+            tk.Label(borradores_frame, text=encabezado, font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=col, padx=5, pady=5, sticky="nsew")
 
         for i, borrador in enumerate(borradores):
-            tk.Label(borradores_frame, text=borrador[0], bg="#101113", fg="#ffffff").grid(row=i+1, column=0, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[1], bg="#101113", fg="#ffffff").grid(row=i+1, column=1, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[2], bg="#101113", fg="#ffffff").grid(row=i+1, column=2, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[3], bg="#101113", fg="#ffffff").grid(row=i+1, column=3, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[4], bg="#101113", fg="#ffffff").grid(row=i+1, column=4, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[5], bg="#101113", fg="#ffffff").grid(row=i+1, column=5, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[6], bg="#101113", fg="#ffffff").grid(row=i+1, column=6, padx=5, pady=5)
-            tk.Label(borradores_frame, text=borrador[7], bg="#101113", fg="#ffffff").grid(row=i+1, column=7, padx=5, pady=5)
-            tk.Button(borradores_frame, text="Cargar", bg="#4B82F0", fg="#101113", command=lambda id=borrador[0]: self.cargar_borrador(id, borradores_window)).grid(row=i+1, column=8, padx=5, pady=5)
+            # Mostrar los datos en las columnas 0 a 7
+            for j in range(len(borrador) - 1):  # Solo hasta la penúltima columna
+                texto_limitado = self.limitar_texto(str(borrador[j]))
+                label = tk.Label(borradores_frame, text=texto_limitado, bg="#101113", fg="#ffffff", cursor="hand2")
+                label.grid(row=i+1, column=j, padx=5, pady=5, sticky="nsew")
+                label.bind("<Button-1>", lambda e, txt=borrador[j]: self.mostrar_contenido_completo(txt))
 
+            # Botón "Cargar" en la última columna
+            btn_cargar = tk.Button(borradores_frame, text="Cargar", bg="#4B82F0", fg="#101113",
+                                command=lambda id=borrador[0]: self.cargar_borrador(id, borradores_window))
+            btn_cargar.grid(row=i+1, column=8, padx=5, pady=5)
+
+        # Configurar el peso de las columnas para que se ajusten al contenido
+        for col in range(len(encabezados)):
+            borradores_frame.columnconfigure(col, weight=1)
+        
+        
     def cargar_borrador(self, borrador_id, borradores_window):
         """Carga un borrador seleccionado."""
         borrador = cargar_borrador_db(borrador_id)
