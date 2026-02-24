@@ -117,19 +117,14 @@ class VentanaIncrementarStock:
             return
 
         # Extraer el código único del producto
-        print(f"DEBUG ANTES DE .split() Producto Seleccionado: {producto_seleccionado}")
         codigo_unico = producto_seleccionado.split("-")[1].strip()
-        print(f"DEBUG DESPUES DE .split() Producto Seleccionado: '{producto_seleccionado}' de tipo {type(producto_seleccionado)}")
         id_producto = db_connect.obtener_id_producto_por_codigo(codigo_unico)
         cantidad = int(cantidad)
 
         # Obtener materiales requeridos (usando tu tabla "detalle")
-        print(f"DEBUG id producto enviado a obtener materiales: {id_producto}")
         materiales_requeridos = db_connect.obtener_materiales_por_producto(id_producto)
 
         # Verificar stock suficiente
-        print(f"DEBUG: material = {materiales_requeridos}")  # Verifica si es un diccionario o una lista/tupla
-
         for material in materiales_requeridos:
             stock_disponible = material["stock"]  # Stock actual del material
             cantidad_requerida_por_producto = material["cantidad"]  # Cantidad necesaria por producto

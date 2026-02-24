@@ -46,7 +46,7 @@ def obtener_id_proveedor_por_nombre(nombre_proveedor):
     resultado = cursor.fetchone()
     conn.commit()
     conn.close()
-    return resultado if resultado else None
+    return resultado[0] if resultado else None
 
 
 # Obtener ID de la Factura por su numero. 
@@ -83,15 +83,16 @@ def obtener_id_producto_por_codigo(codigo):
 
 
 def codigo_existe(codigo):
-    # Aquí debes implementar la consulta a tu base de datos
-    # Ejemplo con SQLite:
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT codigo FROM materiales WHERE codigo=?", (codigo,))
     existe = cursor.fetchone() is not None
-    conn.close()
-    return existe
+    if existe:
+        return True
+    else:
+        return False
 
+# SE IMPLEMENTO EN EL NUEVO MODULO.
 def obtener_codigo_materiales():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -107,13 +108,16 @@ def insertar_material(codigo, nombre, tipo, tamaño, color, stock, precio, costo
     try:
     # Obtener el id_proveedor usando el nombre
         #id_proveedor = obtener_id_proveedor_por_nombre(nombre)
+        print(f"Valores a insertar: {codigo}, {nombre}, {tipo}, {tamaño}, {color}, {stock}, {precio}, {costo_unitario}, {id_proveedor}")  # Depuración
         
         cursor.execute('''
             INSERT INTO Materiales (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor))
         conn.commit()
+        print("Material insertado correctamente.")  # Depuración
     except Exception as e:
+        print(f"Error al insertar material: {e}")  # Depuración
         conn.rollback()
     finally:
         conn.close()
@@ -124,24 +128,36 @@ def insertar_factura(numero_factura, fecha, nombre_proveedor):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    print(f"Dato de tipo {type(numero_factura)}: {numero_factura}")
+    print(f"Dato de tipo {type(fecha)}: {fecha}")
+    print(f"Dato de tipo {type(nombre_proveedor)}: {nombre_proveedor}")
+
     # Obtener el id_proveedor usando el nombre
     id_proveedor = obtener_id_proveedor_por_nombre(nombre_proveedor)
+    print(f"ID del proveedor (antes de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
 
     # Si el proveedor no existe, crear uno nuevo
     if id_proveedor is None:
-        # Aquí podrías pedir más detalles del proveedor, pero por simplicidad, solo usamos el nombre
         cursor.execute('''
             INSERT INTO Proveedores (nombre)
             VALUES (?)
         ''', (nombre_proveedor,))
         conn.commit()
-        id_proveedor = cursor.lastrowid  # Obtener el id del proveedor recién insertado
+        id_proveedor = cursor.lastrowid  # Obtener el ID del proveedor recién insertado
+        print(f"ID del proveedor (después de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
 
     fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"Dato de tipo {type(fecha_registro)}: {fecha_registro}")
+
+    # Asegúrate de que id_proveedor sea un entero
+    if isinstance(id_proveedor, tuple):
+        id_proveedor = id_proveedor[0]
+
     cursor.execute('''
         INSERT INTO Facturas (numero_factura, fecha, fecha_registro, id_proveedor)
         VALUES (?, ?, ?, ?)
     ''', (numero_factura, fecha, fecha_registro, id_proveedor))
+
     conn.commit()
     conn.close()
     
@@ -281,7 +297,7 @@ def insertar_detalle_producto(id_producto, id_material, cantidad, tipo, tamaño)
     conn.close()
     
     
-# Obtener Materiales para creacion de producto.
+# Obtener Materiales para creacion de producto. SE IMPLEMENTO EN EL NUEVO MODULO.
 def obtener_materiales():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

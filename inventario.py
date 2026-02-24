@@ -13,7 +13,9 @@ from db import (
     codigo_existe
 )
 from recursos import crear_boton, configurar_toplevel, LOGO_PATH, redimensionar_imagen
+from databasemanager import DataBaseManager
 
+db_connect = DataBaseManager()
 
 # Variables globales para almacenar datos temporales
 materiales_temporales = []  # Lista para almacenar los materiales antes de guardar
@@ -205,6 +207,9 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
     
     # Función para validar campos obligatorios
     def agregar_material_temporal(frame_contenido, ):
+        # Obtener codigos de materiales.
+        cod_materiales = db_connect.obtener_codigo_materiales()
+        print(f"EL Códogo obtenido para el combobox es: {cod_materiales}")
         # Crear una ventana emergente para ingresar los datos del material
         material_window = tk.Toplevel(frame_contenido)
         configurar_toplevel(material_window, titulo="Agregar Material", ancho_min=300, alto_min=330, color_fondo="#101113")
@@ -212,7 +217,7 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
 
         # Campos para el material
         tk.Label(material_window, text="Código:", bg="#101113", fg="#ffffff").grid(row=0, column=0, padx=10, pady=5)
-        codigo_entry = tk.Entry(material_window)
+        codigo_entry = ttk.Combobox(material_window, values=cod_materiales, state="normal")
         codigo_entry.grid(row=0, column=1, padx=10, pady=5)
 
         tk.Label(material_window, text="Nombre:", bg="#101113", fg="#ffffff").grid(row=1, column=0, padx=10, pady=5)
@@ -239,6 +244,37 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
         precio_entry = tk.Entry(material_window)
         precio_entry.grid(row=6, column=1, padx=10, pady=5)
 
+        def filtrar_codigos_key(event):
+            # Filtrar los codigos por caracteres iniciales.
+            texto_actual = codigo_entry.get().upper()
+            codigos_filtrados = [codigo for codigo in cod_materiales if codigo.startswith(texto_actual)]
+            codigo_entry["values"] = codigos_filtrados
+        
+        def filtrar_codigos_postcommand():
+            texto_actual = codigo_entry.get().upper()
+            codigos_filtrados = [codigo for codigo in cod_materiales if codigo.startswith(texto_actual)]
+            codigo_entry["values"] = codigos_filtrados
+            
+        def auto_completar_entry(event):
+            # Si el Código existe y es seleccionado se auto completan los campos nombre, tipo, tamaño, color.
+            codigo = codigo_entry.get()
+            print(f"El Código que se manda es {codigo}")
+            nombre, tipo, tamaño, color = db_connect.obtener_materiales(codigo)
+            
+            if nombre or tipo or tamaño or color:
+                nombre_entry.delete(0, tk.END)
+                tipo_entry.delete(0, tk.END)
+                tamaño_entry.delete(0, tk.END)
+                color_entry.delete(0, tk.END)
+                
+                nombre_entry.insert(0, nombre)
+                tipo_entry.insert(0, tipo)
+                tamaño_entry.insert(0, tamaño)
+                color_entry.insert(0, color)
+        
+        codigo_entry["postcommand"] = filtrar_codigos_postcommand
+        codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
+        codigo_entry.bind("<KeyRelease>", lambda event : filtrar_codigos_key(event))
         
         # Comprobar que el codigo no este en la lista temporal
         def existe_codigo_lista_temporales(codigo):
@@ -286,8 +322,16 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
             }
             materiales_temporales.append(material)
             messagebox.showinfo("Éxito", "Material agregado temporalmente.")
+            
             material_window.destroy()
 
+        def borrar_campos():
+            # Borrar los campos nombre, tipo, tamaño, color.
+            nombre_entry.delete(0, tk.END)
+            tipo_entry.delete(0, tk.END)
+            tamaño_entry.delete(0, tk.END)
+            color_entry.delete(0, tk.END)
+            
         # Botón para guardar el material
         boton_guardar_material = crear_boton(
         material_window,
@@ -304,23 +348,27 @@ def ingresar_inventario(root, imagen_panel_tk, volver_menu):
         comando=guardar_material
     )
         boton_guardar_material.grid(row=7, column=0, columnspan=2, padx=15, pady=10)
+        
+        boton_borrar_camos = crear_boton(
+        material_window,
+        texto="Borrar Materiales",
+        ancho=30,
+        alto=30,
+        color_fondo="#fa4242",                
+        color_texto="white",
+        font=("Arial", 11, "bold"),
+        #bd=0,
+        #relief=tk.FLAT,
+        hover_color="#252525",
+        #activeforeground="black",
+        comando=borrar_campos
+    )
+        boton_borrar_camos.grid(row=8, column=0, columnspan=2, padx=15, pady=10)
 
 
 def validar_campos_obligatorios(proveedor, num_factura, fecha):
     return proveedor.strip() != "" and num_factura.strip() != "" and fecha.strip() != ""
 
-
-# Función para actualizar el estado de los botones
-# def actualizar_estado_botones(proveedor, num_factura, fecha, btn_agregar_material, btn_mostrar_datos, btn_guardar_factura):
-    
-#     if validar_campos_obligatorios(proveedor, num_factura, fecha):
-#         btn_agregar_material.config(state=tk.NORMAL)
-#         btn_mostrar_datos.config(state=tk.NORMAL)
-#         btn_guardar_factura.config(state=tk.NORMAL)
-#     else:
-#         btn_agregar_material.config(state=tk.DISABLED)
-#         btn_mostrar_datos.config(state=tk.DISABLED)
-#         btn_guardar_factura.config(state=tk.DISABLED)
 
 def actualizar_estado_botones(proveedor, num_factura, fecha, btn_agregar_material, btn_mostrar_datos, btn_guardar_factura):
     estado_activo = validar_campos_obligatorios(proveedor, num_factura, fecha)
@@ -352,11 +400,11 @@ def guardar_factura_y_materiales(frame_contenido):
         messagebox.showerror("⚠️ Error", "Faltan datos de la factura (proveedor, número o fecha).")
         return
 
-    # Validar que haya al menos un material ingresado
+    # Validar que haya al menos un material ingresado el tipo de valor es List
     if not materiales_temporales:
         messagebox.showerror("⚠️ Error", "No se han ingresado materiales.")
         return
-    
+
     try:
         # 1. Guardar la factura en la base de datos
         insertar_factura(
@@ -398,7 +446,7 @@ def guardar_factura_y_materiales(frame_contenido):
             # Verificar que id_material no sea None
             if id_material is not None:
                 # Insertar en Detalle_Factura
-                print("Dentro del if para insertar_detalle_factura")
+                
                 insertar_detalle_factura(id_factura, id_material, material["stock"], material["precio"], material["costo_unitario"])
             else:
                 messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
@@ -610,7 +658,7 @@ def mostrar_datos_ingresados():
     boton_guardar = crear_boton(
         frame_botones,
         texto="Guardar Factura",
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#4283fa",                
         color_texto="white",
@@ -627,7 +675,7 @@ def mostrar_datos_ingresados():
     boton_eliminar = crear_boton(
         frame_botones,
         texto="Eliminar",
-        ancho=30,
+        ancho=20,
         alto=30,
         color_fondo="#4283fa",                
         color_texto="white",

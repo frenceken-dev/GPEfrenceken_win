@@ -9,10 +9,12 @@ from registrar_nuevo_proveedor import nuevo_proveedor
 from incrementar_productos_inventario import VentanaIncrementarStock
 from recursos import crear_boton
 from productManager import ProductoManager
+from inventarioManager import InventarioManager
 
 # menus.py
 def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario):
     crear_producto = ProductoManager(root, imagen_panel_tk, mostrar_menu_principal)
+    inventario_manager = InventarioManager(root, imagen_panel_tk, mostrar_menu_principal)
     
     def usuario_actual_main(usuario):
         """Obtiene el usuario actual y su ID."""
@@ -75,7 +77,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
+            comando=lambda: inventario_manager.iniciar_interfaz(),
         
         ).pack(pady=15)
         crear_boton(
@@ -166,8 +168,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: ingresar_inventario(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
-            
+            comando=lambda: inventario_manager.iniciar_interfaz(),            
         ).pack(pady=15)
         
         crear_boton(
@@ -182,8 +183,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: crear_producto(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
-        
+            comando=lambda: crear_producto.crear_producto()        
         ).pack(pady=15)
         
         crear_boton(

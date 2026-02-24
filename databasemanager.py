@@ -858,6 +858,85 @@ class DataBaseManager():
         )
 
         return exito
+    
+    #######################################################################################################################
+    ############################################ SECCIÓN INCREMENTO DE MATERIALES #########################################
+    #######################################################################################################################
 
+    def obtener_codigo_materiales(self) -> List[dict[str, Any]]:
+        """
+        Obtener los códigos de los Materiales.
 
+        Returns:
+            List[dict[str, Any]]: Lista de diccionario con los codigos
+        """
+        query = "SELECT codigo FROM materiales"
+        codigos = self.select(query)
+        
+        codigos_list = [codigo["codigo"] for codigo in codigos]
+        
+        if not codigos_list:
+            return codigos_list
+        
+        return codigos_list
+    
+    
+    def obtener_materiales(self, codigo) -> List[dict[str, Any]]:
+        """
+        Se obtiene el nombre, tipo, tamaño, color del material por el código actual.
 
+        Args:
+            codigo (str): Código del Material
+
+        Returns:
+            List[dict[str, Any]]:
+            - retorna un dict teniendo como clave el código actual y los valores antes mensionados
+        """
+        print(f"El Código que llega es: {codigo}")
+        query = 'SELECT nombre, tipo, tamaño, color FROM Materiales WHERE codigo = ?'
+        materiales = self.select(query, (codigo,))
+        
+        if not materiales:
+            # Error al consultar la base de datos.
+            print(f"No se encontraron materiales con el código: {codigo}")
+            return "", "", "", ""
+            
+        print(materiales) 
+        nombre = materiales[0]["nombre"]
+        tipo = materiales[0]["tipo"]
+        tamaño = materiales[0]["tamaño"]
+        color = materiales[0]["color"]
+        
+        return nombre, tipo, tamaño, color
+    
+    def actualizar_material(self, codigo, stock, precio, costo_unit) -> bool:
+        """
+        Actualiza el stock del material y el costo.
+
+        Returns:
+            bool:
+            - Retorna True para una operación exitosa
+            - Retorna False si la operación no tuvo éxito.
+        """
+        query = "SELECT stock FROM Materiales WHERE codigo = ?"
+        db_stock = self.select(query, (codigo,))
+        en_stock = db_stock[0]["stock"]
+        
+        nuevo_stock = en_stock + stock
+        print(f"suma inventeario {en_stock} + {stock} = {nuevo_stock}")
+        actualizar = self.update(
+            table= "Materiales",
+            updates= {"stock": nuevo_stock, "precio": precio, "costo_unitario": costo_unit},
+            where_condition= "codigo = ?",
+            where_params= (codigo,)
+        )
+        
+        if actualizar:
+            return True, "Factura agregada exitosamente, stock actualizado."
+        else:
+            return False, "No se pudo completar la operación."
+        
+
+if __name__ == "__main__":
+    probar = DataBaseManager()
+    probar.obtener_materiales()
