@@ -923,7 +923,7 @@ class DataBaseManager():
         en_stock = db_stock[0]["stock"]
         
         nuevo_stock = en_stock + stock
-        print(f"suma inventeario {en_stock} + {stock} = {nuevo_stock}")
+        
         actualizar = self.update(
             table= "Materiales",
             updates= {"stock": nuevo_stock, "precio": precio, "costo_unitario": costo_unit},
@@ -936,7 +936,140 @@ class DataBaseManager():
         else:
             return False, "No se pudo completar la operación."
         
+#######################################################################################################################
+################################################## SECCIÓN DE EMBALAJES ###############################################
+#######################################################################################################################
+
+    def insertar_empaque(self, codigo, nombre, tamaño, cantidad, precio, costo_unitario) -> int:
+        """Recibe la información de un material de empaque para insertarlo en la base de datos.
+
+        Args:
+            codigo (srt): Código unico.
+            nombre (str): Nombre del empaque
+            tama (str): descripción del tamaño.
+            cantidad (int): Cantidad disponible para insertar.
+            precio (float): El precio del embalaje.
+            costo_unitario (float): Precio por unidad.
+
+        Returns:
+            int: _description_
+        """
+        query = {
+            "codigo_emp": codigo,
+            "nombre_emp": nombre,
+            "tamaño_emp": tamaño,
+            "stock_emp": cantidad,
+            "precio_emp": precio,
+            "costo_unitario_emp": costo_unitario
+        }
+        
+        empaque_cod = self.insert("Empaques", query)
+        
+        if empaque_cod:
+            return True, "El Material de empaque se ha guradado exitosamente."
+        else:
+            return False, "No se pudo guardar el material de empaque."
+        
+    def selecion_empaques(self) -> List[Dict[str, Any]]:
+        """
+        Seleciona todos los tipos de empaque existentes.
+
+        Returns:
+            List[Dict[str, Any]]: retorna una lista de diccionarios con los tipos de empaques.
+        """
+        
+        query = "SELECT nombre_emp FROM Empaques"
+        
+        empaques = self.select(query)
+        
+        tipos_de_empaques = [empaque["nombre_emp"] for empaque in empaques]
+        print(tipos_de_empaques)
+        
+        return tipos_de_empaques
+        
+    def costo_embalaje(self, emp_list) -> List[Dict[str, Any]]:
+        # Filtrar solo los empaques que no están vacíos
+        empaques = [e for e in emp_list if e]
+
+        if not empaques:  # Si no hay empaques, devolver lista vacía
+            return []
+
+        # Crear la consulta con IN
+        placeholders = ", ".join(["?"] * len(empaques))  # Ej: "?, ?, ?"
+        query = f"""
+            SELECT stock_emp, costo_unitario_emp
+            FROM Empaques
+            WHERE nombre_emp IN ({placeholders})
+        """
+
+        datos = self.select(query, tuple(empaques))
+        
+        costos = [costo["costo_unitario_emp"] for costo in datos]
+        print(costos)
+        stock = [cantidad["stock_emp"] for cantidad in datos]
+        print(stock)
+        
+        costos_sum = sum(costos)
+        print(costos_sum)
+        return costos
+
+    def descontar_empaque(self, emp_list) -> bool:
+        """
+        Con los nombres se tomo el costo unitario y se retorna y se descuenta de inventario.
+
+        Args:
+            cantidad (list): - lista con los tipos de empaques.
+
+        Returns:
+            bool: 
+            - si se guarda y descuenta de inventario retorna True.
+            - si no retorna False.
+        """
+        # Filtrar solo los empaques que no están vacíos
+        empaques = [e for e in emp_list if e]
+        if not empaques:  # Si no hay empaques, devolver lista vacía
+            return []
+
+        # Crear la consulta con IN
+        placeholders = ", ".join(["?"] * len(empaques))  # Ej: "?, ?, ?"
+        query = f"""
+            SELECT stock_emp
+            FROM Empaques
+            WHERE nombre_emp IN ({placeholders})
+        """
+        stock_actual = self.select(query, tuple(empaques))
+        cantidad = 1
+        stock_db = [cant["stock_emp"] for cant in stock_actual]
+        empaques_sin_stock = []
+        for i, empaque in zip(stock_db, empaques):
+            if i < 1:
+                empaques_sin_stock.append(empaque)
+                continue
+            
+            nuevo_stock = i - cantidad
+            print(f"La resta es: {nuevo_stock}")
+                
+            self.update(
+                table="Empaques",
+                updates={"stock_emp": nuevo_stock},
+                where_condition="nombre_emp = ?",
+                where_params=(empaque,)  # Tupla con un solo elemento
+            )
+            print(f"Actualizado: {empaque}")
+        
+        # Notificar al usuario sobre los empaques faltantes
+        if empaques_sin_stock:
+            mensaje = (
+            "⚠️ Advertencia: Los siguientes empaques NO se descontaron por stock insuficiente:\n"
+            + "\n- ".join(empaques_sin_stock)
+            + "\n\nLos demás empaques se descontaron correctamente."
+            )
+            return False, mensaje
+        else:
+            return True, "✅ Todos los empaques se descontaron correctamente."
+        
+        
 
 if __name__ == "__main__":
     probar = DataBaseManager()
-    probar.obtener_materiales()
+    probar.descontar_empaque(["Bolsas Plasticas Peq.", "Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])

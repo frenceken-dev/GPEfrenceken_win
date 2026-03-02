@@ -180,17 +180,19 @@ def insertar_detalle_factura(id_factura, id_material, stock,  precio, costo_unit
     
     
 # Se registra un nuevo producto creado por Ikigai.
-def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion):
+def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion, empaque):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute('''
-        INSERT INTO Productos (codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (codigo, nombre, tipo, costo_producto, precio_venta, ", ".join(materiales_usados), tiempo_fabricacion, cantidad, fecha_registro, descripcion)) 
+        INSERT INTO Productos (codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaques)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (codigo, nombre, tipo, costo_producto, precio_venta, ", ".join(materiales_usados), tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaque)) 
     conn.commit()
     conn.close()
-    
+    """db.py", line 187, in insertar_producto
+    cursor.execute('''
+sqlite3.ProgrammingError: Error binding parameter 11: type 'list' is not supported"""
 
 def id_usuario_nombre_actual(nombre_usuario):
     # Recupera el id del usuario.
@@ -206,16 +208,26 @@ def id_usuario_nombre_actual(nombre_usuario):
     return resultados
 
 
-def guardar_borrador_db(usuario_actual_id, nombre_usuario_actual, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales_actuales):
+def guardar_borrador_db(usuario_actual_id, 
+                        nombre_usuario_actual, 
+                        codigo_producto, tipo_producto, 
+                        tiempo_invertido, cantidad_producida, 
+                        descripcion, materiales_actuales, 
+                        empaques):
     # Guardar en la base de datos
     print(f"Esto es lo que llega para guardar en el borrador: {usuario_actual_id}--{nombre_usuario_actual}")
+    print(f"Esto es lo que llega para guardar en el borrador: {codigo_producto}--{tipo_producto}")
+    print(f"Esto es lo que llega para guardar en el borrador: {tiempo_invertido}--{cantidad_producida}")
+    print(f"Esto es lo que llega para guardar en el borrador: {descripcion}--{materiales_actuales}")
+    print(f"Esto es lo que llega para guardar en el borrador: {empaques}")
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO productos_borrador
-            (usuario_creador_id, nombre_usuario_creador, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
+            (usuario_creador_id, nombre_usuario_creador, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales,
+            empaques, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
         ''', (
             usuario_actual_id,
             nombre_usuario_actual,
@@ -224,7 +236,8 @@ def guardar_borrador_db(usuario_actual_id, nombre_usuario_actual, codigo_product
             tiempo_invertido,
             cantidad_producida,
             descripcion,
-            str(materiales_actuales)
+            str(materiales_actuales),
+            empaques
         ))
         conn.commit()
         messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
@@ -272,13 +285,12 @@ def marcar_borrador_como_creado(codigo_borrador):
 
 # Carga el borrador seleccionado.
 def cargar_borrador_db(borrador_id):
+    print(f"EL ID BORRADOR ES: {borrador_id}")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales
-        FROM productos_borrador
-        WHERE id = ?
-    ''', (borrador_id,))
+        SELECT codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, 
+        materiales, empaques FROM productos_borrador WHERE id = ? ''', (borrador_id,))
     borrador = cursor.fetchone()
     conn.close()
     return borrador

@@ -437,7 +437,17 @@ class InventarioManager:
         frame_principal = ttk.Frame(ventana_datos, padding="10")
         frame_principal.pack(fill=tk.BOTH, expand=True)
 
-        tree = ttk.Treeview(frame_principal, columns=("Código", "Nombre", "Tipo", "Tamaño", "Color", "Cantidad", "Precio", "Precio Unitario"), show="headings")
+        style = ttk.Style()
+        style.configure("mystyle.Treeview", background="#101113", fieldbackground="#101113", foreground="#ffffff")
+        
+        tree = ttk.Treeview(frame_principal, columns=("Código",
+                                                    "Nombre", 
+                                                    "Tipo", 
+                                                    "Tamaño", 
+                                                    "Color", 
+                                                    "Cantidad", 
+                                                    "Precio", 
+                                                    "Precio Unitario"), show="headings", style="mystyle.Treeview")
 
         for col in tree["columns"]:
             tree.heading(col, text=col)

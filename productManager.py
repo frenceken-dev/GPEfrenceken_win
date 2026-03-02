@@ -1,4 +1,5 @@
 import tkinter as tk
+import json
 from tkinter import messagebox, simpledialog, ttk
 from db import (
     insertar_producto, obtener_materiales, actualizar_stock_material,
@@ -13,7 +14,9 @@ from db import (
 )
 from inventario import convertir_a_float
 from recursos import crear_boton, configurar_toplevel
+from databasemanager import DataBaseManager
 
+db_connect = DataBaseManager()
 class ProductoManager:
     """Clase para gestionar la creación, edición y visualización de productos."""
 
@@ -25,6 +28,7 @@ class ProductoManager:
         self.id_usuario_creador = None
         self.nombre_usuario_creador = None
         self.materiales_usados = []
+        self.empaques_seleccionados = []
         self.codigo_producto = ""
         self.nombre_producto = ""
         self.tipo_producto = ""
@@ -111,7 +115,7 @@ class ProductoManager:
         self.form_frame = tk.Frame(frame, bg="#a0b9f0", padx=20, pady=20)
         self.form_frame.place(relx=0.5, rely=0.1, anchor=tk.N)
 
-        # Campos del formulario
+        # Campos del formulario (usando grid)
         tk.Label(self.form_frame, text="Código del producto:", bg="#a0b9f0", anchor="w").grid(row=0, column=0, sticky="w", pady=1)
         self.codigo_entry = tk.Entry(self.form_frame, width=30)
         self.codigo_entry.grid(row=1, column=0, pady=5)
@@ -120,21 +124,54 @@ class ProductoManager:
         self.tipo_combobox = ttk.Combobox(self.form_frame, values=["pulsera", "collar", "aretes", "llavero"], width=28)
         self.tipo_combobox.grid(row=3, column=0, pady=5)
 
-        tk.Label(self.form_frame, text="Descripción:", bg="#a0b9f0").grid(row=8, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Descripción:", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
         self.descripcion_entry = tk.Entry(self.form_frame, width=30)
-        self.descripcion_entry.grid(row=9, column=0, pady=5)
+        self.descripcion_entry.grid(row=5, column=0, pady=5)
 
-        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=6, column=0, sticky="w", pady=1)
         self.tiempo_entry = tk.Entry(self.form_frame, width=30)
-        self.tiempo_entry.grid(row=5, column=0, pady=5)
+        self.tiempo_entry.grid(row=7, column=0, pady=5)
         self.tiempo_entry.insert(0, "5")
 
-        tk.Label(self.form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=6, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=8, column=0, sticky="w", pady=1)
         self.cantidad_creada_entry = tk.Entry(self.form_frame, width=30)
-        self.cantidad_creada_entry.grid(row=7, column=0, pady=5)
+        self.cantidad_creada_entry.grid(row=9, column=0, pady=5)
         self.cantidad_creada_entry.insert(0, "1")
 
-        # Botones
+        # Frame para los empaques (dentro de tu formulario)
+        self.frame_empaques = tk.LabelFrame(self.form_frame, text="Selecciona Empaques", bg="#a0b9f0", padx=10, pady=10)
+        self.frame_empaques.grid(row=10, column=0, columnspan=2, sticky="ew", pady=10)
+
+        # Combobox para seleccionar empaques
+        tk.Label(self.frame_empaques, text="Empaque:", bg="#a0b9f0").pack(anchor="w")
+        self.combobox_empaque = ttk.Combobox(self.frame_empaques, state="readonly", width=30)
+        self.combobox_empaque.pack(fill=tk.X, pady=5)
+        self.combobox_empaque['values'] = db_connect.selecion_empaques()  # ["Bolsa Plástica", "Caja de Cartón", ...]
+
+        # Botón para agregar el empaque seleccionado a la lista
+        self.boton_agregar = tk.Button(
+            self.frame_empaques,
+            text="Agregar Empaque",
+            command=self.agregar_empaque_a_lista
+        )
+        self.boton_agregar.pack(pady=5)
+
+        # Listbox para mostrar los empaques seleccionados
+        self.listbox_empaques = tk.Listbox(self.frame_empaques, width=40, height=5)
+        self.listbox_empaques.pack(fill=tk.BOTH, pady=5)
+
+        # Botón para eliminar el empaque seleccionado
+        self.boton_eliminar = tk.Button(
+            self.frame_empaques,
+            text="Eliminar Empaque",
+            command=self.eliminar_empaque_de_lista
+        )
+        self.boton_eliminar.pack(pady=5)
+
+        # Lista interna para almacenar los empaques seleccionados
+        
+
+        # Botones (en el form_frame)
         crear_boton(
             self.form_frame,
             texto="Ingresar Materiales",
@@ -145,7 +182,7 @@ class ProductoManager:
             font=("Arial", 11, "bold"),
             hover_color="#2ECC71",
             comando=self.ingresar_materiales
-        ).grid(row=12, column=0, padx=5, pady=5)
+        ).grid(row=11, column=0, padx=5, pady=10)
 
         crear_boton(
             self.form_frame,
@@ -157,7 +194,7 @@ class ProductoManager:
             font=("Arial", 11, "bold"),
             hover_color="#2ECC71",
             comando=self.registrar_producto
-        ).grid(row=12, column=1, pady=5)
+        ).grid(row=11, column=1, padx=5, pady=10)
 
         crear_boton(
             self.form_frame,
@@ -169,7 +206,7 @@ class ProductoManager:
             font=("Arial", 11, "bold"),
             hover_color="#2ECC71",
             comando=lambda: self.mostrar_resumen_materiales(self.root)
-        ).grid(row=13, column=0, padx=5, pady=5)
+        ).grid(row=12, column=0, padx=5, pady=10)
 
         crear_boton(
             self.form_frame,
@@ -181,7 +218,7 @@ class ProductoManager:
             font=("Arial", 11, "bold"),
             hover_color="#15221A",
             comando=self.mostrar_borradores_pendientes
-        ).grid(row=13, column=1, pady=5)
+        ).grid(row=12, column=1, padx=5, pady=10)
 
     def obtener_valores(self):
         """Obtiene los valores de los campos del formulario."""
@@ -190,6 +227,7 @@ class ProductoManager:
         self.descripcion_producto = self.descripcion_entry.get()
         self.tiempo_fabricacion = convertir_a_float(self.tiempo_entry.get())
         self.cantidad_creada = int(self.cantidad_creada_entry.get())
+        
         return self.codigo_producto, self.tipo_producto, self.tiempo_fabricacion, self.cantidad_creada, self.descripcion_producto
 
     def ingresar_materiales(self):
@@ -217,7 +255,7 @@ class ProductoManager:
         tk.Label(material_window, text="Tamaño:", bg="#101113", fg="#ffffff").grid(row=4, column=0, padx=10, pady=5)
         tamaño_entry = ttk.Combobox(material_window, state="disabled")
         tamaño_entry.grid(row=4, column=1, padx=10, pady=5)
-
+        
         # Vincular eventos para actualizar los Combobox
         material_entry.bind("<KeyRelease>", self.filtrar_codigos)
         material_entry.bind("<<ComboboxSelected>>", lambda event: self.actualizar_color(event, color_entry))
@@ -248,7 +286,21 @@ class ProductoManager:
             hover_color="#2ECC71",
             comando=lambda: self.guardar_borrador(material_window)
         ).grid(row=6, column=0, columnspan=2, pady=10)
-
+        
+    def agregar_empaque_a_lista(self):
+        empaque = self.combobox_empaque.get()
+        if empaque and empaque not in self.empaques_seleccionados:
+            self.empaques_seleccionados.append(empaque)
+            self.listbox_empaques.insert(tk.END, empaque)
+            self.combobox_empaque.set("")  # Limpiar el Combobox
+            
+    def eliminar_empaque_de_lista(self):
+        seleccion = self.listbox_empaques.curselection()
+        if seleccion:
+            empaque = self.listbox_empaques.get(seleccion[0])
+            self.empaques_seleccionados.remove(empaque)
+            self.listbox_empaques.delete(seleccion[0])
+        
     def filtrar_codigos(self, event):
         """Filtra los códigos de materiales según el texto ingresado."""
         texto = event.widget.get()
@@ -296,7 +348,7 @@ class ProductoManager:
         else:
             tamaño_entry.set('')
             tamaño_entry.configure(state="disabled")
-
+    
     def agregar_material(self, material_entry, color_entry, tipo_entry, tamaño_entry, cantidad_entry, material_window):
         """Agrega un material a la lista de materiales usados."""
         material_actual = material_entry.get()
@@ -348,17 +400,24 @@ class ProductoManager:
         cantida_producidas = self.cantidad_creada_entry.get()
         descripcion_producto = self.descripcion_entry.get()
         materiales_actuales = self.materiales_usados.copy()
+        
+        # Empaques
+        materiales_de_empaque = self.empaques_seleccionados.copy()  # Lista de los empaques
+        
+        empaques_str = ",".join(materiales_de_empaque) if materiales_de_empaque else "" # Conversión  de empaques a str.
 
-        if not codigo_producto and not descripcion_producto and not materiales_actuales:
+        if not codigo_producto and not descripcion_producto and not materiales_actuales and not empaques_str:
             messagebox.showwarning("Advertencia", "No hay datos para guardar como borrador.")
         else:
             guardar_borrador_db(
                 id_creador, nombre_creador, codigo_producto, tipo_producto,
-                tiempo_invertido, cantida_producidas, descripcion_producto, materiales_actuales
+                tiempo_invertido, cantida_producidas, descripcion_producto,
+                materiales_actuales, empaques_str
             )
 
     def mostrar_resumen_materiales(self, ventana_padre):
         """Muestra un resumen de los materiales usados, ajustando el tamaño de la ventana."""
+
         # Cerrar cualquier ventana de resumen anterior
         if hasattr(self, 'resumen_window') and self.resumen_window:
             self.resumen_window.destroy()
@@ -395,46 +454,80 @@ class ProductoManager:
         for col in columnas:
             self.tree.heading(col, text=encabezados[col])
             self.tree.column(col, anchor=tk.CENTER, width=130)
-            ancho_total += 130  # Sumar el ancho de cada columna
+            ancho_total += 130
 
         self.tree.pack(fill=tk.BOTH, expand=True)
 
-        # Cargar datos en el Treeview
-        self.cargar_datos_en_treeview()
+        # Editor embebido
+        editor = tk.LabelFrame(frame, text="Editar material seleccionado", background="#101113", foreground="#ffffff", padx=10)
+        editor.pack(fill=tk.X, padx=10, pady=8)
 
-        # Ajustar el tamaño de la ventana según el contenido
-        self.ajustar_tamano_ventana(ancho_total)
+        # Variables para el editor
+        codigo_var = tk.StringVar()
+        color_var = tk.StringVar()
+        tipo_var = tk.StringVar()
+        tam_var = tk.StringVar()
+        cant_var = tk.StringVar()
 
-        # Botones
-        frame_btn = ttk.Frame(self.resumen_window, style="mystyle.Treeview", padding=10)
-        frame_btn.pack(fill=tk.X)
+        # Widgets del editor
+        ttk.Label(editor, text="Código", background="#101113", foreground="#ffffff").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(editor, text="Color", background="#101113", foreground="#ffffff").grid(row=0, column=2, padx=5, pady=5)
+        ttk.Label(editor, text="Tipo", background="#101113", foreground="#ffffff").grid(row=1, column=0, padx=5, pady=5)
+        ttk.Label(editor, text="Tamaño", background="#101113", foreground="#ffffff").grid(row=1, column=2, padx=5, pady=5)
+        ttk.Label(editor, text="Cantidad", background="#101113", foreground="#ffffff").grid(row=2, column=0, padx=5, pady=5)
 
-        crear_boton(frame_btn, texto="Guardar", ancho=20, alto=30, color_fondo="#1B3E84", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=self.guardar_cambios).pack(side=tk.LEFT, padx=5)
-        crear_boton(frame_btn, texto="Eliminar", ancho=20, alto=30, color_fondo="#913131", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=self.eliminar_material).pack(side=tk.LEFT, padx=5)
-        crear_boton(frame_btn, texto="Cerrar", ancho=20, alto=30, color_fondo="#555555", color_texto="white", font=("Arial", 11, "bold"), hover_color="#777777", comando=self.resumen_window.destroy).pack(side=tk.RIGHT, padx=5)
+        combo_codigo = ttk.Combobox(editor, textvariable=codigo_var, state="readonly", width=18)
+        combo_codigo.grid(row=0, column=1, padx=5)
 
-    def cargar_datos_en_treeview(self):
-        """Carga los datos en el Treeview."""
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        entry_color = ttk.Entry(editor, textvariable=color_var, state="readonly", width=18)
+        entry_color.grid(row=0, column=3, padx=5)
 
-        for mat in self.materiales_usados:
-            self.tree.insert("", tk.END, values=(
-                mat["codigo"],
-                mat["color"],
-                mat["tipo"],
-                mat["tamaño"],
-                mat["cantidad"]
+        entry_tipo = ttk.Entry(editor, textvariable=tipo_var, state="readonly", width=18)
+        entry_tipo.grid(row=1, column=1, padx=5)
+
+        entry_tam = ttk.Entry(editor, textvariable=tam_var, state="readonly", width=18)
+        entry_tam.grid(row=1, column=3, padx=5)
+
+        entry_cant = ttk.Entry(editor, textvariable=cant_var, width=18)
+        entry_cant.grid(row=2, column=1, padx=5)
+
+        # Cargar códigos disponibles
+        combo_codigo["values"] = obtener_codigo_materiales()
+
+        # Funciones para el Treeview y el editor
+        def cargar_en_editor(event=None):
+            item = self.tree.selection()
+            if not item:
+                return
+            valores = self.tree.item(item[0])["values"]
+            codigo_var.set(valores[0])
+            color_var.set(valores[1])
+            tipo_var.set(valores[2])
+            tam_var.set(valores[3])
+            cant_var.set(valores[4])
+
+        def actualizar_desde_editor():
+            item = self.tree.selection()
+            if not item:
+                return
+            self.tree.item(item[0], values=(
+                codigo_var.get(),
+                color_var.get(),
+                tipo_var.get(),
+                tam_var.get(),
+                convertir_a_float(cant_var.get())
             ))
 
-    def ajustar_tamano_ventana(self, ancho_total):
-        """Ajusta el tamaño de la ventana según el ancho total de las columnas."""
-        # Altura fija (puedes ajustarla según tus necesidades)
-        altura = 400
-
-        # Ajustar el tamaño de la ventana
-        self.resumen_window.geometry(f"{ancho_total + 50}x{altura}")
-
+        def actualizar_por_codigo(event=None):
+            codigo = codigo_var.get()
+            if not codigo:
+                return
+            data = obtener_material_por_codigo(codigo)
+            if not data:
+                return
+            color_var.set(data["color"])
+            tipo_var.set(data["tipo"])
+            tam_var.set(data["tamaño"])
 
         def guardar():
             self.materiales_usados.clear()
@@ -447,6 +540,7 @@ class ProductoManager:
                     "tamaño": tam,
                     "cantidad": convertir_a_float(cant)
                 })
+            messagebox.showinfo("Éxito", "Materiales actualizados correctamente.")
 
         def eliminar():
             item = self.tree.selection()
@@ -457,12 +551,47 @@ class ProductoManager:
         def cerrar():
             self.resumen_window.destroy()
 
+        # Vincular eventos
+        self.tree.bind("<<TreeviewSelect>>", cargar_en_editor)
+        self.tree.bind("<Double-1>", cargar_en_editor)
+        combo_codigo.bind("<<ComboboxSelected>>", actualizar_por_codigo)
+
+        # Frame para los botones (creado solo una vez)
         frame_btn = ttk.Frame(self.resumen_window, style="mystyle.Treeview", padding=10)
         frame_btn.pack(fill=tk.X)
 
+        # Crear botones (solo una vez)
+        crear_boton(frame_btn, texto="Actualizar", ancho=20, alto=30, color_fondo="#1B3E84", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=actualizar_desde_editor).pack(side=tk.LEFT, padx=5)
         crear_boton(frame_btn, texto="Guardar", ancho=20, alto=30, color_fondo="#1B3E84", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=guardar).pack(side=tk.LEFT, padx=5)
         crear_boton(frame_btn, texto="Eliminar", ancho=20, alto=30, color_fondo="#913131", color_texto="white", font=("Arial", 11, "bold"), hover_color="#2ECC71", comando=eliminar).pack(side=tk.LEFT, padx=5)
         crear_boton(frame_btn, texto="Cerrar", ancho=20, alto=30, color_fondo="#555555", color_texto="white", font=("Arial", 11, "bold"), hover_color="#777777", comando=cerrar).pack(side=tk.RIGHT, padx=5)
+
+        # Ajustar el tamaño de la ventana
+        self.ajustar_tamano_ventana(ancho_total)
+
+    def cargar_datos_en_treeview(self):
+        """Carga los datos en el Treeview."""
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for mat in self.materiales_usados:
+            self.tree.insert("", tk.END, values=(
+                mat["codigo"],
+                mat["color"],
+                mat["tipo"],
+                mat["tamaño"],
+                mat["cantidad"]
+            ))
+            
+        
+    def ajustar_tamano_ventana(self, ancho_total):
+        """Ajusta el tamaño de la ventana según el ancho total de las columnas."""
+        # Altura fija (puedes ajustarla según tus necesidades)
+        altura = 400
+
+        # Ajustar el tamaño de la ventana
+        self.resumen_window.geometry(f"{ancho_total + 50}x{altura}")
+
+        self.cargar_datos_en_treeview()
 
 
     def limitar_texto(self, texto, limite=20):
@@ -519,7 +648,7 @@ class ProductoManager:
         
         borradores = borradores_pendientes()
         
-        # Encabezados
+        # Encabezados AJUSTAR QUITAL ALGUNOS
         encabezados = ["ID", "Código", "Creador", "Tipo", "Tiempo Fab.", "Cantidad", "Descripción", "Fecha ini.", "Acciones"]
         for col, encabezado in enumerate(encabezados):
             tk.Label(borradores_frame, text=encabezado, font=("Arial", 10, "bold"), bg="#d1d1d1", fg="#101113").grid(row=0, column=col, padx=5, pady=5, sticky="nsew")
@@ -544,53 +673,77 @@ class ProductoManager:
         
     def cargar_borrador(self, borrador_id, borradores_window):
         """Carga un borrador seleccionado."""
-        borrador = cargar_borrador_db(borrador_id)
-        if borrador:
+        borrador = cargar_borrador_db(borrador_id) # Consulta a la db vieja
+        if borrador: # and borrador_emp:
             self.codigo_entry.delete(0, tk.END)
             self.descripcion_entry.delete(0, tk.END)
             self.tipo_combobox.set('')
             self.tiempo_entry.delete(0, tk.END)
             self.cantidad_creada_entry.delete(0, tk.END)
+            self.listbox_empaques.delete(0, tk.END)  # Limpiar el Listbox
 
             self.codigo_entry.insert(0, borrador[0])
             self.descripcion_entry.insert(0, borrador[4])
             self.tipo_combobox.set(borrador[1])
             self.tiempo_entry.insert(0, borrador[2])
             self.cantidad_creada_entry.insert(0, borrador[3])
-
+            
+            # OJO CAMBIAR EVAL POR ALGO MAS SEGURO 
             self.materiales_usados = eval(borrador[5])
-
-            if self.materiales_usados:
-                print(f"Los materiales cargados del borrador son: {self.materiales_usados}")
-                crear_boton(self.form_frame,
-                    texto="Resumen Materiales",
-                    ancho=30,
-                    alto=30,
-                    color_fondo="#DEE90D",
-                    color_texto="white",
-                    font=("Arial", 11, "bold"),
-                    hover_color="#2ECC71",
-                    comando=lambda: self.mostrar_resumen_materiales(self.root)
-                ).grid(row=13, column=0, padx=5, pady=5)
+            
+            empaques_str = borrador[6]            
+            self.empaques_seleccionados = empaques_str.split(",") if empaques_str else []  # Los Empaques
+            for empaque in self.empaques_seleccionados:
+                self.listbox_empaques.insert(tk.END, empaque)  # Se inserta cada empaque.
+                
+            print(F"Los Materiales  mostrar luego de cargar el borrador son: {self.empaques_seleccionados}")
+            # if self.materiales_usados:
+            #     print(f"Los materiales cargados del borrador son: {self.materiales_usados}")
+            #     crear_boton(self.form_frame,
+            #         texto="Resumen Materiales",
+            #         ancho=30,
+            #         alto=30,
+            #         color_fondo="#DEE90D",
+            #         color_texto="white",
+            #         font=("Arial", 11, "bold"),
+            #         hover_color="#2ECC71",
+            #         comando=lambda: self.mostrar_resumen_materiales(self.root)
+            #     ).grid(row=13, column=0, padx=5, pady=5)
 
             borradores_window.destroy()
             messagebox.showinfo("Éxito", f"Borrador {borrador_id} cargado correctamente.")
         else:
             messagebox.showerror("⚠️ Error", "No se encontró el borrador.")
+            
 
     def calcular_costo_producto(self):
         """Calcula el costo total de producción del producto."""
-        costo_total = 0.0
+        costo_materiales = 0.0
+        
         for material in self.materiales_usados:
             costo_unitario = obtener_costo_unitario_material(material["codigo"])
-            costo_total += material["cantidad"] * costo_unitario
-        return round(costo_total, 2)
+            costo_materiales += material["cantidad"] * costo_unitario
+        
+        # Retorna el costo de Material de empaque,
+        costos = db_connect.costo_embalaje(self.empaques_seleccionados)  # Los Empaques 
+        exito, mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
+        costo_total = sum(costos) + costo_materiales
+            
+        if not exito:
+            respuesta = messagebox.askyesno(
+                "Stock insuficiente",
+                f"{mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
+            )
+            if respuesta:
+                return round(costo_total, 2)    
+        else:
+            return round(costo_total, 2)
 
     def registrar_producto(self):
         """Registra el producto en la base de datos."""
         self.obtener_valores()
 
-        if not self.codigo_producto or not self.tipo_producto or not self.tiempo_fabricacion or not self.descripcion_producto:
+        if not self.codigo_producto or not self.tipo_producto or not self.tiempo_fabricacion or not self.descripcion_producto or not self.empaques_seleccionados:
             messagebox.showerror("⚠️ Error", "Faltan datos obligatorios del producto.")
             return
 
@@ -604,7 +757,15 @@ class ProductoManager:
         resumen_window = tk.Toplevel(self.root)
         configurar_toplevel(resumen_window, titulo="Resumen del Producto", ancho_min=500, alto_min=450)
 
-        tk.Label(resumen_window, text=f"=== RESUMEN DEL PRODUCTO ===\nCódigo: {self.codigo_producto}\nTipo: {self.tipo_producto}\nDescripción: {self.descripcion_producto}\nMateriales usados: {len(self.materiales_usados)}\nCosto de producción: {self.costo_produccion}\nPrecio de venta sugerido: {precio_sugerido}", justify=tk.LEFT).pack(padx=10, pady=10)
+        tk.Label(resumen_window, text=f"""=== RESUMEN DEL PRODUCTO ===\n
+                    Código: {self.codigo_producto}\n
+                    Tipo: {self.tipo_producto}\n
+                    Descripción: {self.descripcion_producto}\n
+                    Tipo de Empaque: {len(self.empaques_seleccionados)}\n
+                    Materiales usados: {len(self.materiales_usados)}\n
+                    Costo de producción: {self.costo_produccion}\n
+                    Precio de venta sugerido: {round(precio_sugerido, 2)}""", justify=tk.LEFT).pack(padx=10, pady=10)
+        
         tk.Label(resumen_window, text="Precio de venta:").pack()
         precio_entry = tk.Entry(resumen_window)
         precio_entry.pack(pady=5)
@@ -621,6 +782,9 @@ class ProductoManager:
             for material in self.materiales_usados:
                 nombre = obtener_nombre_material_por_codigo(material["codigo"])
                 materiales_reales.append(nombre)
+            
+            materiales_empaque = self.empaques_seleccionados
+            empaques_str = ",".join(materiales_empaque) if materiales_empaque else "" # Conversión  de empaques a str.
 
             insertar_producto(
                 self.codigo_producto,
@@ -631,7 +795,8 @@ class ProductoManager:
                 materiales_reales,
                 self.tiempo_fabricacion,
                 self.cantidad_creada,
-                self.descripcion_producto
+                self.descripcion_producto,
+                empaques_str
             )
 
             id_producto = obtener_id_producto_por_codigo(self.codigo_producto)

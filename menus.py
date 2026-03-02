@@ -10,11 +10,13 @@ from incrementar_productos_inventario import VentanaIncrementarStock
 from recursos import crear_boton
 from productManager import ProductoManager
 from inventarioManager import InventarioManager
+from empaqueManager import CrearEmpaques
 
 # menus.py
 def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario):
     crear_producto = ProductoManager(root, imagen_panel_tk, mostrar_menu_principal)
     inventario_manager = InventarioManager(root, imagen_panel_tk, mostrar_menu_principal)
+    gestion_empaque = CrearEmpaques(root, imagen_panel_tk, mostrar_menu_principal)
     
     def usuario_actual_main(usuario):
         """Obtiene el usuario actual y su ID."""
@@ -123,6 +125,21 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             hover_color="#2ECC71",
             #activeforeground="black",
             comando=lambda: VentanaIncrementarStock(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
+            
+        ).pack(pady=15)
+        crear_boton(
+            frame_botones,
+            texto="Gestión Empaques",
+            ancho=160,
+            alto=30,
+            color_fondo="#0474A0",                
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            #bd=0,
+            #relief=tk.FLAT,
+            hover_color="#2ECC71",
+            #activeforeground="black",
+            comando=lambda: gestion_empaque.iniciar_intefaz(),
             
         ).pack(pady=15)
         crear_boton(
