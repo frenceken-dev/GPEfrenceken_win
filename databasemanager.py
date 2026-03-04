@@ -1068,8 +1068,103 @@ class DataBaseManager():
         else:
             return True, "✅ Todos los empaques se descontaron correctamente."
         
-        
+    
+    def empaque_incremento_db(self, nombre_empaque) -> List[Dict[str, any]]:
+        """
+        Selcciona Código y Tamaño de un empaque para actualizar combobox de incremento de stock.
 
+        Args:
+            nombre_empaque (str): Nombre del empaque como condición
+
+        Returns:
+            List[Dict[str, any]]: Devuelve una lista de diccionarios.
+        """
+        #print(f"NOMBRE DE EMPAQUE: {nombre_empaque}")
+        query = "SELECT codigo_emp, tamaño_emp  FROM Empaques WHERE nombre_emp = ?"
+        
+        datos = self.select(query, (nombre_empaque,))
+        
+        datos_list = [dato for dato in datos[0].values()]
+        #print(datos_list)
+        
+        if datos_list:
+            return datos_list
+        else:
+            messagebox.showerror("⚠️ Error", "No se encontraron los datos.")
+            
+            
+    def stock_de_empaque(self, codigo) -> List[Dict[str, any]]:
+        """
+        Obtiene la cantidad en existencia de un empaque
+
+        Returns:
+            List[Dict[str, any]]: Devuelve una lista de diccionario
+        """
+        
+        query = "SELECT stock_emp FROM Empaques WHERE codigo_emp = ?"
+        
+        stock_db = self.select(query, (codigo,))
+        
+        stock = [cantidad["stock_emp"] for cantidad in stock_db]
+        #print(f"La Cantidad es: {stock[0]}")  # Es un int.
+        stock_int = stock[0]
+        if stock:
+            return stock_int
+        
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo obtener la cantidad de este empaque.")
+    
+    
+    def actualiza_stock_db(self, nuevo_stock, codigo) -> bool:
+        """
+        Se actualiza el valor en la base de datos de el stock.
+
+        Args:
+            nuevo_stock (float): nuevo valor del stock
+
+        Returns:
+            bool: 
+            - True si la actualización es exitosa
+            - False si se manifiesta un problema 
+        """
+        print(f"Valor a actualizar: {nuevo_stock}-- código es: {codigo}")
+        actualizado = self.update(
+            table="Empaques",
+            updates={"stock_emp": nuevo_stock},
+            where_condition="codigo_emp =  ?",
+            where_params=(codigo,)
+        )
+    
+        if actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo actualizar el stock ")
+            
+            
+    def actualiza_precio_db(self, precio, codigo) -> bool:
+        """
+        Actualiza el costo del material de empaque
+
+        Args:
+            precio (str): Nuevo costo de Compra.
+            codigo (_type_): Codigo de el Empaque.
+
+        Returns:
+            bool: Devuelve True si la operación es exitosa sino sera False.
+        """
+        actualizado = self.update(
+            table="Empaques",
+            updates={"precio_emp": precio},
+            where_condition="codigo_emp = ?",
+            where_params=(codigo,)
+        )
+        
+        if actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", "No pudo actualizar el precio")
+            
+    
 if __name__ == "__main__":
     probar = DataBaseManager()
-    probar.descontar_empaque(["Bolsas Plasticas Peq.", "Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])
+    #probar.actualiza_stock_db(70,"EMP-1") #"Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])

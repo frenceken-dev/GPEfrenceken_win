@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from recursos import configurar_toplevel, crear_boton
 from databasemanager import DataBaseManager
 
@@ -19,10 +19,11 @@ class CrearEmpaques():
             
     def iniciar_intefaz(self):
         self.limpiar_pantalla()
-        self.toplevel_pantalla()
+        self.incrementa_stock_empaque()
         
-    def toplevel_pantalla(self):
-        """Crea un toplevel para crear el tipo de empaque"""
+    def registro_nuevo(self):
+        """Crea un registro nuevo para crear el tipo de empaque"""
+        self.limpiar_pantalla()
         
         self.emp_frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=800)
         self.emp_frame.pack(fill=tk.BOTH, expand=True)
@@ -48,8 +49,8 @@ class CrearEmpaques():
         )
         self.title_label.pack(pady=15)
         
-        self.frame_campos = tk.Frame(self.emp_frame, bg="#a0b9f0")
-        self.frame_campos.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
+        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Nuevo registro de Empaques.", bg="#a0b9f0")
+        self.frame_campos.pack(pady=20, padx=20, fill="both", expand=False)
         
         # Configurar el frame_campos para centrar el contenido
         self.frame_campos.grid_columnconfigure(0, weight=1)  # Columna vacía a la izquierda
@@ -81,7 +82,7 @@ class CrearEmpaques():
         # Botón para guardar (centrado)
         boton_guardar_material = crear_boton(
             self.frame_campos,
-            texto="Guardar Material",
+            texto="Registrar Empaque",
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
@@ -120,19 +121,25 @@ class CrearEmpaques():
             
     def comprobar_datos(self, codigo_entry, nombre_entry, tamaño_entry, cantidad_entry, precio_entry):
         """Comprobar que todos los campos contengan información"""
+        
         if not codigo_entry or not nombre_entry or not tamaño_entry or not cantidad_entry or not precio_entry:
             messagebox.showerror("⚠️ Error", "Por favor Complete todos los Campos.")
-            return
+            return False
+        try:
+            cantidad = float(cantidad_entry)
+            if cantidad <= 0 :
+                messagebox.showerror("⚠️ Error", "La Cantidad no puede ser cero (0)")
+                return False
+            
+            precio = float(precio_entry)
+            if precio <= 0:
+                messagebox.showerror("⚠️ Error", "El precio Total no puede ser Cero (0)")
+                return False
+        except ValueError:
+            messagebox.showerror("⚠️ Error", "El precio debe ser un número válido (ej: 10.50).")
         
-        self.cantidad = float(cantidad_entry)
-        if self.cantidad <= 0:
-            messagebox.showerror("⚠️ Error", "La Cantidad no puede ser cero (0)")
-            return
-        
-        self.precio = float(precio_entry)
-        if self.precio <= 0:
-            messagebox.showerror("⚠️ Error", "El precio Total no puede ser Cero (0)")
-            return
+        self.cantidad = self.convertir_a_float(cantidad_entry)
+        self.precio = self.convertir_a_float(precio_entry)
         
         self.guardar_paquete(codigo_entry, nombre_entry, tamaño_entry, cantidad_entry, precio_entry)
         
@@ -149,8 +156,6 @@ class CrearEmpaques():
         """
         cantidad_int = float(cantidad)
         precio_int = float(precio)
-        print(f"La Cantidad ahora es de tipo {type(cantidad_int)}")
-        print(f"El Precio ahora es de tipo {type(precio_int)}")
         costo_unitario = float(precio_int / cantidad_int)
         
         exito, mensaje = db_connect.insertar_empaque(codigo, nombre, tamaño, cantidad, precio, round(costo_unitario, 2))
@@ -159,7 +164,165 @@ class CrearEmpaques():
             messagebox.showinfo("✅ Guardado", f"{mensaje}")
         else:
             messagebox.showerror("⚠️ Error", f"{mensaje}")
+    
+    
+    def incrementa_stock_empaque(self):
+        """
+        Actualiza en la base de datos el stock actual de un empaque
+        """
+        self.emp_frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=800)
+        self.emp_frame.pack(fill=tk.BOTH, expand=True)
+        #configurar_toplevel(self.emp_frame, titulo="Gestión de Empaques:", color_fondo="#101113")
+        
+        self.frame_menu = tk.Frame(self.emp_frame, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        self.frame_menu.pack(side=tk.LEFT, fill=tk.Y)
+        self.frame_menu.pack_propagate(False)
+        
+        self.crear_logo_panel()
+        
+        # Frame de título
+        self.frame_titulo = tk.Frame(self.emp_frame, bg="#a0b9f0")
+        self.frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
+
+        # Título
+        self.title_label = tk.Label(
+            self.frame_titulo,
+            text="Registrar Material de Empaque",
+            font=("Arial", 16, "bold"),
+            bg="#a0b9f0",
+            fg="#2C3E50"
+        )
+        self.title_label.pack(pady=15)
+        
+        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Actualizar Stock de Empaques.", bg="#a0b9f0")
+        self.frame_campos.pack(pady=20, padx=20, fill="both", expand=False)
+        
+        # Configurar el frame_campos para centrar el contenido
+        self.frame_campos.grid_columnconfigure(0, weight=1)  # Columna vacía a la izquierda
+        self.frame_campos.grid_columnconfigure(1, weight=1)  # Columna para etiquetas
+        self.frame_campos.grid_columnconfigure(2, weight=1)  # Columna para entradas
+        self.frame_campos.grid_columnconfigure(3, weight=1)  # Columna vacía a la derecha
+
+        # Campos de entrada (centrados)
+        tk.Label(self.frame_campos, text="Código del Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=0, column=1, pady=5, sticky="ns")
+        self.codigo_entry = tk.Entry(self.frame_campos, width=25)
+        self.codigo_entry.grid(row=1, column=1, sticky="ns")
+
+        self.nombre_empaque_var = tk.StringVar()
+        tk.Label(self.frame_campos, text="Nombre de Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=2, column=1, pady=5, sticky="ns")
+        self.nombre_combobox = ttk.Combobox(self.frame_campos, textvariable=self.nombre_empaque_var, state="readonly", width=25)
+        self.nombre_combobox.grid(row=3, column=1, sticky="ns")
+        self.nombre_combobox['values'] = db_connect.selecion_empaques()  # ["Bolsa Plástica", "Caja de Cartón", ...]
+        
+        # Vincular el evento de selección
+        self.nombre_combobox.bind(
+            "<<ComboboxSelected>>",
+            lambda event: self.rellenar_campos(self.nombre_empaque_var.get()))
+        
+        tk.Label(self.frame_campos, text="Tamaño del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=4, column=1, pady=5, sticky="ns")
+        self.tamaño_entry = tk.Entry(self.frame_campos, width=25)
+        self.tamaño_entry.grid(row=5, column=1, sticky="ns")
+
+        tk.Label(self.frame_campos, text="Cantidad del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=6, column=1, pady=5, sticky="ns")
+        self.cantidad_entry = tk.Entry(self.frame_campos, width=25)
+        self.cantidad_entry.grid(row=7, column=1, sticky="ns")
+
+        tk.Label(self.frame_campos, text="Precio total:", bg="#a0b9f0", fg="#2C3E50").grid(row=8, column=1, pady=5, sticky="ns")
+        self.precio_entry = tk.Entry(self.frame_campos, width=25)
+        self.precio_entry.grid(row=9, column=1, sticky="ns")
+        
+        
+        def comprobar():
+            if self.codigo_entry.get() and  self.nombre_combobox.get() and self.tamaño_entry.get() and self.cantidad_entry.get() and self.precio_entry.get():
+                self.incrementa_stock()
+            else:
+                messagebox.showerror("⚠️ Error", "Uno o más campos estan vacios, por favor complete todos los campos.")
+                
+        # Botón para guardar (centrado)
+        boton_guardar_material = crear_boton(
+            self.frame_campos,
+            texto="Actualizar Empaque",
+            ancho=30,
+            alto=30,
+            color_fondo="#4283fa",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=lambda: comprobar()
+        )
+        boton_guardar_material.grid(row=10, column=1, pady=15)
+        
+        boton_cerrar = crear_boton(
+            self.frame_menu,
+            texto="Registrar nuevo Empaque",
+            ancho=30,
+            alto=30,
+            color_fondo="#4283fa",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando= lambda : self.registro_nuevo()
+        )
+        boton_cerrar.pack(padx=5, pady=40)
+        
+        boton_cerrar = crear_boton(
+            self.frame_menu,
+            texto="Volver",
+            ancho=30,
+            alto=30,
+            color_fondo="#913131",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=self.cerrar_ventana
+        )
+        boton_cerrar.pack(side="bottom", padx=5, pady=15)
+        
+        
+    def rellenar_campos(self, nombre):
+        """
+        Rellena los campos según el empaque seleccionado.
+        """
+        #print(F"NOMBRE DE EMPAQUE QUE SE ENVIA A DB: {nombre}")
+        empaque = db_connect.empaque_incremento_db(nombre)
+        self.codigo_entry.delete(0, tk.END)
+        self.tamaño_entry.delete(0, tk.END)
+        
+        self.codigo_entry.insert(0, empaque[0])
+        self.tamaño_entry.insert(0, empaque[1])
+        
+    
+    def incrementa_stock(self):
+        """
+        Se toma el codigo y la cantidad ingresada por el usuario,
+        para sumar a la existencia en db
+        """
+        codigo = self.codigo_entry.get()
+        cantidad_usuario_str = self.cantidad_entry.get()
+        precio_str = self.precio_entry.get()
+        
+        cantidad_en_stock = db_connect.stock_de_empaque(codigo)
+        try:
+            cantidad_usuario_int = float(cantidad_usuario_str)
+            nuevo_stock = float(cantidad_en_stock + cantidad_usuario_int)
             
+            precio_float = self.convertir_a_float(precio_str)
+            actualiza_stock = db_connect.actualiza_stock_db(nuevo_stock, codigo)
+            actualiza_precio = db_connect.actualiza_precio_db(precio_float, codigo)
+            
+            if actualiza_stock and actualiza_precio:
+                messagebox.showinfo("✅ Exito", f"El nuevo stock es {nuevo_stock} unidades.")
+            else:
+                messagebox.showerror("⚠️ Error", "Hay un problema con el dato de stock o el dato de precio.")    
+        except ValueError:
+            messagebox.showerror("⚠️ Error", "El precio y la cantidad deben ser un número válido (ej: 10.50).")
+            
+    
+    def convertir_a_float(self, valor_str):
+        try:
+            valor_str = str(valor_str).replace(",", ".")
+            return float(valor_str)
+        except ValueError:
+            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return None
+    
     def cerrar_ventana(self):
         self.emp_frame.destroy()
         self.volver_menu()
