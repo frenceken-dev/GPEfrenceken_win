@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import messagebox
-from inventario import ingresar_inventario
+#from inventario import ingresar_inventario
 #from productos import crear_producto
 from busqueda import busqueda_articulos #menu_buscar_articulo, formulario_buscar_por_proveedor, formulario_buscar_por_factura, formulario_buscar_por_codigo, formulario_buscar_por_articulo
 from registrar_nuevo_proveedor import nuevo_proveedor

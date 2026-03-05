@@ -1982,9 +1982,9 @@ def cargar_items(tipo):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     if tipo == 'material':
-        cursor.execute("SELECT id_material, nombre FROM Materiales")
+        cursor.execute("SELECT id_material, nombre, tipo, tamaño, color FROM Materiales")
     elif tipo == 'producto':
-        cursor.execute("SELECT id_producto, codigo FROM Productos")
+        cursor.execute("SELECT id_producto, codigo, tipo, costo_producto, precio_venta FROM Productos")
     items = cursor.fetchall()
     conn.close()
     return items

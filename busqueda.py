@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 from db import buscar_en_bd, obtener_materiales, encotrar_notas_entrega, encontrar_facturas, actualizar_en_bd
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
-from inventario import convertir_a_float
+#from inventario import convertir_a_float
 
 def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usuario_actual):
     # Limpiar el frame de contenido
@@ -92,7 +92,6 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
         mostrar_resultados(resultados, tipo, root, usuario_actual, volver_menu)
         
         
-
     # Botón para realizar la búsqueda
     crear_boton(
         form_frame,
@@ -733,4 +732,12 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
     # Empaquetar los widgets
     tree.pack(fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
-    
+
+
+def convertir_a_float(valor_str):
+        try:
+            valor_str = str(valor_str).replace(",", ".")
+            return float(valor_str)
+        except ValueError:
+            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return None

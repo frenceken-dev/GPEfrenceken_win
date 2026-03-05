@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 from db import (
     obtener_nombres_proveedores,
     insertar_factura, insertar_material,
@@ -199,13 +200,28 @@ class InventarioManager:
 
     def validar_campos_obligatorios(self, proveedor, num_factura, fecha):
         return proveedor.strip() != "" and num_factura.strip() != "" and fecha.strip() != ""
+    
+    def validar_fecha(self, fecha_str):
+        try:
+            dia, mes, anio = map(int, fecha_str.split('/'))
+            datetime(year=anio, month=mes, day=dia)  # Lanza ValueError si la fecha no existe
+            return True
+        except ValueError:
+            return False
 
     def actualizar_datos_factura(self):
-        self.datos_factura.update({
+        fecha_ingresada = self.fecha_entry.get()
+        
+        if self.validar_fecha(fecha_ingresada):
+            self.datos_factura.update({
             "proveedor": self.proveedor_combobox.get(),
             "numero_factura": self.factura_entry.get(),
-            "fecha": self.fecha_entry.get()
+            "fecha": fecha_ingresada
         })
+            print("Fecha válida:", fecha_ingresada)
+        else:
+            messagebox.showerror("Error", "Fecha inválida. Usa DD/MM/AAAA y asegúrate de que exista.")
+
 
     def agregar_material_temporal(self, frame_contenido):
         cod_materiales = self.db_connect.obtener_codigo_materiales()

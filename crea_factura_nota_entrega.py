@@ -195,7 +195,7 @@ class VentanaVentas:
         self.combobox_productos = ttk.Combobox(
             self.frame_productos,
             #textvariable=self.producto_seleccionado,
-            state="readonly"
+            state="readonly", width=35
         )
         self.combobox_productos.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         self.combobox_productos.bind("<<ComboboxSelected>>", self.on_producto_seleccionado)

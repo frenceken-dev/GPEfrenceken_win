@@ -1,11 +1,12 @@
 # registrar_nuevo_proveedor.py
 
 from db import obtener_id_proveedor_por_nombre
-from menus import ingresar_inventario
+#from menus import ingresar_inventario
 import tkinter as tk
 from tkinter import messagebox
 from recursos import crear_boton
 from databasemanager import DataBaseManager
+from inventarioManager import InventarioManager
 
 
 db_connect = DataBaseManager()
@@ -105,7 +106,7 @@ def nuevo_proveedor(root, imagen_panel_tk, volver_menu):
         )
         print(f"El ID del nuevo Proveedor es: {id_nuevo_proveedor}")
         # 2. Luego, comprueba si se guardó
-        comprobacion_registro(nombre_entry.get(), frame, volver_menu)
+        comprobacion_registro(nombre_entry.get(), frame, volver_menu, root, imagen_panel_tk)
 
     # Botón modificado para usar la función intermedia
     crear_boton(
@@ -125,13 +126,17 @@ def nuevo_proveedor(root, imagen_panel_tk, volver_menu):
     ).grid(row=4, column=0, columnspan=2, pady=10)
     
 
-def comprobacion_registro(nombre, frame_contenido, volver_menu):
+def comprobacion_registro(nombre, frame_contenido, volver_menu, root, imagen_panel_tk):
+    inventario_manager = InventarioManager(root, imagen_panel_tk, volver_menu)
+    
     # Realizar la comprobacion el base de datos
     proveedor = obtener_id_proveedor_por_nombre(nombre)
     if proveedor is not None:
         messagebox.showinfo("Guardado", "El proveedor se guardo correctamente.")
-        ingresar_inventario(frame_contenido, volver_menu)
+        #inventario_manager.iniciar_interfaz()
+        volver_menu()
     else:
         messagebox.showinfo("⚠️ Error", "El proveedor no se guardo...Error")
-        ingresar_inventario(frame_contenido, volver_menu)
+        #inventario_manager.iniciar_interfaz()
+        return
     

@@ -12,7 +12,7 @@ from db import (
     guardar_borrador_db, id_usuario_nombre_actual, borradores_pendientes,
     cargar_borrador_db, marcar_borrador_como_creado,
 )
-from inventario import convertir_a_float
+#from inventario import convertir_a_float
 from recursos import crear_boton, configurar_toplevel
 from databasemanager import DataBaseManager
 
@@ -57,8 +57,8 @@ class ProductoManager:
         self.articulos = [material[1] for material in materiales]
         self.tipo_material = [material[3] for material in materiales]
         self.tamaño_material = [material[4] for material in materiales]
-        self.cantidades = [convertir_a_float(material[6]) for material in materiales]
-        self.precios_uni = [convertir_a_float(material[8]) for material in materiales]
+        self.cantidades = [self.convertir_a_float(material[6]) for material in materiales]
+        self.precios_uni = [self.convertir_a_float(material[8]) for material in materiales]
         self.tipos_unicos = list(set(self.tipo_material))
         self.tamaños_unicos = list(set(self.tamaño_material))
 
@@ -225,7 +225,7 @@ class ProductoManager:
         self.codigo_producto = self.codigo_entry.get()
         self.tipo_producto = self.tipo_combobox.get()
         self.descripcion_producto = self.descripcion_entry.get()
-        self.tiempo_fabricacion = convertir_a_float(self.tiempo_entry.get())
+        self.tiempo_fabricacion = self.convertir_a_float(self.tiempo_entry.get())
         self.cantidad_creada = int(self.cantidad_creada_entry.get())
         
         return self.codigo_producto, self.tipo_producto, self.tiempo_fabricacion, self.cantidad_creada, self.descripcion_producto
@@ -357,7 +357,7 @@ class ProductoManager:
         tamaño_material_actual = tamaño_entry.get()
 
         try:
-            cantidad_necesaria = convertir_a_float(cantidad_entry.get())
+            cantidad_necesaria = self.convertir_a_float(cantidad_entry.get())
         except ValueError:
             messagebox.showerror("⚠️ Error", "La cantidad debe ser un número entero.")
             return
@@ -515,7 +515,7 @@ class ProductoManager:
                 color_var.get(),
                 tipo_var.get(),
                 tam_var.get(),
-                convertir_a_float(cant_var.get())
+                self.convertir_a_float(cant_var.get())
             ))
 
         def actualizar_por_codigo(event=None):
@@ -538,7 +538,7 @@ class ProductoManager:
                     "color": col,
                     "tipo": t,
                     "tamaño": tam,
-                    "cantidad": convertir_a_float(cant)
+                    "cantidad": self.convertir_a_float(cant)
                 })
             messagebox.showinfo("Éxito", "Materiales actualizados correctamente.")
 
@@ -725,19 +725,11 @@ class ProductoManager:
             costo_materiales += material["cantidad"] * costo_unitario
         
         # Retorna el costo de Material de empaque,
-        costos = db_connect.costo_embalaje(self.empaques_seleccionados)  # Los Empaques 
-        exito, mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
+        costos = db_connect.costo_embalaje(self.empaques_seleccionados)  # Los Empaques
         costo_total = sum(costos) + costo_materiales
-            
-        if not exito:
-            respuesta = messagebox.askyesno(
-                "Stock insuficiente",
-                f"{mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
-            )
-            if respuesta:
-                return round(costo_total, 2)    
-        else:
-            return round(costo_total, 2)
+        
+        return round(costo_total, 2)
+    
 
     def registrar_producto(self):
         """Registra el producto en la base de datos."""
@@ -772,12 +764,33 @@ class ProductoManager:
         precio_entry.insert(0, precio_sugerido)
 
         def guardar_producto():
+            """ Guarda el nuevo producto en la base de datos."""
             try:
                 self.precio_venta = round(float(precio_entry.get()), 2)
             except ValueError:
                 messagebox.showerror("⚠️ Error", "Introduce un número válido para el precio")
                 return
-
+            
+            validar_codigo = db_connect.validar_codigo_producto()
+            
+            codigo_ingresado = self.codigo_entry.get()
+            
+            if codigo_ingresado in validar_codigo:
+                messagebox.showerror("⚠️ Error", "El código ya existe.")
+                return
+            
+            self.exito, self.mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
+            
+            if not self.exito:
+                respuesta = messagebox.askyesno(
+                    "Stock insuficiente",
+                    f"{self.mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
+                )
+                if respuesta:
+                    messagebox.showinfo("Continuar", "Se continuara con el guardado del producto")
+                else:
+                    return
+            
             materiales_reales = []
             for material in self.materiales_usados:
                 nombre = obtener_nombre_material_por_codigo(material["codigo"])
@@ -837,3 +850,12 @@ class ProductoManager:
             hover_color="#222423",
             comando=resumen_window.destroy
         ).pack(pady=5)
+        
+        
+    def convertir_a_float(self, valor_str):
+        try:
+            valor_str = str(valor_str).replace(",", ".")
+            return float(valor_str)
+        except ValueError:
+            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return None

@@ -723,7 +723,6 @@ class DataBaseManager():
     #######################################################################################################################
     ############################################ SECCIÓN INCREMENTO DE PRODUCTOS ##########################################
     #######################################################################################################################
-
     
     def obtener_id_producto_por_codigo(self, codigo_unico) -> List[Dict[str, any]]:
         """
@@ -859,6 +858,27 @@ class DataBaseManager():
 
         return exito
     
+    def validar_codigo_producto(self) -> List[str]:
+        """
+        Recupera todos los códigos de los productos (evitar duplicados)
+
+        Args:
+            codigo (str): Recibe el código tipo string
+
+        Returns:
+            List[str]: Retorna una lista con los codigos.
+        """
+        query = "SELECT codigo FROM Productos"
+        
+        codigos = self.select(query)
+        
+        codigo_list = [codigo["codigo"] for codigo in codigos]
+        
+        if codigo_list:
+            return codigo_list
+        else:
+            messagebox.showerror("⚠️ Error", "No se ha podido comprobar si el código existe.")
+        
     #######################################################################################################################
     ############################################ SECCIÓN INCREMENTO DE MATERIALES #########################################
     #######################################################################################################################
@@ -1168,3 +1188,4 @@ class DataBaseManager():
 if __name__ == "__main__":
     probar = DataBaseManager()
     #probar.actualiza_stock_db(70,"EMP-1") #"Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])
+    probar.validar_codigo_producto()

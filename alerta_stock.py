@@ -9,7 +9,7 @@ class VentanaConfigurarUmbrales:
     def __init__(self, root, volver_menu):
         # Crear ventana secundaria centrada y ajustada
         self.root = tk.Toplevel(root)
-        configurar_toplevel(self.root, titulo="Configurar Umbrales de Alerta", ancho_min=400, alto_min=250)
+        configurar_toplevel(self.root, titulo="Configurar Umbrales de Alerta", ancho_min=410, alto_min=250)
         
         # 🎨 Frame principal para el contenido
         frame_contenido = tk.Frame(self.root, bg="#101113", padx=20, pady=20)
@@ -18,18 +18,18 @@ class VentanaConfigurarUmbrales:
         # 🔹 Tipo
         tk.Label(frame_contenido, text="Tipo:", background="#101113", fg="#ffffff").grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.tipo_var = tk.StringVar()
-        self.combobox_tipo = ttk.Combobox(frame_contenido, textvariable=self.tipo_var, values=['material', 'producto'], state="readonly")
-        self.combobox_tipo.grid(row=0, column=1, padx=10, pady=10)
+        self.combobox_tipo = ttk.Combobox(frame_contenido, textvariable=self.tipo_var, values=['material', 'producto'], state="readonly", width=35)
+        self.combobox_tipo.grid(row=0, column=1, padx=5, pady=10)
 
         # 🔹 Item
         tk.Label(frame_contenido, text="Item:", background="#101113", fg="#ffffff").grid(row=1, column=0, padx=10, pady=10, sticky="e")
-        self.combobox_item = ttk.Combobox(frame_contenido, state="readonly")
-        self.combobox_item.grid(row=1, column=1, padx=10, pady=10)
+        self.combobox_item = ttk.Combobox(frame_contenido, state="readonly", width=35)
+        self.combobox_item.grid(row=1, column=1, padx=5, pady=10)
 
         # 🔹 Umbral
         tk.Label(frame_contenido, text="Umbral:", background="#101113", fg="#ffffff").grid(row=2, column=0, padx=10, pady=10, sticky="e")
-        self.entry_umbral = ttk.Entry(frame_contenido)
-        self.entry_umbral.grid(row=2, column=1, padx=10, pady=10)
+        self.entry_umbral = ttk.Entry(frame_contenido, width=10)
+        self.entry_umbral.grid(row=2, column=1, padx=5, pady=10, sticky="w")
 
         # 🔹 Botón Guardar
         crear_boton(frame_contenido, 
@@ -59,7 +59,7 @@ class VentanaConfigurarUmbrales:
         self.combobox_item['values'] = []
 
         items_carados = cargar_items(tipo)
-        self.combobox_item['values'] = [f"{item[0]} - {item[1]}" for item in items_carados]
+        self.combobox_item['values'] = [f"{item[0]} - {item[1]}-{item[2]}-{item[3]}-{item[4]}" for item in items_carados]
         
     def guardar_umbral(self, volver_menu):
         tipo = self.tipo_var.get()

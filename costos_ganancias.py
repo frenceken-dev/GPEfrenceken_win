@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, Toplevel
 from tkcalendar import Calendar 
-from inventario import convertir_a_float
+#from inventario import convertir_a_float
 from db import (
     obtener_productos_para_acthistorial, 
     guardar_historial, 
@@ -1861,3 +1861,12 @@ def abrir_modulo_costos_ganancias(root, mostrar_menu_principal, imagen_panel_tk,
         comando=mostrar_menu_principal,
         
     ).pack(side=tk.LEFT, padx=30, pady=40)
+
+
+def convertir_a_float(valor_str):
+        try:
+            valor_str = str(valor_str).replace(",", ".")
+            return float(valor_str)
+        except ValueError:
+            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return None
