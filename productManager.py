@@ -1,16 +1,17 @@
 import tkinter as tk
+import sqlite3
 import json
 from tkinter import messagebox, simpledialog, ttk
 from db import (
-    insertar_producto, obtener_materiales, actualizar_stock_material,
-    insertar_detalle_producto, obtener_id_producto_por_codigo,
-    obtener_id_material_por_codigo, obtener_costo_unitario_material,
-    buscar_codigos_like, obtener_codigo_material_por_nombre_color_tipo_tamaño,
+    #obtener_materiales_pro, #actualizar_stock_material, #insertar_producto, id_usuario_nombre_actual
+    #insertar_detalle_producto, #obtener_id_producto_por_codigo, guardar_borrador_db, buscar_codigos_like, 
+    obtener_costo_unitario_material, #obtener_id_material_por_codigo, borradores_pendientes,
+    obtener_codigo_material_por_nombre_color_tipo_tamaño,
     obtener_nombre_material_por_codigo, obtener_tipos_por_material_y_color,
     obtener_tamaños_por_material_color_tipo, obtener_color_por_material,
-    obtener_codigo_materiales, obtener_material_por_codigo,
-    guardar_borrador_db, id_usuario_nombre_actual, borradores_pendientes,
-    cargar_borrador_db, marcar_borrador_como_creado,
+    #obtener_material_por_codigo,
+    
+    #cargar_borrador_db, #marcar_borrador_como_creado, #obtener_codigo_materiales,
 )
 #from inventario import convertir_a_float
 from recursos import crear_boton, configurar_toplevel
@@ -41,9 +42,9 @@ class ProductoManager:
     def usuario_actual(self, usuario):
         """Obtiene el usuario actual y su ID."""
         self.nombre_usuario_creador = usuario
-        print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
+        #print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
         if self.nombre_usuario_creador:
-            self.id_usuario_creador = id_usuario_nombre_actual(self.nombre_usuario_creador)
+            self.id_usuario_creador = db_connect.id_usuario_nombre_actual(self.nombre_usuario_creador)
             print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
             #return self.id_usuario_creador[0][0], self.nombre_usuario_creador
 
@@ -53,7 +54,7 @@ class ProductoManager:
             widget.destroy()
 
         # Obtener materiales de la base de datos
-        materiales = obtener_materiales()
+        materiales = db_connect.obtener_materiales_pro()
         self.articulos = [material[1] for material in materiales]
         self.tipo_material = [material[3] for material in materiales]
         self.tamaño_material = [material[4] for material in materiales]
@@ -118,24 +119,24 @@ class ProductoManager:
         # Campos del formulario (usando grid)
         tk.Label(self.form_frame, text="Código del producto:", bg="#a0b9f0", anchor="w").grid(row=0, column=0, sticky="w", pady=1)
         self.codigo_entry = tk.Entry(self.form_frame, width=30)
-        self.codigo_entry.grid(row=1, column=0, pady=5)
+        self.codigo_entry.grid(row=0, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Tipo (Pulsera/Collar/Aretes/Llavero):", bg="#a0b9f0").grid(row=2, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Tipo (Pulsera/Collar/Aretes/Llavero):", bg="#a0b9f0").grid(row=1, column=0, sticky="w", pady=1)
         self.tipo_combobox = ttk.Combobox(self.form_frame, values=["pulsera", "collar", "aretes", "llavero"], width=28)
-        self.tipo_combobox.grid(row=3, column=0, pady=5)
+        self.tipo_combobox.grid(row=1, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Descripción:", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Descripción:", bg="#a0b9f0").grid(row=2, column=0, sticky="w", pady=1)
         self.descripcion_entry = tk.Entry(self.form_frame, width=30)
-        self.descripcion_entry.grid(row=5, column=0, pady=5)
+        self.descripcion_entry.grid(row=2, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=6, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=3, column=0, sticky="w", pady=1)
         self.tiempo_entry = tk.Entry(self.form_frame, width=30)
-        self.tiempo_entry.grid(row=7, column=0, pady=5)
+        self.tiempo_entry.grid(row=3, column=1, pady=5)
         self.tiempo_entry.insert(0, "5")
 
-        tk.Label(self.form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=8, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
         self.cantidad_creada_entry = tk.Entry(self.form_frame, width=30)
-        self.cantidad_creada_entry.grid(row=9, column=0, pady=5)
+        self.cantidad_creada_entry.grid(row=4, column=1, pady=5)
         self.cantidad_creada_entry.insert(0, "1")
 
         # Frame para los empaques (dentro de tu formulario)
@@ -307,7 +308,7 @@ class ProductoManager:
         if texto == "":
             event.widget['values'] = self.articulos
         else:
-            resultados = buscar_codigos_like(texto)
+            resultados = db_connect.buscar_codigos_like(texto)
             event.widget['values'] = resultados
 
     def actualizar_color(self, event, color_entry):
@@ -392,7 +393,7 @@ class ProductoManager:
         """Guarda el producto actual como borrador."""
         print(f"ID usuario en guardar_borrador: {self.id_usuario_creador}")
         print(f"Nombre usuario en guardar_borrador: {self.nombre_usuario_creador}")
-        id_creador = self.id_usuario_creador[0][0]
+        id_creador = self.id_usuario_creador
         nombre_creador = str(self.nombre_usuario_creador)
         codigo_producto = self.codigo_entry.get()
         tipo_producto = self.tipo_combobox.get()
@@ -402,17 +403,18 @@ class ProductoManager:
         materiales_actuales = self.materiales_usados.copy()
         
         # Empaques
-        materiales_de_empaque = self.empaques_seleccionados.copy()  # Lista de los empaques
-        
+        materiales_de_empaque = self.empaques_seleccionados.copy()  # Lista de los empaques        
         empaques_str = ",".join(materiales_de_empaque) if materiales_de_empaque else "" # Conversión  de empaques a str.
+        
+        materiales_actuales_json = json.dumps(materiales_actuales) # Cambiar formato para poder guardar en db
 
         if not codigo_producto and not descripcion_producto and not materiales_actuales and not empaques_str:
             messagebox.showwarning("Advertencia", "No hay datos para guardar como borrador.")
         else:
-            guardar_borrador_db(
+            db_connect.guardar_borrador_db(
                 id_creador, nombre_creador, codigo_producto, tipo_producto,
                 tiempo_invertido, cantida_producidas, descripcion_producto,
-                materiales_actuales, empaques_str
+                materiales_actuales_json, empaques_str
             )
 
     def mostrar_resumen_materiales(self, ventana_padre):
@@ -492,7 +494,7 @@ class ProductoManager:
         entry_cant.grid(row=2, column=1, padx=5)
 
         # Cargar códigos disponibles
-        combo_codigo["values"] = obtener_codigo_materiales()
+        combo_codigo["values"] = db_connect.obtener_codigo_materiales()
 
         # Funciones para el Treeview y el editor
         def cargar_en_editor(event=None):
@@ -522,12 +524,12 @@ class ProductoManager:
             codigo = codigo_var.get()
             if not codigo:
                 return
-            data = obtener_material_por_codigo(codigo)
-            if not data:
+            nombre, tipo, tamaño, color, = db_connect.obtener_material_por_codigo(codigo)
+            if not nombre:
                 return
-            color_var.set(data["color"])
-            tipo_var.set(data["tipo"])
-            tam_var.set(data["tamaño"])
+            color_var.set(color)
+            tipo_var.set(tipo)
+            tam_var.set(tamaño)
 
         def guardar():
             self.materiales_usados.clear()
@@ -594,7 +596,7 @@ class ProductoManager:
         self.cargar_datos_en_treeview()
 
 
-    def limitar_texto(self, texto, limite=20):
+    def limitar_texto(self, texto, limite=15):
         """Limitara la cantidad de caracteres dentro de una columna de borradores pendientes."""
         if len(texto) > limite:
             return texto[:limite] + "..."
@@ -625,7 +627,7 @@ class ProductoManager:
     def mostrar_borradores_pendientes(self):
         """Muestra una ventana con los borradores pendientes."""
         borradores_window = tk.Toplevel(self.root)
-        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=840, alto_min=300, color_fondo="#101113")
+        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=795, alto_min=300, color_fondo="#101113")
         
         # Crear un frame principal para el Canvas y el Scrollbar
         borradores_main = tk.Frame(borradores_window)
@@ -646,7 +648,7 @@ class ProductoManager:
         borradores_frame = tk.Frame(canvas, bg="#101113")
         canvas.create_window((0,0), window=borradores_frame, anchor="nw")
         
-        borradores = borradores_pendientes()
+        borradores = db_connect.borradores_pendientes()
         
         # Encabezados AJUSTAR QUITAL ALGUNOS
         encabezados = ["ID", "Código", "Creador", "Tipo", "Tiempo Fab.", "Cantidad", "Descripción", "Fecha ini.", "Acciones"]
@@ -655,7 +657,7 @@ class ProductoManager:
 
         for i, borrador in enumerate(borradores):
             # Mostrar los datos en las columnas 0 a 7
-            for j in range(len(borrador) - 1):  # Solo hasta la penúltima columna
+            for j in range(len(borrador)):  # Solo hasta la penúltima columna se quito -1 por no mostrar la fecha.
                 texto_limitado = self.limitar_texto(str(borrador[j]))
                 label = tk.Label(borradores_frame, text=texto_limitado, bg="#101113", fg="#ffffff", cursor="hand2")
                 label.grid(row=i+1, column=j, padx=5, pady=5, sticky="nsew")
@@ -673,7 +675,7 @@ class ProductoManager:
         
     def cargar_borrador(self, borrador_id, borradores_window):
         """Carga un borrador seleccionado."""
-        borrador = cargar_borrador_db(borrador_id) # Consulta a la db vieja
+        borrador = db_connect.cargar_borrador_db(borrador_id) # Consulta a la db vieja
         if borrador: # and borrador_emp:
             self.codigo_entry.delete(0, tk.END)
             self.descripcion_entry.delete(0, tk.END)
@@ -749,22 +751,140 @@ class ProductoManager:
         resumen_window = tk.Toplevel(self.root)
         configurar_toplevel(resumen_window, titulo="Resumen del Producto", ancho_min=500, alto_min=450)
 
+        # Acortar la descripción si es muy larga
+        descripcion_corta = (
+            f"{self.descripcion_producto[:16]}..."
+            if len(self.descripcion_producto) > 16
+            else self.descripcion_producto)
+        
         tk.Label(resumen_window, text=f"""=== RESUMEN DEL PRODUCTO ===\n
                     Código: {self.codigo_producto}\n
                     Tipo: {self.tipo_producto}\n
-                    Descripción: {self.descripcion_producto}\n
+                    Descripción: {descripcion_corta}\n
                     Tipo de Empaque: {len(self.empaques_seleccionados)}\n
                     Materiales usados: {len(self.materiales_usados)}\n
                     Costo de producción: {self.costo_produccion}\n
-                    Precio de venta sugerido: {round(precio_sugerido, 2)}""", justify=tk.LEFT).pack(padx=10, pady=10)
+                    Precio de venta sugerido: {round(precio_sugerido,2)}""", justify=tk.LEFT).pack(padx=10, pady=10)
         
         tk.Label(resumen_window, text="Precio de venta:").pack()
         precio_entry = tk.Entry(resumen_window)
         precio_entry.pack(pady=5)
         precio_entry.insert(0, precio_sugerido)
+        
 
         def guardar_producto():
-            """ Guarda el nuevo producto en la base de datos."""
+            """Guarda el nuevo producto y descuenta empaques/materiales solo si todo es exitoso."""
+            try:
+                # Validar el precio
+                self.precio_venta = round(float(precio_entry.get()), 2)
+            except ValueError:
+                messagebox.showerror("⚠️ Error", "Introduce un número válido para el precio.")
+                return
+
+            # Validar que el código no exista
+            validar_codigo = db_connect.validar_codigo_producto()
+            codigo_ingresado = self.codigo_entry.get()
+            if codigo_ingresado in validar_codigo:
+                messagebox.showerror("⚠️ Error", "El código ya existe.")
+                return
+
+            # Validar stock de materiales antes de iniciar la transacción
+            for material in self.materiales_usados:
+                stock_actual = db_connect.obtener_stock_material(material["codigo"])
+                if stock_actual < material["cantidad"]:
+                    messagebox.showerror(
+                        "Stock insuficiente",
+                        f"No hay suficiente stock del material {material['codigo']}. "
+                        f"Stock disponible: {stock_actual}, requerido: {material['cantidad']}."
+                    )
+                    return  # Detener el proceso si no hay stock suficiente
+
+            # Iniciar transacción
+            if not db_connect.begin_transaction():
+                messagebox.showerror("Error", "No se pudo iniciar la transacción.")
+                return
+
+            try:
+                # Validar stock de empaques antes de iniciar la transacción
+                if self.empaques_seleccionados:
+                    self.exito, self.mensaje = db_connect.validar_stock_empaques(self.empaques_seleccionados)
+                    if not self.exito:
+                        respuesta = messagebox.askyesno(
+                            "Stock insuficiente",
+                            f"{self.mensaje}\n\n¿Deseas continuar sin estos empaques?"
+                        )
+                        if not respuesta:
+                            db_connect.rollback_transaction()
+                            return
+                        else:
+                            pass  # Detener el proceso si el usuario no quiere continuar
+                
+                # Convertir materiales y empaques a strings
+                materiales_reales = []
+                for material in self.materiales_usados:
+                    nombre = obtener_nombre_material_por_codigo(material["codigo"])
+                    materiales_reales.append(nombre)
+                materiales_str = ",".join(materiales_reales) if materiales_reales else ""
+                empaques_str = ",".join(self.empaques_seleccionados) if self.empaques_seleccionados else ""
+
+                # Insertar el producto
+                id_registro = db_connect.insertar_producto(
+                    self.codigo_producto,
+                    self.nombre_producto,
+                    self.tipo_producto,
+                    self.costo_produccion,
+                    self.precio_venta,
+                    materiales_str,
+                    self.tiempo_fabricacion,
+                    self.cantidad_creada,
+                    self.descripcion_producto,
+                    empaques_str
+                )
+                
+                # Obtener el ID del producto recién insertado
+                id_producto = db_connect.obtener_id_producto_por_codigo(self.codigo_producto)
+                if not id_producto:
+                    raise Exception("No se pudo obtener el ID del producto.")
+
+                # Insertar los detalles del producto (materiales)
+                for material in self.materiales_usados:
+                    id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+                    if id_material is not None:
+                        db_connect.insertar_detalle_producto(
+                            id_producto,
+                            id_material,
+                            material["cantidad"],
+                            material["tipo"],
+                            material["tamaño"]
+                        )
+                    else:
+                        raise Exception(f"Material no encontrado: {material['codigo']}")
+                    
+                # Enviar la lista completa de empaques al método
+                self.exito, self.mensaje = db_connect.descontar_empaques(self.empaques_seleccionados)
+                
+                # Descontar stock de materiales y empaques (solo si todo lo anterior tuvo éxito)
+                for material in self.materiales_usados:
+                    db_connect.actualizar_stock_material(material["codigo"], material["cantidad"])
+
+                # Confirmar la transacción
+                if not db_connect.commit_transaction():
+                    messagebox.showerror("Error", "No se pudo confirmar la transacción.")
+                    return
+
+                db_connect.marcar_borrador_como_creado(self.codigo_producto)
+                messagebox.showinfo("Éxito", "Producto creado y guardado correctamente.")
+                resumen_window.destroy()
+                self.volver_menu()
+
+            except Exception as e:
+                # Si algo falla, revertir la transacción
+                db_connect.rollback_transaction()
+                messagebox.showerror("Error", f"Ocurrió un error al guardar el producto: {e}")
+
+
+        """def guardar_producto():
+            """ 'Guarda el nuevo producto en la base de datos.'"""
             try:
                 self.precio_venta = round(float(precio_entry.get()), 2)
             except ValueError:
@@ -779,43 +899,45 @@ class ProductoManager:
                 messagebox.showerror("⚠️ Error", "El código ya existe.")
                 return
             
-            self.exito, self.mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
-            
-            if not self.exito:
-                respuesta = messagebox.askyesno(
-                    "Stock insuficiente",
-                    f"{self.mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
-                )
-                if respuesta:
-                    messagebox.showinfo("Continuar", "Se continuara con el guardado del producto")
-                else:
-                    return
+            def descontar_material_empaque():
+                self.exito, self.mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
+                
+                if not self.exito:
+                    respuesta = messagebox.askyesno(
+                        "Stock insuficiente",
+                        f"{self.mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
+                    )
+                    if respuesta:
+                        messagebox.showinfo("Continuar", "Se continuara con el guardado del producto")
+                    else:
+                        return
             
             materiales_reales = []
             for material in self.materiales_usados:
                 nombre = obtener_nombre_material_por_codigo(material["codigo"])
                 materiales_reales.append(nombre)
             
+            materiales_str = ",".join(materiales_reales) if materiales_reales else "" # Conversión de materiales a str.
             materiales_empaque = self.empaques_seleccionados
             empaques_str = ",".join(materiales_empaque) if materiales_empaque else "" # Conversión  de empaques a str.
 
-            insertar_producto(
+            id_registro = db_connect.insertar_producto(
                 self.codigo_producto,
                 self.nombre_producto,
                 self.tipo_producto,
                 self.costo_produccion,
                 self.precio_venta,
-                materiales_reales,
+                materiales_str,
                 self.tiempo_fabricacion,
                 self.cantidad_creada,
                 self.descripcion_producto,
                 empaques_str
             )
 
-            id_producto = obtener_id_producto_por_codigo(self.codigo_producto)
+            id_producto = db_connect.obtener_id_producto_por_codigo(self.codigo_producto)
 
             for material in self.materiales_usados:
-                id_material = obtener_id_material_por_codigo(material["codigo"])
+                id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
                 if id_material is not None:
                     insertar_detalle_producto(id_producto, id_material, material["cantidad"], material["tipo"], material["tamaño"])
                 else:
@@ -824,11 +946,12 @@ class ProductoManager:
             for material in self.materiales_usados:
                 actualizar_stock_material(material["codigo"], material["cantidad"])
 
-            marcar_borrador_como_creado(self.codigo_producto)
+            db_connect.marcar_borrador_como_creado(self.codigo_producto)
+            descontar_material_empaque()
             messagebox.showinfo("Éxito", "Producto creado y guardado correctamente.")
             resumen_window.destroy()
-            self.volver_menu()
-
+            self.volver_menu()"""
+            
         crear_boton(resumen_window,
             texto="Guardar Producto",
             ancho=30,

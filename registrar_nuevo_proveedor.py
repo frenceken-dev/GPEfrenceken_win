@@ -1,6 +1,6 @@
 # registrar_nuevo_proveedor.py
 
-from db import obtener_id_proveedor_por_nombre
+#from db import obtener_id_proveedor_por_nombre
 #from menus import ingresar_inventario
 import tkinter as tk
 from tkinter import messagebox
@@ -130,7 +130,7 @@ def comprobacion_registro(nombre, frame_contenido, volver_menu, root, imagen_pan
     inventario_manager = InventarioManager(root, imagen_panel_tk, volver_menu)
     
     # Realizar la comprobacion el base de datos
-    proveedor = obtener_id_proveedor_por_nombre(nombre)
+    proveedor = db_connect.obtener_id_proveedor_por_nombre(nombre)
     if proveedor is not None:
         messagebox.showinfo("Guardado", "El proveedor se guardo correctamente.")
         #inventario_manager.iniciar_interfaz()

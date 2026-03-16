@@ -26,338 +26,341 @@ def init_db():
     
 
 # Obtener todos los Proveedores .
-def obtener_proveedores():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT nombre FROM Proveedores')
-    proveedores = cursor.fetchall()
-    conn.close()
-    return proveedores
+# def obtener_proveedores():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT nombre FROM Proveedores')
+#     proveedores = cursor.fetchall()
+#     conn.close()
+#     return proveedores
 
 
 # Obtener ID del proveedor por su nombre. 
-def obtener_id_proveedor_por_nombre(nombre_proveedor):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id_proveedor FROM Proveedores
-        WHERE nombre = ?
-    ''', (nombre_proveedor,))
-    resultado = cursor.fetchone()
-    conn.commit()
-    conn.close()
-    return resultado[0] if resultado else None
+# def obtener_id_proveedor_por_nombre(nombre_proveedor):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT id_proveedor FROM Proveedores
+#         WHERE nombre = ?
+#     ''', (nombre_proveedor,))
+#     resultado = cursor.fetchone()
+#     conn.commit()
+#     conn.close()
+#     print(resultado[0])
+#     return resultado[0] if resultado else None
 
 
 # Obtener ID de la Factura por su numero. 
-def obtener_id_factura_por_numero(numero_factura):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id_factura FROM Facturas
-        WHERE numero_factura = ?
-    ''', (numero_factura,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else None
+# def obtener_id_factura_por_numero(numero_factura):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT id_factura FROM Facturas
+#         WHERE numero_factura = ?
+#     ''', (numero_factura,))
+#     resultado = cursor.fetchone()
+#     print(resultado)
+#     conn.close()
+#     return resultado[0] if resultado else None
 
 
 # Obtener ID del material por su código.
-def obtener_id_material_por_codigo(codigo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT id_material FROM Materiales WHERE codigo = ?', (codigo,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else None
+# def obtener_id_material_por_codigo(codigo):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT id_material FROM Materiales WHERE codigo = ?', (codigo,))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     return resultado[0] if resultado else None
 
 
 # Obtener ID del nuevo producto por su código.
-def obtener_id_producto_por_codigo(codigo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT id_producto FROM Productos WHERE codigo = ?', (codigo,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else None
+# def obtener_id_producto_por_codigo(codigo):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT id_producto FROM Productos WHERE codigo = ?', (codigo,))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     return resultado[0] if resultado else None
 
 
-def codigo_existe(codigo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT codigo FROM materiales WHERE codigo=?", (codigo,))
-    existe = cursor.fetchone() is not None
-    if existe:
-        return True
-    else:
-        return False
+# def codigo_existe(codigo):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT codigo FROM materiales WHERE codigo=?", (codigo,))
+#     existe = cursor.fetchone() is not None
+#     if existe:
+#         return True
+#     else:
+#         return False
 
 # SE IMPLEMENTO EN EL NUEVO MODULO.
-def obtener_codigo_materiales():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT codigo FROM materiales")
-    existencia = cursor.fetchall()
-    conn.close()
-    return existencia
+# def obtener_codigo_materiales():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT codigo FROM materiales")
+#     existencia = cursor.fetchall()
+#     conn.close()
+#     return existencia
 
 # Ingresar los Items de las facturas.
-def insertar_material(codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    try:
-    # Obtener el id_proveedor usando el nombre
-        #id_proveedor = obtener_id_proveedor_por_nombre(nombre)
-        print(f"Valores a insertar: {codigo}, {nombre}, {tipo}, {tamaño}, {color}, {stock}, {precio}, {costo_unitario}, {id_proveedor}")  # Depuración
+# def insertar_material(codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     try:
+#     # Obtener el id_proveedor usando el nombre
+#         #id_proveedor = obtener_id_proveedor_por_nombre(nombre)
+#         print(f"Valores a insertar: {codigo}, {nombre}, {tipo}, {tamaño}, {color}, {stock}, {precio}, {costo_unitario}, {id_proveedor}")  # Depuración
         
-        cursor.execute('''
-            INSERT INTO Materiales (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor))
-        conn.commit()
-        print("Material insertado correctamente.")  # Depuración
-    except Exception as e:
-        print(f"Error al insertar material: {e}")  # Depuración
-        conn.rollback()
-    finally:
-        conn.close()
+#         cursor.execute('''
+#             INSERT INTO Materiales (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor)
+#             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+#         ''', (codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor))
+#         conn.commit()
+#         print("Material insertado correctamente.")  # Depuración
+#     except Exception as e:
+#         print(f"Error al insertar material: {e}")  # Depuración
+#         conn.rollback()
+#     finally:
+#         conn.close()
         
 
 # Ingresar datos Basicos de la factura para el ingreso de Items.
-def insertar_factura(numero_factura, fecha, nombre_proveedor):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def insertar_factura(numero_factura, fecha, nombre_proveedor):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    print(f"Dato de tipo {type(numero_factura)}: {numero_factura}")
-    print(f"Dato de tipo {type(fecha)}: {fecha}")
-    print(f"Dato de tipo {type(nombre_proveedor)}: {nombre_proveedor}")
+#     print(f"Dato de tipo {type(numero_factura)}: {numero_factura}")
+#     print(f"Dato de tipo {type(fecha)}: {fecha}")
+#     print(f"Dato de tipo {type(nombre_proveedor)}: {nombre_proveedor}")
 
-    # Obtener el id_proveedor usando el nombre
-    id_proveedor = obtener_id_proveedor_por_nombre(nombre_proveedor)
-    print(f"ID del proveedor (antes de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
+#     # Obtener el id_proveedor usando el nombre
+#     #id_proveedor = obtener_id_proveedor_por_nombre(nombre_proveedor)
+#     print(f"ID del proveedor (antes de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
 
-    # Si el proveedor no existe, crear uno nuevo
-    if id_proveedor is None:
-        cursor.execute('''
-            INSERT INTO Proveedores (nombre)
-            VALUES (?)
-        ''', (nombre_proveedor,))
-        conn.commit()
-        id_proveedor = cursor.lastrowid  # Obtener el ID del proveedor recién insertado
-        print(f"ID del proveedor (después de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
+#     # Si el proveedor no existe, crear uno nuevo
+#     if id_proveedor is None:
+#         cursor.execute('''
+#             INSERT INTO Proveedores (nombre)
+#             VALUES (?)
+#         ''', (nombre_proveedor,))
+#         conn.commit()
+#         id_proveedor = cursor.lastrowid  # Obtener el ID del proveedor recién insertado
+#         print(f"ID del proveedor (después de insertar): {id_proveedor}, tipo: {type(id_proveedor)}")
 
-    fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Dato de tipo {type(fecha_registro)}: {fecha_registro}")
+#     fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     print(f"Dato de tipo {type(fecha_registro)}: {fecha_registro}")
 
-    # Asegúrate de que id_proveedor sea un entero
-    if isinstance(id_proveedor, tuple):
-        id_proveedor = id_proveedor[0]
+#     # Asegúrate de que id_proveedor sea un entero
+#     if isinstance(id_proveedor, tuple):
+#         id_proveedor = id_proveedor[0]
 
-    cursor.execute('''
-        INSERT INTO Facturas (numero_factura, fecha, fecha_registro, id_proveedor)
-        VALUES (?, ?, ?, ?)
-    ''', (numero_factura, fecha, fecha_registro, id_proveedor))
+#     cursor.execute('''
+#         INSERT INTO Facturas (numero_factura, fecha, fecha_registro, id_proveedor)
+#         VALUES (?, ?, ?, ?)
+#     ''', (numero_factura, fecha, fecha_registro, id_proveedor))
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
     
 
 #  Insertar los detalles de una factura.
-def insertar_detalle_factura(id_factura, id_material, stock,  precio, costo_unitario):
-    print("id: ", id_factura)
-    print("id-materia: ", id_material)
-    print("stock: ", stock)
-    print("Precio: ", precio)
-    print("Costo Uni.: ", costo_unitario)
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO Detalle_Factura (id_factura, id_material, stock, precio, costo_unitario)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (id_factura, id_material, stock, precio, costo_unitario))
-    conn.commit()
-    conn.close()
+# def insertar_detalle_factura(id_factura, id_material, stock,  precio, costo_unitario):
+#     print("id: ", id_factura)
+#     print("id-materia: ", id_material)
+#     print("stock: ", stock)
+#     print("Precio: ", precio)
+#     print("Costo Uni.: ", costo_unitario)
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         INSERT INTO Detalle_Factura (id_factura, id_material, stock, precio, costo_unitario)
+#         VALUES (?, ?, ?, ?, ?)
+#     ''', (id_factura, id_material, stock, precio, costo_unitario))
+#     conn.commit()
+#     conn.close()
     
     
-# Se registra un nuevo producto creado por Ikigai.
-def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion, empaque):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute('''
-        INSERT INTO Productos (codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaques)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (codigo, nombre, tipo, costo_producto, precio_venta, ", ".join(materiales_usados), tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaque)) 
-    conn.commit()
-    conn.close()
-    """db.py", line 187, in insertar_producto
-    cursor.execute('''
-sqlite3.ProgrammingError: Error binding parameter 11: type 'list' is not supported"""
+# # Se registra un nuevo producto creado por Ikigai.
+# def insertar_producto(codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion, empaque):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     cursor.execute('''
+#         INSERT INTO Productos (codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaques)
+#         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#     ''', (codigo, nombre, tipo, costo_producto, precio_venta, ", ".join(materiales_usados), tiempo_fabricacion, cantidad, fecha_registro, descripcion, empaque)) 
+#     conn.commit()
+#     conn.close()
 
-def id_usuario_nombre_actual(nombre_usuario):
-    # Recupera el id del usuario.
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id_usuario
-        FROM Usuarios
-        WHERE nombre_usuario LIKE ?
-    ''', (nombre_usuario,))
-    resultados = cursor.fetchall()
-    conn.close()
-    return resultados
+# def id_usuario_nombre_actual(nombre_usuario):
+#     # Recupera el id del usuario.
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT id_usuario
+#         FROM Usuarios
+#         WHERE nombre_usuario LIKE ?
+#     ''', (nombre_usuario,))
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     return resultados
 
 
-def guardar_borrador_db(usuario_actual_id, 
-                        nombre_usuario_actual, 
-                        codigo_producto, tipo_producto, 
-                        tiempo_invertido, cantidad_producida, 
-                        descripcion, materiales_actuales, 
-                        empaques):
-    # Guardar en la base de datos
-    print(f"Esto es lo que llega para guardar en el borrador: {usuario_actual_id}--{nombre_usuario_actual}")
-    print(f"Esto es lo que llega para guardar en el borrador: {codigo_producto}--{tipo_producto}")
-    print(f"Esto es lo que llega para guardar en el borrador: {tiempo_invertido}--{cantidad_producida}")
-    print(f"Esto es lo que llega para guardar en el borrador: {descripcion}--{materiales_actuales}")
-    print(f"Esto es lo que llega para guardar en el borrador: {empaques}")
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO productos_borrador
-            (usuario_creador_id, nombre_usuario_creador, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales,
-            empaques, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
-        ''', (
-            usuario_actual_id,
-            nombre_usuario_actual,
-            codigo_producto,
-            tipo_producto,
-            tiempo_invertido,
-            cantidad_producida,
-            descripcion,
-            str(materiales_actuales),
-            empaques
-        ))
-        conn.commit()
-        messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
-    except Exception as e:
-        messagebox.showerror("⚠️ Error", f"No se pudo guardar el borrador: {e}")
-    finally:
-        conn.close()
+# def guardar_borrador_db(usuario_actual_id, 
+#                         nombre_usuario_actual, 
+#                         codigo_producto, tipo_producto, 
+#                         tiempo_invertido, cantidad_producida, 
+#                         descripcion, materiales_actuales, 
+#                         empaques):
+#     # Guardar en la base de datos
+#     print(f"Esto es lo que llega para guardar en el borrador: {usuario_actual_id}--{nombre_usuario_actual}")
+#     print(f"Esto es lo que llega para guardar en el borrador: {codigo_producto}--{tipo_producto}")
+#     print(f"Esto es lo que llega para guardar en el borrador: {tiempo_invertido}--{cantidad_producida}")
+#     print(f"Esto es lo que llega para guardar en el borrador: {descripcion}--{materiales_actuales}")
+#     print(f"Esto es lo que llega para guardar en el borrador: {empaques}")
+#     try:
+#         conn = sqlite3.connect(db_path)
+#         cursor = conn.cursor()
+#         cursor.execute('''
+#             INSERT INTO productos_borrador
+#             (usuario_creador_id, nombre_usuario_creador, codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, materiales,
+#             empaques, estado)
+#             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
+#         ''', (
+#             usuario_actual_id,
+#             nombre_usuario_actual,
+#             codigo_producto,
+#             tipo_producto,
+#             tiempo_invertido,
+#             cantidad_producida,
+#             descripcion,
+#             str(materiales_actuales),
+#             empaques
+#         ))
+#         conn.commit()
+#         messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
+#     except Exception as e:
+#         messagebox.showerror("⚠️ Error", f"No se pudo guardar el borrador: {e}")
+#     finally:
+#         conn.close()
 
 
 # Mostrar cantidad de Borradores Pendientes.
-def borradores_pendientes():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id, codigo_producto, nombre_usuario_creador, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, fecha_creacion
-        FROM productos_borrador
-        WHERE estado = 'pendiente'
-        ORDER BY fecha_creacion
-    ''') #  ORDER BY fecha_creacion DESC 
-    borradores = cursor.fetchall()
-    conn.close()
-    return borradores
+# def borradores_pendientes():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT id, codigo_producto, nombre_usuario_creador, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, fecha_creacion
+#         FROM productos_borrador
+#         WHERE estado = 'pendiente'
+#         ORDER BY fecha_creacion
+#     ''') #  ORDER BY fecha_creacion DESC 
+#     borradores = cursor.fetchall()
+#     print(borradores)
+#     conn.close()
+#     return borradores
 
 
-def marcar_borrador_como_creado(codigo_borrador):
-    """Actualiza el estado de un borrador a 'creado' y registra la fecha de finalización."""
-    print(f"El Código del Borrador Culminado es: {codigo_borrador}, se cambia estatus a Creado. DB")
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE productos_borrador
-            SET estado = 'creado',
-                fecha_finalizacion = CURRENT_TIMESTAMP
-            WHERE codigo_producto = ?
-        ''', (codigo_borrador,))
-        conn.commit()
-        return True
-    except Exception as e:
-        print(f"⚠️ Error al actualizar el borrador: {e}")
-        return False
-    finally:
-        conn.close()
+# def marcar_borrador_como_creado(codigo_borrador):
+#     """Actualiza el estado de un borrador a 'creado' y registra la fecha de finalización."""
+#     print(f"El Código del Borrador Culminado es: {codigo_borrador}, se cambia estatus a Creado. DB")
+#     try:
+#         conn = sqlite3.connect(db_path)
+#         cursor = conn.cursor()
+#         cursor.execute('''
+#             UPDATE productos_borrador
+#             SET estado = 'creado',
+#                 fecha_finalizacion = CURRENT_TIMESTAMP
+#             WHERE codigo_producto = ?
+#         ''', (codigo_borrador,))
+#         conn.commit()
+#         return True
+#     except Exception as e:
+#         print(f"⚠️ Error al actualizar el borrador: {e}")
+#         return False
+#     finally:
+#         conn.close()
 
 
 # Carga el borrador seleccionado.
-def cargar_borrador_db(borrador_id):
-    print(f"EL ID BORRADOR ES: {borrador_id}")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, 
-        materiales, empaques FROM productos_borrador WHERE id = ? ''', (borrador_id,))
-    borrador = cursor.fetchone()
-    conn.close()
-    return borrador
+# def cargar_borrador_db(borrador_id):
+#     print(f"EL ID BORRADOR ES: {borrador_id}")
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT codigo_producto, tipo_producto, tiempo_invertido, cantidad_producida, descripcion, 
+#         materiales, empaques FROM productos_borrador WHERE id = ? ''', (borrador_id,))
+#     borrador = cursor.fetchone()
+#     conn.close()
+#     print(borrador)
+#     return borrador
 
 
 # Obtener los materiales empleados en un producto creado.
-def insertar_detalle_producto(id_producto, id_material, cantidad, tipo, tamaño):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO Detalle_Producto
-        (id_producto, id_material, cantidad, tipo_material, tamaño_material)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (id_producto, id_material, cantidad, tipo, tamaño))
-    conn.commit()
-    conn.close()
+# def insertar_detalle_producto(id_producto, id_material, cantidad, tipo, tamaño):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         INSERT INTO Detalle_Producto
+#         (id_producto, id_material, cantidad, tipo_material, tamaño_material)
+#         VALUES (?, ?, ?, ?, ?)
+#     ''', (id_producto, id_material, cantidad, tipo, tamaño))
+#     conn.commit()
+#     conn.close()
     
     
 # Obtener Materiales para creacion de producto. SE IMPLEMENTO EN EL NUEVO MODULO.
-def obtener_materiales():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Materiales')
-    materiales = cursor.fetchall()
-    conn.close()
-    return materiales
+# def obtener_materiales_pro():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT * FROM Materiales')
+#     materiales = cursor.fetchall()
+#     conn.close()
+#     print(materiales)
+#     return materiales
 
 
-def obtener_material_por_codigo(codigo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def obtener_material_por_codigo(codigo):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    cursor.execute("""SELECT color, tipo, tamaño
-            FROM materiales
-            WHERE codigo = ?""", (codigo,))
+#     cursor.execute("""SELECT color, tipo, tamaño
+#             FROM materiales
+#             WHERE codigo = ?""", (codigo,))
 
-    fila = cursor.fetchone()
-    conn.close()
+#     fila = cursor.fetchone()
+#     conn.close()
 
-    print("DB MATERIAL POR CODIGO:", fila)
+#     print("DB MATERIAL POR CODIGO:", fila)
 
-    if not fila:
-        return None
+#     if not fila:
+#         return None
 
-    return {
-        "color": fila[0],
-        "tipo": fila[1],
-        "tamaño": fila[2]
-    }
+#     return {
+#         "color": fila[0],
+#         "tipo": fila[1],
+#         "tamaño": fila[2]
+#     }
 
 
 # Obtener los codigos por patron
-def buscar_codigos_like(texto):
-    print("EL TEXTO RECIBIDO PARA EL CODIGO ES: ", texto)
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    patron = f"%{texto}%"
+# def buscar_codigos_like(texto):
+#     print("EL TEXTO RECIBIDO PARA EL CODIGO ES: ", texto)
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     patron = f"%{texto}%"
 
-    cursor.execute("""
-        SELECT DISTINCT codigo
-        FROM Materiales
-        WHERE codigo LIKE ?
-    """, (patron,))
+#     cursor.execute("""
+#         SELECT DISTINCT codigo
+#         FROM Materiales
+#         WHERE codigo LIKE ?
+#     """, (patron,))
 
-    resultados = [fila[0] for fila in cursor.fetchall()]
-    conn.close()
-    return resultados
+#     resultados = [fila[0] for fila in cursor.fetchall()]
+#     print(resultados)
+#     conn.close()
+#     return resultados
 
 # Obtener el nombre del material por el código
 def obtener_nombre_material_por_codigo(codigo_material):
@@ -405,16 +408,16 @@ def obtener_costo_unitario_material(codigo_material):
 
 
 # Función para actualizar el stock de un material en la base de datos
-def actualizar_stock_material(codigo, cantidad):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        UPDATE Materiales
-        SET stock = stock - ?
-        WHERE codigo = ?
-    ''', (cantidad, codigo))
-    conn.commit()
-    conn.close()
+# def actualizar_stock_material(codigo, cantidad):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         UPDATE Materiales
+#         SET stock = stock - ?
+#         WHERE codigo = ?
+#     ''', (cantidad, codigo))
+#     conn.commit()
+#     conn.close()
     
 
 # Obtener los productos ya creados.
@@ -429,7 +432,7 @@ def obtener_productos():
 
 # Seleccionar el color del material por nombre
 def obtener_color_por_material(codigo_material):
-    print("CODIGO ENTREGADO A LA CONSULTA", codigo_material)
+    #print("CODIGO ENTREGADO A LA CONSULTA", codigo_material)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     #patron_busqueda = f"%{codigo_material}%"
@@ -440,7 +443,7 @@ def obtener_color_por_material(codigo_material):
     ''', (codigo_material,))
     resultados = cursor.fetchall()
     conn.close()
-    print("RESULATDO DE LA BASE DE DATOS", resultados)
+    #print("RESULATDO DE LA BASE DE DATOS", resultados)
     return [resultado[0] for resultado in resultados]
 
 
@@ -866,123 +869,128 @@ def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
     return id_factura
     
 
-def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-# Actualiza los materiales en la base de datos.
-    try:
-        if tipo_busqueda == "Todos los Materiales":
-            # Usar valores originales si no se editaron.
-            codigo = nuevos_valores.get("Código", valores_originales[0])
-            nombre = nuevos_valores.get("Nombre", valores_originales[1])
-            tipo = nuevos_valores.get("Tipo", valores_originales[2])
-            tamaño = nuevos_valores.get("Tamaño", valores_originales[3])
-            color = nuevos_valores.get("Color", valores_originales[4])
-            stock = nuevos_valores.get("Stock", valores_originales[5])
-            precio = nuevos_valores.get("Costo", valores_originales[6])
-            costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[7])
-            print("DATOS QUE LLEGAN Todos los Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
-            cursor.execute("""
-                UPDATE Materiales
-                SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
-                WHERE codigo=?
-            """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
+# def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+    
+#     print(f"Tipo de Busqueda: {tipo_busqueda}")
+#     print(f"Nuevos valores: {nuevos_valores}")
+#     print(f"Valores Originales: {valores_originales}")
+#     print(f"El id_item es: {id_item}")
+# # Actualiza los materiales en la base de datos.
+#     try:
+#         if tipo_busqueda == "Todos los Materiales":
+#             # Usar valores originales si no se editaron.
+#             codigo = nuevos_valores.get("Código", valores_originales[0])
+#             nombre = nuevos_valores.get("Nombre", valores_originales[1])
+#             tipo = nuevos_valores.get("Tipo", valores_originales[2])
+#             tamaño = nuevos_valores.get("Tamaño", valores_originales[3])
+#             color = nuevos_valores.get("Color", valores_originales[4])
+#             stock = nuevos_valores.get("Stock", valores_originales[5])
+#             precio = nuevos_valores.get("Costo", valores_originales[6])
+#             costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[7])
+#             print("DATOS QUE LLEGAN Todos los Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
+#             cursor.execute("""
+#                 UPDATE Materiales
+#                 SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
+#                 WHERE codigo=?
+#             """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
             
-        elif tipo_busqueda == "Material especifico":
-            # Usar valores originales si no se editaron
-            codigo = nuevos_valores.get("Código", valores_originales[3])
-            nombre = nuevos_valores.get("Nombre", valores_originales[4])
-            tipo = nuevos_valores.get("Tipo", valores_originales[5])
-            tamaño = nuevos_valores.get("Tamaño", valores_originales[7])
-            color = nuevos_valores.get("Color", valores_originales[7])
-            stock = nuevos_valores.get("Stock", valores_originales[8])
-            precio = nuevos_valores.get("Costo", valores_originales[9])
-            costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[10])
-            print("DATOS QUE LLEGAN Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
+#         elif tipo_busqueda == "Material especifico":
+#             # Usar valores originales si no se editaron
+#             codigo = nuevos_valores.get("Código", valores_originales[3])
+#             nombre = nuevos_valores.get("Nombre", valores_originales[4])
+#             tipo = nuevos_valores.get("Tipo", valores_originales[5])
+#             tamaño = nuevos_valores.get("Tamaño", valores_originales[7])
+#             color = nuevos_valores.get("Color", valores_originales[7])
+#             stock = nuevos_valores.get("Stock", valores_originales[8])
+#             precio = nuevos_valores.get("Costo", valores_originales[9])
+#             costo_unitario = nuevos_valores.get("Costo Unit.", valores_originales[10])
+#             print("DATOS QUE LLEGAN Materiales: ", nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo)
             
-            cursor.execute("""
-                UPDATE Materiales
-                SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
-                WHERE codigo=?
-            """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
+#             cursor.execute("""
+#                 UPDATE Materiales
+#                 SET nombre=?, tipo=?, tamaño=?, color=?, stock=?, precio=?, costo_unitario=?
+#                 WHERE codigo=?
+#             """, (nombre, tipo, tamaño, color, stock, precio, costo_unitario, codigo))
 
-        elif tipo_busqueda == "Código especifico":
-            proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
-            codigo = nuevos_valores.get("Código", valores_originales[3])
+#         elif tipo_busqueda == "Código especifico":
+#             proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
+#             codigo = nuevos_valores.get("Código", valores_originales[3])
             
-            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
-            if isinstance(id_proveedor, tuple):
-                id_proveedor = id_proveedor[0]
+#             #id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+#             if isinstance(id_proveedor, tuple):
+#                 id_proveedor = id_proveedor[0]
 
-            id_material = obtener_codigo_por_id(valores_originales[3])
-            if isinstance(id_material, tuple):
-                id_material = id_material[0]
+#             id_material = obtener_codigo_por_id(valores_originales[3])
+#             if isinstance(id_material, tuple):
+#                 id_material = id_material[0]
 
-            cursor.execute("""
-                UPDATE Materiales
-                SET codigo=?
-                WHERE id_material=?
-            """, (codigo, id_material))
+#             cursor.execute("""
+#                 UPDATE Materiales
+#                 SET codigo=?
+#                 WHERE id_material=?
+#             """, (codigo, id_material))
         
-        elif tipo_busqueda == "Proveedor especifico":
-            proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
-            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
-            if isinstance(id_proveedor, tuple):
-                id_proveedor = id_proveedor[0]
+#         elif tipo_busqueda == "Proveedor especifico":
+#             proveedor = nuevos_valores.get("Proveedor", valores_originales[0])
+#             #id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+#             if isinstance(id_proveedor, tuple):
+#                 id_proveedor = id_proveedor[0]
 
-            cursor.execute("""
-                UPDATE Proveedores
-                SET nombre=?
-                WHERE id_proveedor=?
-            """, (proveedor, id_proveedor))
+#             cursor.execute("""
+#                 UPDATE Proveedores
+#                 SET nombre=?
+#                 WHERE id_proveedor=?
+#             """, (proveedor, id_proveedor))
 
-        elif tipo_busqueda == "Factura Proveedor":
-            factura_n = nuevos_valores.get("Factura N°", valores_originales[1])
-            fecha = nuevos_valores.get("Fecha", valores_originales[2])
+#         elif tipo_busqueda == "Factura Proveedor":
+#             factura_n = nuevos_valores.get("Factura N°", valores_originales[1])
+#             fecha = nuevos_valores.get("Fecha", valores_originales[2])
 
-            id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
-            if isinstance(id_proveedor, tuple):
-                id_proveedor = id_proveedor[0]
+#             #id_proveedor = obtener_id_proveedor_por_nombre(valores_originales[0])
+#             if isinstance(id_proveedor, tuple):
+#                 id_proveedor = id_proveedor[0]
 
-            id_factura = obtener_id_factura_por_proveedor(id_proveedor, valores_originales[1])
-            if isinstance(id_factura, tuple):
-                id_factura = id_factura[0]
-                print("El ID DE LA FACTURA ES: ", id_factura)
-            cursor.execute("""
-                UPDATE Facturas
-                SET numero_factura=?, fecha=?
-                WHERE id_factura=?
-            """, (factura_n, fecha, id_factura))
+#             id_factura = obtener_id_factura_por_proveedor(id_proveedor, valores_originales[1])
+#             if isinstance(id_factura, tuple):
+#                 id_factura = id_factura[0]
+#                 print("El ID DE LA FACTURA ES: ", id_factura)
+#             cursor.execute("""
+#                 UPDATE Facturas
+#                 SET numero_factura=?, fecha=?
+#                 WHERE id_factura=?
+#             """, (factura_n, fecha, id_factura))
 
-        elif tipo_busqueda in ["Todos los Productos", "Producto especifico"]:
-            id_producto = obtener_id_producto_por_codigo(valores_originales[0])
-            print("EL ID DEL PRODUCTO ES: ", id_producto)
-            cursor.execute("""
-                UPDATE Productos
-                SET codigo=?, tipo=?, costo_producto=?, precio_venta=?, materiales_usados=?, tiempo_fabricacion=?, cantidad=?, fecha_registro=?, descripcion=?
-                WHERE id_producto=?
-            """, (
-                nuevos_valores.get("Código", valores_originales[0]),
-                nuevos_valores.get("Tipo", valores_originales[1]),
-                nuevos_valores.get("Costo Venta", valores_originales[2]),
-                nuevos_valores.get("Precio Venta", valores_originales[3]),
-                nuevos_valores.get("Materiales Usados", valores_originales[4]),
-                nuevos_valores.get("Tiempo Fabricación", valores_originales[5]),
-                nuevos_valores.get("Cantidad", valores_originales[6]),
-                nuevos_valores.get("Fecha R", valores_originales[7]),
-                nuevos_valores.get("Descripción", valores_originales[8]),
-                id_producto
-            ))
+#         elif tipo_busqueda in ["Todos los Productos", "Producto especifico"]:
+#             # id_producto = obtener_id_producto_por_codigo(valores_originales[0])
+#             # print("EL ID DEL PRODUCTO ES: ", id_producto)
+#             cursor.execute("""
+#                 UPDATE Productos
+#                 SET codigo=?, tipo=?, costo_producto=?, precio_venta=?, materiales_usados=?, tiempo_fabricacion=?, cantidad=?, fecha_registro=?, descripcion=?
+#                 WHERE id_producto=?
+#             """, (
+#                 nuevos_valores.get("Código", valores_originales[0]),
+#                 nuevos_valores.get("Tipo", valores_originales[1]),
+#                 nuevos_valores.get("Costo Venta", valores_originales[2]),
+#                 nuevos_valores.get("Precio Venta", valores_originales[3]),
+#                 nuevos_valores.get("Materiales Usados", valores_originales[4]),
+#                 nuevos_valores.get("Tiempo Fabricación", valores_originales[5]),
+#                 nuevos_valores.get("Cantidad", valores_originales[6]),
+#                 nuevos_valores.get("Fecha R", valores_originales[7]),
+#                 nuevos_valores.get("Descripción", valores_originales[8]),
+#                 #id_producto
+#             ))
             
-        conn.commit()
+#         conn.commit()
 
-    except sqlite3.Error as e:
-        print(f"⚠️ Error al actualizar la base de datos: {e}")
-        conn.rollback()
-        messagebox.showerror("⚠️ Error", f"No se pudo actualizar la base de datos: {e}")
+#     except sqlite3.Error as e:
+#         print(f"⚠️ Error al actualizar la base de datos: {e}")
+#         conn.rollback()
+#         messagebox.showerror("⚠️ Error", f"No se pudo actualizar la base de datos: {e}")
 
-    finally:
-        conn.close()
+#     finally:
+#         conn.close()
 
 
 # Busca las notas de entrega para mostrar en la busqueda.
@@ -2136,3 +2144,10 @@ if __name__ == "__main__":
     #actualizar_clave()
     #columnas_usuario()
     #agregar_en_usuarios()
+    #obtener_id_proveedor_por_nombre("TEMU")
+    #obtener_id_factura_por_numero(987654321)
+    #buscar_en_bd("Todos los Materiales", "")
+    #borradores_pendientes()
+    #cargar_borrador_db(17)
+    #obtener_materiales_pro()
+    #buscar_codigos_like("ALF")

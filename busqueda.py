@@ -2,10 +2,12 @@
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
-from db import buscar_en_bd, obtener_materiales, encotrar_notas_entrega, encontrar_facturas, actualizar_en_bd
+from db import buscar_en_bd, encotrar_notas_entrega, encontrar_facturas #actualizar_en_bd, obtener_materiales
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
 #from inventario import convertir_a_float
+from databasemanager import DataBaseManager
 
+db_connect = DataBaseManager()
 def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usuario_actual):
     # Limpiar el frame de contenido
     for widget in root.winfo_children():
@@ -169,7 +171,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         # Ajustar el ancho de las columnas
         tree.column("Proveedor", width=100)
         tree.column("Factura N°", width=80)
-        tree.column("Fecha", width=80)
+        tree.column("Fecha", width=78)
         tree.column("Código", width=50)
         tree.column("Artículo", width=100)
         tree.column("Tipo", width=60)
@@ -214,7 +216,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         tree.column("Materiales Usados", width=240)
         tree.column("Cantidad", width=40)
         tree.column("Tiempo Fabricación", width=40)
-        tree.column("Fecha R", width=80)
+        tree.column("Fecha R", width=78)
         tree.column("Descripción", width=240)
 
         # Insertar los resultados en el Treeview
@@ -287,7 +289,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         tree.column("Materiales Usados", width=240)
         tree.column("Cantidad", width=40)
         tree.column("Tiempo Fabricación", width=40)
-        tree.column("Fecha R", width=80)
+        tree.column("Fecha R", width=78)
         tree.column("Descripción", width=240)
 
         # Insertar los resultados en el Treeview
@@ -506,8 +508,8 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         tree.column("Tipo Producto", width=60)
         tree.column("Cantidad creada", width=60)
         tree.column("Fecha Creación", width=60)
-        tree.column("Fecha Culminación", width=62)
-        tree.column("Estado Actual", width=50)
+        tree.column("Fecha Culminación", width=60)
+        tree.column("Estado Actual", width=52)
 
         # Insertar los resultados en el Treeview
         for resultado in resultados:
@@ -638,7 +640,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                     messagebox.showerror("⚠️ Error", "El precio o la cantidad no son valores numéricos válidos.")
                     
             # Llamar a la función para actualizar la base de datos
-            actualizar_en_bd(tipo_busqueda, valores[0], nuevos_valores, valores)
+            db_connect.actualizar_en_bd(tipo_busqueda, nuevos_valores, valores) 
             # Actualizar el Treeview con los nuevos valores (incluyendo los no editados)
             tree.item(selected_item, values=nuevos_valores_tree)
             # Cerrar la ventana de edición

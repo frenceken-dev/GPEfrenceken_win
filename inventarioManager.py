@@ -3,12 +3,12 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 from db import (
     obtener_nombres_proveedores,
-    insertar_factura, insertar_material,
-    obtener_id_proveedor_por_nombre,
-    obtener_id_factura_por_numero,
-    obtener_id_material_por_codigo,
-    insertar_detalle_factura,
-    codigo_existe
+    #insertar_material, #insertar_factura,
+    #obtener_id_proveedor_por_nombre,
+    #obtener_id_factura_por_numero,
+    #obtener_id_material_por_codigo,
+    #insertar_detalle_factura,
+    #codigo_existe
 )
 from recursos import crear_boton, configurar_toplevel
 from databasemanager import DataBaseManager
@@ -272,7 +272,7 @@ class InventarioManager:
         def auto_completar_entry(event):
             codigo = codigo_entry.get()
             print(f"Código seleccionado: {codigo}")
-            nombre, tipo, tamaño, color = self.db_connect.obtener_materiales(codigo)
+            nombre, tipo, tamaño, color = self.db_connect.obtener_material_por_codigo(codigo)
 
             if nombre or tipo or tamaño or color:
                 nombre_entry.delete(0, tk.END)
@@ -364,6 +364,7 @@ class InventarioManager:
                         child.set('')
 
     def guardar_factura_y_materiales(self, frame_contenido):
+        
         if not self.datos_factura["proveedor"] or not self.datos_factura["numero_factura"] or not self.datos_factura["fecha"]:
             messagebox.showerror("⚠️ Error", "Faltan datos de la factura (proveedor, número o fecha).")
             return
@@ -373,17 +374,17 @@ class InventarioManager:
             return
         
         #try:
-        insertar_factura(
+        db_connect.insertar_factura(
             self.datos_factura["numero_factura"],
             self.datos_factura["fecha"],
             self.datos_factura["proveedor"]
         )
 
-        id_proveedor = obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
+        id_proveedor = db_connect.obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
         if isinstance(id_proveedor, tuple):
             id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
         
-        id_factura = obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
+        id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
         
         for material in self.materiales_temporales:
             try:
@@ -392,8 +393,8 @@ class InventarioManager:
                 print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
                 material["costo_unitario"] = 0.0
                 
-            codigo_true = codigo_existe(material["codigo"])
-            print(f"El volor de codigo_true: {codigo_true}")
+            codigo_true = db_connect.codigo_existe(material["codigo"])
+            print(f"El valor de codigo_true: {codigo_true}")
             # Verificar si el material existe en la base de datos
             if codigo_true:
                 # Si existe, actualizar el stock y el costo
@@ -407,7 +408,7 @@ class InventarioManager:
                     messagebox.showwarning("Advertencia", mensaje)
             else:
                 # Si no existe, insertar el material completo
-                insertar_material(
+                id_material = db_connect.insertar_material(
                     material["codigo"],
                     material["nombre"],
                     material["tipo"],
@@ -420,11 +421,11 @@ class InventarioManager:
                 )
 
             # 4. Obtener el id_material
-            id_material = obtener_id_material_por_codigo(material["codigo"])
-
+            id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+            print(f"ID que deveulve insertar material: {id_material}")
             # 5. Insertar en Detalle_Factura
             if id_material is not None:
-                insertar_detalle_factura(
+                id_detalle = db_connect.insertar_detalle_factura(
                     id_factura,
                     id_material,
                     material["stock"],
@@ -595,7 +596,7 @@ class InventarioManager:
             color_fondo="#4283fa",
             color_texto="white",
             font=("Arial", 11, "bold"),
-            comando=guardar_cambios
+            comando= lambda : guardar_cambios()
         )
         boton_guardar.pack(side=tk.LEFT, padx=5)
 

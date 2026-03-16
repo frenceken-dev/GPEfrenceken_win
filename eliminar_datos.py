@@ -1,7 +1,7 @@
 # eliminar_datos.py
 import tkinter as tk
 from tkinter import messagebox, ttk
-from db import eliminar_proveedor_bd, obtener_materiales, eliminar_material_bd, obtener_productos, eliminar_producto_bd
+from db import eliminar_proveedor_bd, eliminar_material_bd, obtener_productos, eliminar_producto_bd # obtener_materiales,
 from db import obtener_nombres_usuarios, eliminar_usuario_bd_nombre
 from PIL import Image, ImageTk
 from recursos import crear_boton
@@ -232,7 +232,7 @@ def eliminar_material(root, volver_menu, imagen_tk, imagen_panel_tk):
     tk.Label(eliminar_material_frame, text="Selecciona el material a eliminar:", bg="#a0b9f0", font=("Arial", 12)).pack(pady=10)
 
     # Obtener los nombres de los materiales
-    materiales = obtener_materiales()
+    materiales = db_connect.obtener_materiales_pro()
     nombres_materiales = [material[1:6] for material in materiales]  # quite [2]
 
     material_combobox = ttk.Combobox(eliminar_material_frame, values=nombres_materiales, width=35)
