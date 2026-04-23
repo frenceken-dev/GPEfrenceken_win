@@ -363,16 +363,16 @@ def init_db():
 #     return resultados
 
 # Obtener el nombre del material por el código
-def obtener_nombre_material_por_codigo(codigo_material):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT nombre FROM Materiales WHERE codigo = ?', (codigo_material,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else "Desconocido"
+# def obtener_nombre_material_por_codigo(codigo_material):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT nombre FROM Materiales WHERE codigo = ?', (codigo_material,))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     return resultado[0] if resultado else "Desconocido"
 
 
-# Obtener código del materia por su nombre
+# Obtener código del materia por su nombre NO SE USA 
 def obtener_codigo_material_por_nombre(nombre_material):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -382,29 +382,30 @@ def obtener_codigo_material_por_nombre(nombre_material):
     return resultado[0] if resultado else None
 
 
-# Materales por nombre, tipo, tamaño para crear producto nuevo.
-def obtener_codigo_material_por_nombre_color_tipo_tamaño(codigo, color, tipo, tamaño):
-    print("EL MATERIAL ACTUAL RECIBIDO PARA LA CONSULTA ES: ", codigo)
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT codigo
-        FROM Materiales
-        WHERE codigo = ? AND color = ? AND tipo = ? AND tamaño = ?
-    ''', (codigo, color, tipo, tamaño))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else None
+# Materiales por nombre, tipo, tamaño para crear producto nuevo.
+# def obtener_codigo_material_por_nombre_color_tipo_tamaño(codigo, color, tipo, tamaño):
+#     print("EL MATERIAL ACTUAL RECIBIDO PARA LA CONSULTA ES: ", codigo)
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT codigo
+#         FROM Materiales
+#         WHERE codigo = ? AND color = ? AND tipo = ? AND tamaño = ?
+#     ''', (codigo, color, tipo, tamaño))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     print(resultado)
+#     return resultado[0] if resultado else None
 
 
 # Obtener el costo Unitario del material
-def obtener_costo_unitario_material(codigo_material):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT costo_unitario FROM Materiales WHERE codigo = ?', (codigo_material,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else 0.0
+# def obtener_costo_unitario_material(codigo_material):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT costo_unitario FROM Materiales WHERE codigo = ?', (codigo_material,))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     return resultado[0] if resultado else 0.0
 
 
 # Función para actualizar el stock de un material en la base de datos
@@ -421,299 +422,310 @@ def obtener_costo_unitario_material(codigo_material):
     
 
 # Obtener los productos ya creados.
-def obtener_productos():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Productos')
-    productos = cursor.fetchall()
-    conn.close()
-    return productos
+# def obtener_productos():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT * FROM Productos')
+#     productos = cursor.fetchall()
+#     conn.close()
+#     print(productos)
+#     return productos
 
 
 # Seleccionar el color del material por nombre
-def obtener_color_por_material(codigo_material):
-    #print("CODIGO ENTREGADO A LA CONSULTA", codigo_material)
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    #patron_busqueda = f"%{codigo_material}%"
-    cursor.execute('''
-        SELECT DISTINCT color
-        FROM Materiales
-        WHERE codigo  LIKE ? 
-    ''', (codigo_material,))
-    resultados = cursor.fetchall()
-    conn.close()
-    #print("RESULATDO DE LA BASE DE DATOS", resultados)
-    return [resultado[0] for resultado in resultados]
+# def obtener_color_por_material(codigo_material):
+#     #print("CODIGO ENTREGADO A LA CONSULTA", codigo_material)
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     #patron_busqueda = f"%{codigo_material}%"
+#     cursor.execute('''
+#         SELECT DISTINCT color
+#         FROM Materiales
+#         WHERE codigo  LIKE ? 
+#     ''', (codigo_material,))
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     print("RESULATDO DE LA BASE DE DATOS", resultados[0][0])
+#     return [resultado[0] for resultado in resultados]
 
 
 # Seleccionar el tipo del material por nombre
-def obtener_tipos_por_material_y_color(codigo_material, color_material):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT DISTINCT tipo
-        FROM Materiales
-        WHERE codigo = ? AND color = ? 
-    ''', (codigo_material, color_material))
-    resultados = cursor.fetchall()
-    conn.close()
-    return [resultado[0] for resultado in resultados]
+# def obtener_tipos_por_material_y_color(codigo_material, color_material):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT DISTINCT tipo
+#         FROM Materiales
+#         WHERE codigo = ? AND color = ? 
+#     ''', (codigo_material, color_material))
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     print()
+#     return [resultado[0] for resultado in resultados]
 
 
 # Obtener tipo y tamaño de un material.
-def obtener_tamaños_por_material_color_tipo(nombre_material, color_material, tipo_material):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT DISTINCT tamaño
-        FROM Materiales
-        WHERE codigo = ? AND color = ? AND tipo = ?
-    ''', (nombre_material, color_material, tipo_material))
-    resultados = cursor.fetchall()
-    conn.close()
-    return [resultado[0] for resultado in resultados]
+# def obtener_tamaños_por_material_color_tipo(nombre_material, color_material, tipo_material):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT DISTINCT tamaño
+#         FROM Materiales
+#         WHERE codigo = ? AND color = ? AND tipo = ?
+#     ''', (nombre_material, color_material, tipo_material))
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     print(resultados)
+#     print([resultado[0] for resultado in resultados])
+#     return [resultado[0] for resultado in resultados]
 
 
 # Datos seleccionados para el calculo de precio de venta
-def obtener_productos_para_costoventa():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''SELECT id_producto, codigo, costo_producto FROM Productos''')
-    _3_productos = cursor.fetchall()
-    conn.close()
-    return _3_productos
+# def obtener_productos_para_costoventa():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''SELECT id_producto, codigo, costo_producto FROM Productos''')
+#     _3_productos = cursor.fetchall()
+#     conn.close()
+#     print(_3_productos)
+#     return _3_productos
 
 
 # Datos para actualizar el historial de ganancias.
-def obtener_productos_para_acthistorial():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''SELECT id_producto, codigo, costo_producto, precio_venta FROM Productos''')
-    productos_h = cursor.fetchall()
-    conn.close()
-    return productos_h
+# def obtener_productos_para_acthistorial():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''SELECT id_producto, codigo, costo_producto, precio_venta FROM Productos''')
+#     productos_h = cursor.fetchall()
+#     conn.close()
+#     print(productos_h)
+#     return productos_h
 
 
 # Guardar en Historial_Ganancias
-def guardar_historial(id_producto, mes_año, ganancia, margen):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            INSERT INTO Historial_Ganancias
-            (id_producto, mes, ganancia_total, margen_promedio)
-            VALUES (?, ?, ?, ?)
-            """,
-            (id_producto, mes_año, ganancia, margen)
-                )
-    conn.commit()
-    conn.close()
+# def guardar_historial(id_producto, mes_año, ganancia, margen):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             INSERT INTO Historial_Ganancias
+#             (id_producto, mes, ganancia_total, margen_promedio)
+#             VALUES (?, ?, ?, ?)
+#             """,
+#             (id_producto, mes_año, ganancia, margen)
+#                 )
+#     conn.commit()
+#     conn.close()
 
 
-def registrar_historial_costo(id_producto, costo_anterior, costo_nuevo, es_por_lote, unidades=None, motivo=None):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT INTO Historial_Costos
-        (id_producto, fecha, costo_anterior, costo_nuevo, es_por_lote, unidades, motivo)
-        VALUES (?, DATE('now'), ?, ?, ?, ?, ?)
-        """,
-        (id_producto, costo_anterior, costo_nuevo, es_por_lote, unidades, motivo)
-    )
-    conn.commit()
-    conn.close()
+# def registrar_historial_costo(id_producto, costo_anterior, costo_nuevo, es_por_lote, unidades=None, motivo=None):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         """
+#         INSERT INTO Historial_Costos
+#         (id_producto, fecha, costo_anterior, costo_nuevo, es_por_lote, unidades, motivo)
+#         VALUES (?, DATE('now'), ?, ?, ?, ?, ?)
+#         """,
+#         (id_producto, costo_anterior, costo_nuevo, es_por_lote, unidades, motivo)
+#     )
+#     conn.commit()
+#     conn.close()
 
 # Mostrar el historial de costos por producto.
-def mostrar_historial_costos_por_producto(codigo_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
-        FROM Historial_Costos h
-        JOIN Productos p ON h.id_producto = p.id_producto
-        WHERE p.codigo = ?
-        ORDER BY h.fecha DESC
-        """,
-        (codigo_producto,)
-        )
-    historial_producto = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return historial_producto
+# def mostrar_historial_costos_por_producto(codigo_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         """
+#         SELECT h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
+#         FROM Historial_Costos h
+#         JOIN Productos p ON h.id_producto = p.id_producto
+#         WHERE p.codigo = ?
+#         ORDER BY h.fecha DESC
+#         """,
+#         (codigo_producto,)
+#         )
+#     historial_producto = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(historial_producto)
+#     return historial_producto
 
     
 # Mostrar el historial de costos de todos los productos..
-def mostrar_historial_costos_general():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-            """
-            SELECT p.codigo, h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
-            FROM Historial_Costos h
-            JOIN Productos p ON h.id_producto = p.id_producto
-            ORDER BY h.fecha DESC
-            """
-        )
-    historial_general = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return historial_general
+# def mostrar_historial_costos_general():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#             """
+#             SELECT p.codigo, h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
+#             FROM Historial_Costos h
+#             JOIN Productos p ON h.id_producto = p.id_producto
+#             ORDER BY h.fecha DESC
+#             """
+#         )
+#     historial_general = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(historial_general)
+#     return historial_general
 
 
 # Mostrar Historial de ganacias.
-def mostrar_historial_ganancias_producto(codigo_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-            """
-            SELECT h.mes, h.ganancia_total, h.margen_promedio
-            FROM Historial_Ganancias h
-            JOIN Productos p ON h.id_producto = p.id_producto
-            WHERE p.codigo = ?
-            ORDER BY h.mes DESC
-            """,
-            (codigo_producto,)
-        )
-    historial = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return historial
+# def mostrar_historial_ganancias_producto(codigo_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#             """
+#             SELECT h.mes, h.ganancia_total, h.margen_promedio
+#             FROM Historial_Ganancias h
+#             JOIN Productos p ON h.id_producto = p.id_producto
+#             WHERE p.codigo = ?
+#             ORDER BY h.mes DESC
+#             """,
+#             (codigo_producto,)
+#         )
+#     historial = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(historial)
+#     return historial
 
 
 # Mostrar historial de ganancias mensual general.
-def mostrar_historial_general_mensual(mes_str):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT p.codigo, h.ganancia_total, h.margen_promedio
-        FROM Historial_Ganancias h
-        JOIN Productos p ON h.id_producto = p.id_producto
-        WHERE h.mes = ?
-        ORDER BY p.codigo
-        """,
-        (mes_str,)
-    )
+# def mostrar_historial_general_mensual(mes_str):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         """
+#         SELECT p.codigo, h.ganancia_total, h.margen_promedio
+#         FROM Historial_Ganancias h
+#         JOIN Productos p ON h.id_producto = p.id_producto
+#         WHERE h.mes = ?
+#         ORDER BY p.codigo
+#         """,
+#         (mes_str,)
+#     )
 
-    historial = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return historial
+#     historial = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(historial)
+#     return historial
 
 
 # Obtener una lista de nombres de proveedores.
-def obtener_nombres_proveedores(texto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT nombre FROM Proveedores WHERE nombre LIKE ?', (f'%{texto}%',))
-    proveedores = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return proveedores
+# def obtener_nombres_proveedores(texto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT nombre FROM Proveedores WHERE nombre LIKE ?', (f'%{texto}%',))
+#     proveedores = [row[0] for row in cursor.fetchall()]
+#     conn.close()
+#     print(proveedores)
+#     return proveedores
 
 
 # Obtener los datos para el módulo de búsqueda.
-def buscar_en_bd(tipo_busqueda, valor_busqueda):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    if tipo_busqueda == "Todos los Materiales":
-        cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
+# def buscar_en_bd(tipo_busqueda, valor_busqueda):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     if tipo_busqueda == "Todos los Materiales":
+#         cursor.execute('SELECT codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario FROM Materiales')
     
-    elif tipo_busqueda == "Proveedor especifico":
-        cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
-            FROM Proveedores
-            JOIN Facturas ON Proveedores.id_proveedor = Facturas.id_proveedor
-            JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
-            JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
-            WHERE Proveedores.nombre LIKE ?
-        ''', (f"%{valor_busqueda}%",))
+#     elif tipo_busqueda == "Proveedor especifico":
+#         cursor.execute('''
+#             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
+#             FROM Proveedores
+#             JOIN Facturas ON Proveedores.id_proveedor = Facturas.id_proveedor
+#             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
+#             JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
+#             WHERE Proveedores.nombre LIKE ?
+#         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Factura Proveedor":
-        print("El Valor de la Busqueda es: ", valor_busqueda)
-        cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, Materiales.precio, Materiales.costo_unitario
-            FROM Facturas
-            JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
-            JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
-            JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
-            WHERE Facturas.numero_factura LIKE ?
-        ''', (f"%{valor_busqueda}%",))
+#     elif tipo_busqueda == "Factura Proveedor":
+#         print("El Valor de la Busqueda es: ", valor_busqueda)
+#         cursor.execute('''
+#             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, Materiales.precio, Materiales.costo_unitario
+#             FROM Facturas
+#             JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
+#             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
+#             JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
+#             WHERE Facturas.numero_factura LIKE ?
+#         ''', (f"%{valor_busqueda}%",))
     
-    elif tipo_busqueda == "Facturas Ventas":
-        print("El tipo de busqueda es FActuras Ventas") # aqui llega
-        cursor.execute("""
-            SELECT 
-                Ventas.id_venta AS NumeroFactura,
-                Clientes.nombre AS Cliente,
-                Ventas.fecha,
-                Ventas.subtotal,
-                Ventas.descuento,
-                Ventas.impuesto,
-                Ventas.total
-            FROM Ventas
-            JOIN Clientes ON Ventas.id_cliente = Clientes.id_cliente
-            WHERE Ventas.tipo_documento = 'factura'
-            ORDER BY Ventas.fecha DESC;
-        """)
+#     elif tipo_busqueda == "Facturas Ventas":
+#         print("El tipo de busqueda es FActuras Ventas") # aqui llega
+#         cursor.execute("""
+#             SELECT 
+#                 Ventas.id_venta AS NumeroFactura,
+#                 Clientes.nombre AS Cliente,
+#                 Ventas.fecha,
+#                 Ventas.subtotal,
+#                 Ventas.descuento,
+#                 Ventas.impuesto,
+#                 Ventas.total
+#             FROM Ventas
+#             JOIN Clientes ON Ventas.id_cliente = Clientes.id_cliente
+#             WHERE Ventas.tipo_documento = 'factura'
+#             ORDER BY Ventas.fecha DESC;
+#         """)
         
         
-    elif tipo_busqueda == "Notas de Entregas":
-        cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
-            FROM Facturas
-            JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
-            JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
-            JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
-            WHERE Facturas.numero_factura LIKE ?
-        ''', (f"%{valor_busqueda}%",))
+#     elif tipo_busqueda == "Notas de Entregas":
+#         cursor.execute('''
+#             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.stock, materiales.precio, materiales.costo_unitario
+#             FROM Facturas
+#             JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
+#             JOIN Detalle_Factura ON Facturas.id_factura = Detalle_Factura.id_factura
+#             JOIN Materiales ON Detalle_Factura.id_material = Materiales.id_material
+#             WHERE Facturas.numero_factura LIKE ?
+#         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Código especifico":
-        cursor.execute('''
-            SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
-            FROM Materiales
-            JOIN Detalle_Factura ON Materiales.id_material = Detalle_Factura.id_material
-            JOIN Facturas ON Detalle_Factura.id_factura = Facturas.id_factura
-            JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
-            WHERE Materiales.codigo LIKE ?
-        ''', (f"%{valor_busqueda}%",))
+#     elif tipo_busqueda == "Código especifico":
+#         cursor.execute('''
+#             SELECT Proveedores.nombre, Facturas.numero_factura, Facturas.fecha, Materiales.codigo, Materiales.nombre, Materiales.tipo, Materiales.tamaño, Materiales.color, Materiales.stock, materiales.precio, materiales.costo_unitario
+#             FROM Materiales
+#             JOIN Detalle_Factura ON Materiales.id_material = Detalle_Factura.id_material
+#             JOIN Facturas ON Detalle_Factura.id_factura = Facturas.id_factura
+#             JOIN Proveedores ON Facturas.id_proveedor = Proveedores.id_proveedor
+#             WHERE Materiales.codigo LIKE ?
+#         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Material especifico":
-        cursor.execute('''
-            SELECT p.nombre, f.numero_factura, f.fecha, m.codigo, m.nombre, m.tipo, m.tamaño, m.color, m.stock, m.precio, m.costo_unitario
-            FROM Materiales m
-            JOIN Detalle_Factura df ON m.id_material = df.id_material
-            JOIN Facturas f ON df.id_factura = f.id_factura
-            JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
-            WHERE m.nombre LIKE ?
-        ''', (f"%{valor_busqueda}%",))
+#     elif tipo_busqueda == "Material especifico":
+#         cursor.execute('''
+#             SELECT p.nombre, f.numero_factura, f.fecha, m.codigo, m.nombre, m.tipo, m.tamaño, m.color, m.stock, m.precio, m.costo_unitario
+#             FROM Materiales m
+#             JOIN Detalle_Factura df ON m.id_material = df.id_material
+#             JOIN Facturas f ON df.id_factura = f.id_factura
+#             JOIN Proveedores p ON f.id_proveedor = p.id_proveedor
+#             WHERE m.nombre LIKE ?
+#         ''', (f"%{valor_busqueda}%",))
 
-    elif tipo_busqueda == "Producto especifico":
-        cursor.execute('''
-            SELECT p.codigo, p.tipo, p.costo_producto, p.precio_venta, p.materiales_usados, p.tiempo_fabricacion, p.cantidad, p.fecha_registro, p.descripcion
-            FROM Productos p
-            WHERE p.codigo LIKE ? OR p.nombre LIKE ?
-        ''', (f"%{valor_busqueda}%", f"%{valor_busqueda}%"))
+#     elif tipo_busqueda == "Producto especifico":
+#         cursor.execute('''
+#             SELECT p.codigo, p.tipo, p.costo_producto, p.precio_venta, p.materiales_usados, p.tiempo_fabricacion, p.cantidad, p.fecha_registro, p.descripcion
+#             FROM Productos p
+#             WHERE p.codigo LIKE ? OR p.nombre LIKE ?
+#         ''', (f"%{valor_busqueda}%", f"%{valor_busqueda}%"))
         
-    elif tipo_busqueda == "Todos los Productos":
-        cursor.execute('SELECT codigo, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion FROM Productos')
+#     elif tipo_busqueda == "Todos los Productos":
+#         cursor.execute('SELECT codigo, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, fecha_registro, descripcion FROM Productos')
 
-    elif tipo_busqueda == "Borradores Nuevos Productos":
-        cursor.execute("""SELECT nombre_usuario_creador, 
-                    codigo_producto, 
-                    tipo_producto, 
-                    cantidad_producida, 
-                    fecha_creacion, 
-                    fecha_finalizacion, 
-                    estado FROM productos_borrador""")
+#     elif tipo_busqueda == "Borradores Nuevos Productos":
+#         cursor.execute("""SELECT nombre_usuario_creador, 
+#                     codigo_producto, 
+#                     tipo_producto, 
+#                     cantidad_producida, 
+#                     fecha_creacion, 
+#                     fecha_finalizacion, 
+#                     estado FROM productos_borrador""")
 
-    resultados = cursor.fetchall()
-    print("Resultado de buscar_en_db: ", resultados)
-    conn.commit()
-    conn.close()
+#     resultados = cursor.fetchall()
+#     print("Resultado de buscar_en_db: ", resultados)
+#     conn.commit()
+#     conn.close()
     
-    return resultados
+#     return resultados
 
 # def buscar_en_bd(tipo_busqueda, valor_busqueda):
 #     # Aseguramos que la ruta a la base sea absoluta y válida
@@ -835,38 +847,38 @@ def buscar_en_bd(tipo_busqueda, valor_busqueda):
 #         return []
 
 
-def obtener_codigo_por_id(codigo_actual):
-    print("EL CODIGO ACTUAL ES: ", codigo_actual)
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""SELECT id_material FROM Materiales WHERE codigo = ?""", (codigo_actual,))
-    id_material_tupla = cursor.fetchone()
-    conn.commit()
-    conn.close()
-    print("EL ID MATERIAL ES: ", id_material_tupla)
-    return id_material_tupla
+# def obtener_codigo_por_id(codigo_actual):
+#     print("EL CODIGO ACTUAL ES: ", codigo_actual)
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""SELECT id_material FROM Materiales WHERE codigo = ?""", (codigo_actual,))
+#     id_material_tupla = cursor.fetchone()
+#     conn.commit()
+#     conn.close()
+#     print("EL ID MATERIAL ES: ", id_material_tupla)
+#     return id_material_tupla
 
 
-def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
-    id_factura = None
-    valor_actual_str = str(factura_actual)
-    print("EL ID DEL PROVEEDOR ES: ", id_proveedor)
-    print("EL VALOR ACTUAL DE LA FACTURA ES: ", factura_actual)
+# def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
+#     id_factura = None
+#     valor_actual_str = str(factura_actual)
+#     print("EL ID DEL PROVEEDOR ES: ", id_proveedor)
+#     print("EL VALOR ACTUAL DE LA FACTURA ES: ", factura_actual)
     
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""SELECT numero_factura FROM Facturas WHERE id_proveedor = ?""", (id_proveedor,))
-    facturas_tupla = cursor.fetchall()
-    conn.commit()
-    conn.close()
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""SELECT numero_factura FROM Facturas WHERE id_proveedor = ?""", (id_proveedor,))
+#     facturas_tupla = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
     
-    facturas = [x[0] for x in facturas_tupla]
+#     facturas = [x[0] for x in facturas_tupla]
     
-    for i, factura in enumerate(facturas):
-        if valor_actual_str == factura:
-            id_factura = i + 1
+#     for i, factura in enumerate(facturas):
+#         if valor_actual_str == factura:
+#             id_factura = i + 1
     
-    return id_factura
+#     return id_factura
     
 
 # def actualizar_en_bd(tipo_busqueda, id_item, nuevos_valores, valores_originales):
@@ -994,15 +1006,16 @@ def obtener_id_factura_por_proveedor(id_proveedor, factura_actual):
 
 
 # Busca las notas de entrega para mostrar en la busqueda.
-def encotrar_notas_entrega():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""SELECT ne.id_nota_entrega, ne.fecha, c.nombre, ne.total, ne.estado
-        FROM NotasEntrega ne
-        JOIN Clientes c ON ne.id_cliente = c.id_cliente""")
-    notas_entregas = cursor.fetchall()
-    conn.close()
-    return notas_entregas
+# def encotrar_notas_entrega():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""SELECT ne.id_nota_entrega, ne.fecha, c.nombre, ne.total, ne.estado
+#         FROM NotasEntrega ne
+#         JOIN Clientes c ON ne.id_cliente = c.id_cliente""")
+#     notas_entregas = cursor.fetchall()
+#     conn.close()
+#     print(notas_entregas)
+#     return notas_entregas
 
 def encontrar_facturas():
     conn = sqlite3.connect(db_path)
@@ -1018,11 +1031,12 @@ def encontrar_facturas():
             v.total
         FROM Ventas v
         JOIN Clientes c ON v.id_cliente = c.id_cliente
-        WHERE v.tipo_documento = 'Factura'
+        WHERE v.tipo_documento = 'factura'
         ORDER BY v.fecha DESC
     """)
     facturas = cursor.fetchall()
     conn.close()
+    print(facturas)
     return facturas
 
     
@@ -2151,3 +2165,20 @@ if __name__ == "__main__":
     #cargar_borrador_db(17)
     #obtener_materiales_pro()
     #buscar_codigos_like("ALF")
+    #obtener_codigo_material_por_nombre_color_tipo_tamaño("NUEVO", "Blanco", "ingreso", "10mm")
+    #obtener_productos()
+    #obtener_color_por_material("P-BL")
+    #obtener_tipos_por_material_y_color("P-BL", "Blancas")
+    #obtener_tamaños_por_material_color_tipo("OLIVA", "Plateado", "Plastico")
+    #obtener_productos_para_costoventa()
+    #obtener_productos_para_acthistorial()
+    #mostrar_historial_costos_por_producto("WINTER08")
+    #mostrar_historial_costos_general()
+    #mostrar_historial_ganancias_producto("WINTER08")
+    #mostrar_historial_general_mensual("2026-02")
+    #obtener_nombres_proveedores("TEM")
+    #encotrar_notas_entrega()
+    encontrar_facturas()
+    
+    
+    

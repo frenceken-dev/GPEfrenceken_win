@@ -60,7 +60,8 @@ def crear_boton(
     hover_color=None,   # color al pasar el cursor
     focus_color=None,   # color al recibir foco (solo si se pasa)
     focus_width=None,   # grosor del borde de foco
-    **kwargs
+    **kwargs,
+    
 ):
     """
     Crear un botón adaptable con hover_color y focus_color opcionales.
@@ -79,6 +80,7 @@ def crear_boton(
     border_width = border_width or 2
     font = font or ("Arial", 10, "bold")
     cursor = cursor or "hand2"
+    
 
     # Colores interactivos
     hover_color_local = hover_color or _darker(color_fondo, 0.15)
@@ -182,6 +184,13 @@ def crear_boton(
         cont.get_state = get_state
         cont.canvas = canvas
 
+        # Metodo para eliminar bóton
+        original_cont = destroy
+        def destroy():
+            original_cont()
+            
+        cont.destroy = destroy
+        
         return cont
 
 
@@ -204,6 +213,7 @@ def crear_boton(
         width=ancho,
         height=int(alto / 20),
         **kwargs
+        
     )
 
     # --- Métodos dinámicos para Windows/Linux ---
@@ -226,6 +236,13 @@ def crear_boton(
     boton.set_command = set_command
     boton.set_state = set_state
     boton.get_state = get_state
+    
+    # Metodo para eliminar bóton
+    original_destroy = boton.destroy
+    def destroy():
+        original_destroy()
+    
+    boton.destroy = destroy
 
     # Si el usuario pasa focus_color, aplicamos visualmente el efecto
     if focus_color_local:
@@ -243,6 +260,7 @@ def crear_boton(
 
         boton.bind("<FocusIn>", _on_focus_in)
         boton.bind("<FocusOut>", _on_focus_out)
+        
     else:
         boton.configure(highlightthickness=0)
 

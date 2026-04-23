@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import obtener_productos#, incrementar_stock_producto
 from recursos import LOGO_PATH, crear_boton
 from databasemanager import DataBaseManager
 
@@ -99,7 +98,7 @@ class VentanaIncrementarStock:
         self.cargar_productos()
 
     def cargar_productos(self):
-        productos = obtener_productos()
+        productos = db_connect.obtener_productos()
         self.combobox_productos['values'] = [f"{producto[2]} - {producto[1]}" for producto in productos]
         # Asumiendo que producto[2] es el código único y producto[1] es el nombre
         

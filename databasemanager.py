@@ -3,6 +3,7 @@ import sqlite3
 import hashlib
 from datetime import datetime
 from tkinter import messagebox
+import ast
 from typing import List, Dict, Optional, Any, Union, Tuple
 from recursos import DB_PATH
 
@@ -1076,6 +1077,68 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", f"El Producto {codigo}, no se pudo guardar.")
             
+    
+    def existe_borrador(self, codigo_producto) -> bool:
+        """
+        Verifica si ya existe un borrador para el código de producto.
+
+        Args:
+            codigo_producto (str): Codigo para verificar si existe.
+
+        Returns:
+            bool: - Retorna True si existe o False si no existe.
+        """
+        query = "SELECT id FROM productos_borrador WHERE codigo_producto = ? AND estado = 'pendiente'"
+        resultado = self.select(query, (codigo_producto,))
+        
+        return resultado[0]["id"] if resultado else None
+    
+    
+    def actualizar_borrador(self, usuario_actual_id, 
+                        nombre_usuario_actual, 
+                        codigo_producto, tipo_producto, 
+                        tiempo_invertido, cantidad_producida, 
+                        descripcion, materiales_actuales, 
+                        empaques) -> bool:
+        """
+        Actualiza el borrador existente
+
+        Args:
+            usuario_actual_id (int): id de usuario actual.
+            nombre_usuario_actual (str): Nombre del usuario.
+            codigo_producto (str): Código del producto.
+            tipo_producto (str): Tipo: pulsera, collar, llavero, zarcillos.
+            tiempo_invertido (int): Cuanto tiempo llevo crear el producto.
+            cantidad_producida (int): Cuantas piezas fueron creadas.
+            descripcion (str): Descripción breve del producto.
+            materiales_actuales (str): Diferentes tipos de materiales usados en el producto.
+            empaques (str): Los empaques seleccionados para empacar el producto.
+
+        Returns:
+            bool: - Retorna True si hay exito en la actualización si no muestra mensaje de error.
+        """
+        actualizar_el_borrador = self.update(
+            table="Productos_borrador",
+            updates={
+                "usuario_creador_id":usuario_actual_id,
+                "nombre_usuario_creador":nombre_usuario_actual,
+                "codigo_producto":codigo_producto,
+                "tipo_producto":tipo_producto,
+                "tiempo_invertido":tiempo_invertido,
+                "cantidad_producida":cantidad_producida,
+                "descripcion":descripcion,
+                "materiales":materiales_actuales,
+                "empaques":empaques,
+                "estado":"pendiente"
+            },
+            where_condition="codigo_producto = ?",
+            where_params=(codigo_producto,)
+        )
+        if actualizar_el_borrador:
+            messagebox.showinfo("Información", "✅ El Borrador se ha actualizado")
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo Actualizar el borrador")
+    
             
     def guardar_borrador_db(self,usuario_actual_id, 
                         nombre_usuario_actual, 
@@ -1154,7 +1217,7 @@ class DataBaseManager():
         if lista_de_tuplas:
             return lista_de_tuplas
         else:
-            messagebox.showerror("⚠️ Error", f"No se pudieron cargar los borradores pendientes")
+            messagebox.showerror("⚠️ Error", f"No se encontraron los borradores pendientes")
             
     
     def cargar_borrador_db(self, borrador_id) -> Dict:
@@ -1202,7 +1265,7 @@ class DataBaseManager():
         Returns:
             bool: retorna True si la actualización es un exito False si no lo es.
         """
-        fecha_finalizacion = datetime().strftime("%Y-%m-%d %H:%M")
+        fecha_finalizacion = datetime.now().strftime("%Y-%m-%d %H:%M")
         estado_actualizado = self.update(
             table= "productos_borrador",
             updates= {"estado": "creado", "fecha_finalizacion": fecha_finalizacion},
@@ -1279,7 +1342,99 @@ class DataBaseManager():
         ]
         #print(materiales_tupla)
         return materiales_tupla
+    
+    def obtener_productos(self) -> tuple:
+        """
+        Recupera todos los productos
+
+        Returns:
+            tuple: Retorna una tupla con los productos.
+        """
+        query = "SELECT * FROM Productos"
+        productos_lis = self.select(query)
+        
+        orden_campos = [
+            "id_producto",
+            "codigo",
+            "nombre",
+            "tipo",
+            "costo_producto",
+            "precio_venta",
+            "materiales_usados",
+            "tiempo_fabricacion",
+            "cantidad",
+            "fecha_registro",
+            "descripcion",
+            "empaques"
+        ]
+        
+        productos_tupla = [
+            tuple(diccionario.get(campo) for campo in orden_campos)
+            for diccionario in productos_lis
+        ]
+        print(productos_tupla)
+        return productos_tupla
+        
+    
+    def obtener_color_por_material(self, codigo_material) -> str:
+        """
+        Recupera el color segun el código ingresado
+
+        Args:
+            codigo_material (str): Codigo del material.
+
+        Returns:
+            str: - Retorna el color del material.
+        """
+        print(f"OBTENER TAMAÑO MAETRIAL: {codigo_material}")
+        query = "SELECT DISTINCT color FROM Materiales WHERE codigo  LIKE ?"
+        
+        color_list = self.select(query, (codigo_material,))
+        print(color_list)
+        color_str = [color["color"] for color in color_list]
+        print(f"RESULTADO DE LA BUSQUEDA DEL COLOR: {color_str}")
+        return color_str
+        
+    
+    def obtener_tipos_por_material_y_color(self, codigo_material, color_material) -> str:
+        """
+        Selecciona el tipo de material segun el código y el color.
+
+        Args:
+            codigo_material (str): Código material.
+            color_material (str): Color material.
+
+        Returns:
+            str: - Retorna el tipo de material.
+        """
+        print(f"OBTENER TIPOS MATERIAL: {codigo_material}, {color_material}")
+        query = "SELECT DISTINCT tipo FROM Materiales WHERE codigo = ? AND color = ?"
+        params = (codigo_material, color_material,)
+        print(f"PARAMETROS PARA LA CONSULTA SELECT EN TIPO MATERIAL: {params}")
+        tipo_list = self.select(query, params)
+        print(f"RESULTADO DE LA CONSULTA SELECT EN TIPO DE MATERIAL ES: {tipo_list}")
+        tipos_str = [tipo["tipo"] for tipo in tipo_list]
+        
+        return tipos_str
+    
+    
+    def obtener_tamaños_por_material_color_tipo(self, nombre_material, color_material, tipo_material) -> str:
+        """
+        Recupera el tamaño del material en base a los parametros dados.
+
+        Returns:
+            str: - Retorna el valor obtenido.
+        """
+        print(f"VALORES QUE LLEGAN PARA TAMAÑO MATERIAL: {nombre_material}, {color_material}, {tipo_material}")
+        query = "SELECT DISTINCT tamaño FROM Materiales WHERE codigo = ? AND color = ? AND tipo = ?"
             
+        params = (nombre_material, color_material, tipo_material)
+        print(f"PARAMETROS PARA LA CONSULTA DEL TAMAÑO DEL MATERIAL ES: {params}")
+        tamaño_material = self.select(query, params)
+        print(f"RESULTADO DE LA CONSULTA PARA OBTENER EL TAMAÑO ES: {tamaño_material}")
+        tamaño_str = [tamaño["tamaño"] for tamaño in tamaño_material]
+        return tamaño_str
+    
     #######################################################################################################################
     ################################################# SECCIÓN DE INVENTARIO ###############################################
     #######################################################################################################################
@@ -1398,9 +1553,9 @@ class DataBaseManager():
             """
         datos = self.select(query, (patron,))
         
-        resultados = [fila for fila in datos]
-        print(resultados[0]["codigo"])
-        return resultados[0]["codigo"]
+        resultados_str = [fila["codigo"] for fila in datos]
+        
+        return resultados_str
             
             
     def codigo_existe(self, codigo) -> bool:
@@ -1511,7 +1666,90 @@ class DataBaseManager():
         if material_actualizado:
             messagebox.showinfo("Actualizado", "✅ Inventario de materiales actualizado.")
         else:
-            print("Material no actualizado")
+            messagebox.showerror("⚠️ Error", f"No se pudo actualizar el material")
+            
+    
+    def obtener_nombre_material_por_codigo(self, codigo_material) -> list:
+        """_summary_
+
+        Args:
+            codigo_material (str): Se usa el código del material para recuperar el nombre.
+
+        Returns:
+            list: - Retorna una lista
+        """
+        query = "SELECT nombre FROM Materiales WHERE codigo = ?"
+        
+        datos = self.select(query, (codigo_material,))
+        
+        nombre = datos[0]["nombre"]
+        #print(nombre)
+        return nombre if nombre else "Desconocido"
+    
+    
+    def obtener_codigo_material_por_nombre_color_tipo_tamaño(self, codigo, color, tipo, tamaño) -> List:
+        """
+        Selecciona los Materiales por nombre, tipo, tamaño para crear producto nuevo.
+
+        Returns:
+            list: - Retorna una lista.
+        """
+        print("EL MATERIAL ACTUAL RECIBIDO PARA LA CONSULTA ES: ", codigo)
+        if not self.connection:
+            self.connect()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''
+                SELECT codigo
+                FROM Materiales
+                WHERE codigo = ? AND color = ? AND tipo = ? AND tamaño = ?
+            ''', (codigo, color, tipo, tamaño))
+            resultado = cursor.fetchone()
+            #print(f"Resultado directo: {resultado}")  # Depuración
+            return resultado[0] if resultado else None
+        except sqlite3.Error as e:
+            print(f"Error en consulta directa: {e}")
+            return None
+        
+    
+    def obtener_costo_unitario_material(self, codigo_material) -> int:
+        """
+        Recupera el costo unitario de un material
+
+        Args:
+            codigo_material (str): Código del material que sera seleccionado.
+
+        Returns:
+            int: - Retorna el costo unitario del material
+        """
+        
+        query = "SELECT costo_unitario FROM Materiales WHERE codigo = ?"
+        costo_uni = self.select(query, (codigo_material,))
+        
+        if costo_uni:
+            return costo_uni[0]["costo_unitario"] if costo_uni else 0.0
+        else:
+            messagebox.showerror("⚠️ Error", "El precio unitario no  se encontrado")
+            
+    
+    def obtener_nombres_proveedores(self, texto) -> List[str]:
+        """
+        Obtener una lista de nombres de proveedores.
+
+        Args:
+            texto (str): - Filtra por nombre de proveedor.
+
+        Returns:
+            List[str]: - Retorna una lista con los nombres filtrados
+        """
+        query = "SELECT nombre FROM Proveedores WHERE nombre LIKE ?"
+        params = (f'%{texto}%',)
+        
+        proveedores_filtrados = self.select(query, params)
+        
+        proveedores = [proveedores_filtrados[0]["nombre"]]
+        print(proveedores)
+        return proveedores
             
             
 #######################################################################################################################
@@ -1532,6 +1770,7 @@ class DataBaseManager():
         Returns:
             int: _description_
         """
+        print(" DESDE INSERTAR EMPAQUES: ", codigo, nombre, tamaño, cantidad, precio, costo_unitario)
         query = {
             "codigo_emp": codigo,
             "nombre_emp": nombre,
@@ -1565,34 +1804,43 @@ class DataBaseManager():
         
         return tipos_de_empaques
         
-    def costo_embalaje(self, emp_list) -> List[Dict[str, Any]]:
+    def costo_embalaje(self, emp_kit) -> List[Dict[str, Any]]:
         # Filtrar solo los empaques que no están vacíos
-        empaques = [e for e in emp_list if e]
+        print(f"EMPAQUE SELECCIONADO ES: {emp_kit}")
+        empaques = [e for e in emp_kit if e]
 
         if not empaques:  # Si no hay empaques, devolver lista vacía
             return []
+        
+        emp_kit_str = emp_kit[0]
+        #print(emp_kit_str)
+        query_emp = "SELECT items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        nombre_empaques = self.select(query_emp, (emp_kit_str,))
+        #print(nombre_empaques[0]['items_del_kit'])
+        if nombre_empaques:
+            empaques_list = ast.literal_eval(nombre_empaques[0]['items_del_kit'])  # Ahora es una lista.
+            print(empaques_list)
+        else:
+            print("No se esta obtwniendo el resultado de los empaques")
 
         # Crear la consulta con IN
-        placeholders = ", ".join(["?"] * len(empaques))  # Ej: "?, ?, ?"
+        placeholders = ", ".join(["?"] * len(empaques_list))  # Ej: "?, ?, ?"
+        #print(f"Los Placeholders: {placeholders}")
         query = f"""
-            SELECT stock_emp, costo_unitario_emp
+            SELECT costo_unitario_emp
             FROM Empaques
             WHERE nombre_emp IN ({placeholders})
         """
-
-        datos = self.select(query, tuple(empaques))
-        
+        datos = self.select(query, tuple(empaques_list))
         costos = [costo["costo_unitario_emp"] for costo in datos]
-        print(costos)
-        stock = [cantidad["stock_emp"] for cantidad in datos]
-        print(stock)
+        #print(costos)
         
         costos_sum = sum(costos)
-        print(costos_sum)
+        #print(costos_sum)
         return costos
     
     
-    def validar_stock_empaques(self, empaques) -> bool:
+    def validar_stock_empaques(self, empaques) -> bool: # APLICAR AL CREAR EL KIT
         """
         Valida que haya stock suficiente de los empaques seleccionados.
 
@@ -1602,17 +1850,27 @@ class DataBaseManager():
         Returns:
             bool: - Si haz existencia retorna True si no False.
         """
+        #print(f"Los empaques a validar son: {empaques}")  # lista con el kit no con los empaques
         
-        for empaque in empaques:
+        emp_kit_str = empaques[0]
+        #print(emp_kit_str)
+        query_emp = "SELECT items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        nombre_empaques = self.select(query_emp, (emp_kit_str,))
+        #print(nombre_empaques)
+        empaques_de_kit = ast.literal_eval(nombre_empaques[0]["items_del_kit"])  # Ahora es una lista.
+        #print(empaques_de_kit)
+        
+        for empaque in empaques_de_kit:
             query = "SELECT stock_emp FROM Empaques WHERE nombre_emp = ?"
             resultado = self.select(query, (empaque,))
             if not resultado or resultado[0]["stock_emp"] < 1:
                 return False, f"No hay suficiente stock del empaque {empaque}."
-            
+    
+        
         return True, "Stock de empaques suficiente."
     
 
-    def descontar_empaques(self, emp_list) -> bool:
+    def descontar_empaques(self, emp_list) -> bool: #Modificar aqui
         """
         Con los nombres se tomo el costo unitario y se retorna y se descuenta de inventario.
 
@@ -1629,24 +1887,33 @@ class DataBaseManager():
         if not empaques:  # Si no hay empaques, devolver lista vacía
             return []
 
+        #print(f"Descontar empaques: {emp_list}")
+        
+        emp_kit_str = empaques[0]
+        #print(emp_kit_str)
+        query_emp = "SELECT items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        nombre_empaques = self.select(query_emp, (emp_kit_str,))
+        empaques_de_kit = ast.literal_eval(nombre_empaques[0]["items_del_kit"])  # Ahora es una lista.
+        
         # Crear la consulta con IN
-        placeholders = ", ".join(["?"] * len(empaques))  # Ej: "?, ?, ?"
+        placeholders = ", ".join(["?"] * len(empaques_de_kit))  # Ej: "?, ?, ?"
+        #print(f"Cantidad de placeholders: {placeholders}")
         query = f"""
             SELECT stock_emp
             FROM Empaques
             WHERE nombre_emp IN ({placeholders})
         """
-        stock_actual = self.select(query, tuple(empaques))
+        stock_actual = self.select(query, tuple(empaques_de_kit))
         cantidad = 1
         stock_db = [cant["stock_emp"] for cant in stock_actual]
         empaques_sin_stock = []
-        for i, empaque in zip(stock_db, empaques):
+        for i, empaque in zip(stock_db, empaques_de_kit):
             if i < 1:
                 empaques_sin_stock.append(empaque)
                 continue
             
             nuevo_stock = i - cantidad
-            print(f"La resta es: {nuevo_stock}")
+            #print(f"La resta es: {nuevo_stock}")
                 
             self.update(
                 table="Empaques",
@@ -1763,6 +2030,276 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", "No pudo actualizar el precio")
             
+            
+    def codigo_empaques(self) -> List[tuple]:
+        """
+        Recupera los codigos de los empaques
+
+        Returns:
+            List[tuple]: - Retorna una lista de tuplas
+        """
+        
+        query = "SELECT codigo_emp FROM Empaques"
+        
+        codigos = self.select(query)
+        
+        codigo_list = [codigo["codigo_emp"] for codigo in codigos]
+
+            
+        #print(codigo_tupla)
+        if codigo_list:
+            return codigo_list
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo obtener la información.")
+            
+            
+    def selecciona_empaque_por_codigo(self, codigo) -> list[Tuple]:
+        """
+        Seleciona un empaque por el código
+
+        Returns:
+            list[Tuple]: - Retorna una lista de tuplas
+        """
+        query = "SELECT nombre_emp, tamaño_emp, stock_emp, precio_emp FROM Empaques WHERE codigo_emp = ?"
+        params = codigo
+        
+        empaque = self.select(query, (params,))
+        
+        dict_claves = [
+            "nombre_emp",
+            "tamaño_emp",
+            "stock_emp",
+            "precio_emp"
+        ]
+        
+        empaque_tupla = [
+            tuple(diccionario.get(campo) for campo in dict_claves)
+            for diccionario in empaque
+        ]
+        
+        if empaque_tupla:
+            #print(empaque_tupla[0][0], empaque_tupla[0][1], empaque_tupla[0][2], empaque_tupla[0][3])
+            return empaque_tupla[0][0], empaque_tupla[0][1], empaque_tupla[0][2], empaque_tupla[0][3]
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudieron obtener los datos del empaque.")
+            
+            
+    def codigo_existe_emp(self, codigo) -> bool:
+        """
+        Verifica si un código existe en data base
+
+        Args:
+            codigo (str): Código en string
+
+        Returns:
+            bool: - retorna True si existe False si no.
+        """
+        
+        query = "SELECT codigo_emp FROM Empaques WHERE codigo_emp = ?"
+        params = codigo
+        print(f"El codigo que llega para ver si existe es {codigo}")
+        cod_existe = self.select(query, (params,))
+        print(cod_existe)
+        if cod_existe:
+            return True
+        else:
+            return False
+    
+    
+    def actualizar_empaque(self, codigo, stock, precio, costo_unit) -> bool:
+        """
+        Si el código existe entoces actualiza sus datos.
+
+        Args:
+            codigo (str): Código.
+            stock (float): Cantidad a incrementar.
+            precio (float): Precio.
+            costo_unitario (float): Costo por unidad.
+
+        Returns:
+            bool: - Retorna True si es exitoso, False si no.
+        """
+        print("EN ACTUALIZAR EMPAQUE LLEGA: ", codigo, stock, precio, costo_unit)
+        query = "SELECT stock_emp FROM Empaques WHERE codigo_emp = ?"
+        db_stock = self.select(query, (codigo,))
+        en_stock = db_stock[0]["stock_emp"]
+        
+        nuevo_stock = en_stock + stock
+        
+        actualizar = self.update(
+            table= "Empaques",
+            updates= {"stock_emp": nuevo_stock, "precio_emp": precio, "costo_unitario_emp": costo_unit},
+            where_condition= "codigo_emp = ?",
+            where_params= (codigo,)
+        )
+
+        if actualizar:
+            return True, "Empaque agregada exitosamente, stock actualizado."
+        else:
+            return False, "No se pudo completar la operación."
+        
+#######################################################################################################################
+############################################## SECCIÓN DE KIT EMBALAJE  ###############################################
+#######################################################################################################################
+
+    def guardar_kit(self, codigo_kit, items_kit, usuario) -> int:
+        """
+        Guarda en la bse de datos el kit de empaque creado por un usuario.
+
+        Args:
+            codigo_kit (str): Código del kit 
+            items_kit (str): Lista con los items que conforman el kit de empaque.
+            costo_kit (float): Costo del kit, se suman los costos de cada item.
+        Returns:
+            int: - Si se guarda correctamente retorna el id del kit sino -1.
+        """
+        costo_kit = []
+        fecha_registro_kit =  datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        costo_emp = "SELECT costo_unitario_emp FROM Empaques WHERE nombre_emp = ?"
+        nombre_empaques = items_kit
+        
+        for nombre in nombre_empaques:
+            costos_dict = self.select(costo_emp, (nombre,))
+            costo_kit.append(costos_dict[0]["costo_unitario_emp"])
+        
+        
+        costo_kit_total = sum(costo_kit)
+    
+        nuevo_kit = {
+            "codigo_kit": codigo_kit,
+            "items_del_kit": str(items_kit),
+            "costo_kit": costo_kit_total,
+            "fecha_creacion": fecha_registro_kit,
+            "usuario_creador": usuario
+        }
+        
+        id_kit_guardado = self.insert("KitEmpaque", nuevo_kit)
+        
+        if id_kit_guardado:
+            return costo_kit_total, "El Kit de Empaque se ha guardar correctamente."
+        else:
+            return "No se pudo guardar el kit de empaque."
+        
+    
+    def selecion_kit_empaques(self) -> list:
+        """
+        Selecciona los codigos de los kit de enpaques y los materiales que contiene
+
+        Returns:
+            list: - Retorna una lista con los datos.
+        """
+        codigos = []
+        items = []
+        costo = []
+        
+        query = "SELECT codigo_kit, items_del_kit, costo_kit FROM KitEmpaque"
+        
+        datos_kit = self.select(query)
+        
+        for valor in datos_kit:
+            codigos.append(valor["codigo_kit"])
+            items.append(valor["items_del_kit"])
+            costo.append(valor["costo_kit"])
+        
+        if codigos and items and costo:
+            return codigos, items, costo
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo obtener la información.")
+            
+            
+    def descripcion_kit_empaque(self, empaques) -> List: # APLICAR AL CREAR EL KIT
+        """
+        Obtiene los nombres de los empaques para mostrar en descripción del kit.
+
+        Args:
+            empaques (str): Kit de empaques a verificar.
+
+        Returns:
+            List: - Retorna una lista con los datos de para la descripción.
+        """
+        #print(f"Los empaques a validar son: {empaques}")  # lista con el kit no con los empaques
+        
+        emp_kit_str = empaques[0]
+        #print(emp_kit_str)
+        query_emp = "SELECT items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        nombre_empaques = self.select(query_emp, (emp_kit_str,))
+        
+        return nombre_empaques[0]
+    
+    def obtener_kits(self) -> List[any]:
+        """
+        Obtiene los kit de embalajes disponibles.
+
+        Returns:
+            List[any]: - Retorna una lista con los resultados.
+        """
+        query = "SELECT codigo_kit FROM KitEmpaque"
+        
+        datos_dic = self.select(query)
+        
+        kit_empaque = [campos["codigo_kit"] for campos in datos_dic]
+        
+        return kit_empaque
+    
+    def obtener_detalles_kit(self, codigo_kit) -> List[any]:
+        """
+        Selecciona los items que contine un kit de empaque
+
+        Args:
+            codigo_kit (str): Se recupera mediante el codigo del kit
+
+        Returns:
+            List[any]: - Retorna una lista con los items
+        """
+        query = "SELECT id_kit, items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        params = (codigo_kit,)
+        items_dic = self.select(query, params)
+        
+        items_list = ast.literal_eval(items_dic[0]["items_del_kit"])
+        
+        return items_dic[0:] # se retorna el diccionario con los datos.
+    
+    def actualizar_kit(self, codigo_kit, empaques, usuario) -> str:
+        """
+        Actualiza los empaques que conforman un kit
+
+        Args:
+            codigo_kit (str): Código de identificación del Kit.
+            empaques (list): Lista con los empaques actualizados.
+            usuario (str): Usuario que realizo la actualización.
+
+        Returns:
+            str: - Retorna el nuevo costo del kit y mensaje de exito.
+        """
+        placeholders = ", ".join(["?"] * len(empaques))  # Ej: "?, ?, ?"
+        query = f"SELECT costo_unitario_emp FROM Empaques WHERE nombre_emp IN ({placeholders})"
+        costos_empaques = self.select(query, tuple(empaques))
+        
+        costos = [costos["costo_unitario_emp"] for costos in costos_empaques]
+        
+        costo_actualizado = sum(costos)
+        actualizado_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        actualizar_data = {
+            "items_del_kit": str(empaques),
+            "costo_kit": costo_actualizado,
+            "usuario_creador": usuario,
+            "actualizado": actualizado_time
+        }
+        
+        actualiza = self.update(
+            table= "KitEmpaque",
+            updates= actualizar_data,
+            where_condition= "codigo_kit = ?",
+            where_params= (codigo_kit,)
+        )
+        
+        if actualiza:
+            return costo_actualizado, "Kit actualizado correctamente"
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo Actualizar el Kit de empaque.")
+            
 #######################################################################################################################
 ################################################## SECCIÓN DE FACTURAS  ###############################################
 #######################################################################################################################
@@ -1863,10 +2400,342 @@ class DataBaseManager():
             return id_detalle
         else:
             messagebox.showerror("⚠️ Error", f"No se Ha podido Guardar el detalle de la Factura.")
+
+
+#######################################################################################################################
+############################################## SECCIÓN DE COSTO Y GANANCIAS ###########################################
+#######################################################################################################################
+
+    def obtener_productos_para_costoventa(self) -> List[Tuple[any]]:
+            """
+            Calcula el costo de venta del producto.
+
+            Returns:
+                List[Tuple[any]]: - Retorna una lista de tuplas.
+            """
+            
+            query = "SELECT id_producto, codigo, costo_producto FROM Productos"
+            datos = self.select(query)
+            
+            orden_campos = [
+                "id_producto",
+                "codigo",
+                "costo_producto"
+            ]
+            productos_tupla = [
+                tuple(diccionario.get(campo) for campo in orden_campos)
+                for diccionario in datos
+            ]
+            #print(productos_tupla)
+            return productos_tupla
         
+        
+    def obtener_productos_para_acthistorial(self) -> List[Tuple[any]]:
+        """
+        Actualizar el historial de un producto
+
+        Returns:
+            List[Tuple[any]]: - Retorna una lista de tuplas con la información.
+        """
+        query = "SELECT id_producto, codigo, costo_producto, precio_venta FROM Productos"
+        
+        productos_h = self.select(query)
+        
+        orden_campos = [
+            "id_producto",
+            "codigo",
+            "costo_producto",
+            "precio_venta"
+        ]
+        
+        productos_tupla = [
+            tuple(diccionario.get(campo) for campo in orden_campos)
+            for diccionario in productos_h
+        ]
+        #print(productos_tupla)
+        return productos_tupla
+    
+    
+    def guardar_historial(self, id_producto, mes_año, ganancia, margen):
+        """
+        Guarda historial del producto
+        """
+        datos_producto = {
+            "id_producto": id_producto,
+            "mes": mes_año,
+            "ganancia_total": ganancia,
+            "margen_promedio": margen
+        }
+        insertar_datos = self.insert("Historial_Ganancias", datos_producto)
+        
+        if insertar_datos:
+            pass
+            #messagebox.showinfo("Información", "✅ Historial de ganancias guardado exitosamente.")
+        else:
+            messagebox.showerror("⚠️ Error", f"No se Ha podido Guardar el historial de ganancias.")
+            
+            
+    def registrar_historial_costo(self, id_producto, costo_anterior, costo_nuevo, es_por_lote, unidades=None, motivo=None):
+        """
+        Registra el cambio en el historial de costos
+        
+        """
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
+        datos_registro = {
+            "id_producto": id_producto,
+            "fecha": fecha,
+            "costo_anterior": costo_anterior,
+            "costo_nuevo": costo_nuevo,
+            "es_por_lote": es_por_lote,
+            "unidades": unidades,
+            "motivo": motivo
+        }
+        
+        datos_registrados = self.insert("Historial_Costos", datos_registro)
+        
+        if datos_registrados:
+            messagebox.showinfo("Información", "✅ Historial de Costos guardado exitosamente.")
+        else:
+            messagebox.showerror("⚠️ Error", f"No se Ha podido Guardar el historial de Costos.")
+    
+    
+    def mostrar_historial_costos_por_producto(self, codigo_producto) -> List[Tuple[Any]]:
+        """
+        
+
+        Args:
+            codigo_producto (_type_): _description_
+
+        Returns:
+            List[Tuple[Any]]: _description_
+        """        """ """      
+        query = """
+            SELECT p.codigo, h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
+            FROM Historial_Costos h
+            JOIN Productos p ON h.id_producto = p.id_producto
+            WHERE p.codigo = ?
+            ORDER BY h.fecha DESC
+            """
+        params = (codigo_producto,)
+        historial_producto = self.select(query, params)
+        
+        datos_historial = [
+            "codigo",
+            "fecha",
+            "costo_anterior",
+            "costo_nuevo",
+            "es_por_lote",
+            "unidades",
+            "motivo"
+        ]
+        historial_producto_tupla = [
+            tuple(diccionario.get(campo) for campo in datos_historial)
+            for diccionario in historial_producto
+        ]
+        print(historial_producto_tupla)
+        return historial_producto_tupla
+    
+    
+    def mostrar_historial_costos_general(self) -> List[Tuple]:
+        """
+        Mostrar el historial de costos de todos los productos.
+
+        Returns:
+            str: - Retorna una lista de tuplas
+        """
+        
+        query = """
+                SELECT p.codigo, h.fecha, h.costo_anterior, h.costo_nuevo, h.es_por_lote, h.unidades, h.motivo
+                FROM Historial_Costos h
+                JOIN Productos p ON h.id_producto = p.id_producto
+                ORDER BY h.fecha DESC
+                """
+            
+        historial_general = self.select(query)
+        
+        datos_historial = [
+            "codigo",
+            "fecha",
+            "costo_anterior",
+            "costo_nuevo",
+            "es_por_lote",
+            "unidades",
+            "motivo"
+        ]
+        
+        historial_general_tuple = [
+            tuple(diccionario.get(campo) for campo in datos_historial)
+            for diccionario in historial_general
+        ]
+        print(historial_general_tuple)
+        return historial_general_tuple
+    
+    
+    def mostrar_historial_ganancias_producto(self, codigo_producto) -> List[Tuple]:
+        """
+        Mostrar Historial de ganacias de un producto
+
+        Args:
+            codigo_producto (str): Código del producto
+
+        Returns:
+            List[Tuple]: - Retorna una lista con tupla
+        """        
+        
+        query = """
+                SELECT h.mes, h.ganancia_total, h.margen_promedio
+                FROM Historial_Ganancias h
+                JOIN Productos p ON h.id_producto = p.id_producto
+                WHERE p.codigo = ?
+                ORDER BY h.mes DESC
+                """
+        params = (codigo_producto,)
+                
+        historial = self.select(query, params)
+        
+        datos_historial = [
+            "mes",
+            "ganancia_total",
+            "margen_promedio"
+        ]
+        
+        historial_tupla = [
+            tuple(diccionario.get(campo) for campo in datos_historial)
+            for diccionario in historial
+        ]
+        print(historial_tupla)
+        return historial_tupla
+    
+    
+    def mostrar_historial_general_mensual(self, mes_str) -> List[Tuple]:
+        """
+        Mostrar historial de ganancias general mensual.
+
+        Args:
+            mes_str (str): Mes del historial.
+
+        Returns:
+            List[Tuple] - Retorna una lista de tuplas
+        """        
+        
+        query = """
+            SELECT p.codigo, h.ganancia_total, h.margen_promedio
+            FROM Historial_Ganancias h
+            JOIN Productos p ON h.id_producto = p.id_producto
+            WHERE h.mes = ?
+            ORDER BY p.codigo
+            """
+        params = (mes_str,)
+
+        historial_general_mensual = self.select(query, params)
+        
+        datos_historial = [
+            "codigo",
+            "ganancia_total",
+            "margen_promedio",
+        ]
+        
+        historial_general_mensual_tupla = [
+            tuple(diccionario.get(campo) for campo in datos_historial)
+            for diccionario in historial_general_mensual
+        ]
+        print(historial_general_mensual_tupla)
+        return historial_general_mensual_tupla
+    
+#######################################################################################################################
+############################################# SECCIÓN DE FACTURAS Y NOTASEGA ##########################################
+#######################################################################################################################
+
+    def encotrar_notas_entrega(self) -> List[Tuple]:
+        """
+        Selecciona Nota de entrega de un cliente
+
+        Returns:
+            List[Tuple]: - Retorna una lista de tuplas.
+        """        
+        
+        query = """SELECT ne.id_nota_entrega, ne.fecha, c.nombre, ne.total, ne.estado
+            FROM NotasEntrega ne
+            JOIN Clientes c ON ne.id_cliente = c.id_cliente"""
+        
+        notas_entregas = self.select(query)
+        
+        datos_nota_entrega = [
+            "id_nota_entrega",
+            "fecha",
+            "nombre",
+            "total",
+            "estado"
+        ]
+        notas_entregas_tuplas = [tuple(diccionario.get(campo) for campo in datos_nota_entrega) 
+                                for diccionario in notas_entregas]
+        print(notas_entregas_tuplas)
+        return notas_entregas_tuplas
+    
+    
+    def encontrar_facturas(self) -> List[Tuple]:
+        """
+        Selecciona Factura de un cliente
+
+        Returns:
+            List[Tuple]: - Retorna una lista de tuplas
+        """        
+        
+        query = """
+            SELECT 
+                v.id_venta, 
+                v.fecha, 
+                c.nombre, 
+                v.subtotal, 
+                v.descuento, 
+                v.impuesto, 
+                v.total
+            FROM Ventas v
+            JOIN Clientes c ON v.id_cliente = c.id_cliente
+            WHERE v.tipo_documento = 'factura'
+            ORDER BY v.fecha
+        """
+        facturas = self.select(query)
+        
+        print("Las facturas son:  ", facturas)
+        
+        datos_facturas = [
+            "id_venta",
+            "fecha",
+            "nombre",
+            "subtotal",
+            "descuento",
+            "impuesto",
+            "total"
+        ]
+        
+        facturas_tupla = [
+            tuple(diccionario.get(campos) for campos in datos_facturas) 
+            for diccionario in facturas
+        ]
+        print("ESTOS SON LOS DATOS DE LA CONSULTA DE LAS FACTURAS", facturas_tupla)
+        return facturas_tupla
+
+    
     
 if __name__ == "__main__":
     probar = DataBaseManager()
     #probar.actualiza_stock_db(70,"EMP-1") #"Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])
     #probar.obtener_id_factura_por_numero(987654321)
-    probar.buscar_codigos_like("ALF")
+    #probar.encontrar_facturas()
+    #probar.mostrar_historial_costos_general("WINTER08")
+    #probar.seleccion_empaque_por_codigo()
+    #probar.codigo_existe_emp("EMP-1")
+    #probar.selecion_kit_empaques()
+    #probar.selecion_empaques()
+    #probar.costo_embalaje(["KIT-1"])
+    #probar.validar_stock_empaques(["KIT-2"])
+    #probar.descontar_empaques(["KIT-2"])
+    #probar.obtener_tamaños_por_material_color_tipo("P-AC", "Azul celeste", "Acrilicas")
+    #probar.descripcion_kit_empaque(["KIT-1"])
+    #probar.obtener_kits()
+    probar.obtener_detalles_kit("KIT-1")
+    
+    
+
+    

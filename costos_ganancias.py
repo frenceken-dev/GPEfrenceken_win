@@ -4,21 +4,22 @@ from tkinter import ttk, messagebox, Toplevel
 from tkcalendar import Calendar 
 #from inventario import convertir_a_float
 from db import (
-    obtener_productos_para_acthistorial, 
-    guardar_historial, 
-    obtener_productos_para_costoventa, 
-    mostrar_historial_costos_por_producto, 
-    mostrar_historial_costos_general, 
-    mostrar_historial_ganancias_producto,
-    mostrar_historial_general_mensual, 
+    #obtener_productos_para_acthistorial, 
+    #guardar_historial, 
+    #obtener_productos_para_costoventa, 
+    #mostrar_historial_costos_por_producto, 
+    #mostrar_historial_costos_general, 
+    #mostrar_historial_ganancias_producto,
+    #mostrar_historial_general_mensual, 
     datos_imprimir_historial_costo, 
     datos_imprimir_historial_ganancia,
     calcular_costo_produccion, 
-    obtener_productos_para_costoventa, 
+    #obtener_productos_para_costoventa, 
     actualizar_precio_venta, 
     datos_costo_d_producto_actualizar, 
     actualizar_costo_producto, 
-    registrar_historial_costo,registrar_producto_en_lote, 
+    #registrar_historial_costo,
+    registrar_producto_en_lote, 
     obtener_lotes, 
     obtener_lotes_con_productos, 
     obtener_costo_actual_lote,
@@ -29,8 +30,10 @@ from db import (
     actualiza_precio_venta_lote,
     )
 from recursos import crear_boton, configurar_toplevel
+from databasemanager import DataBaseManager
 
 
+db_connect = DataBaseManager()
 # Actualizar los costos por unidad
 def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
     # Limpiar pantalla
@@ -90,7 +93,7 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
     )
     product_label.pack(anchor=tk.W, pady=(0, 5))
 
-    productos = obtener_productos_para_costoventa()
+    productos = db_connect.obtener_productos_para_costoventa()
     
     # Verificar si la lista de productos está vacía
     if not productos:
@@ -112,18 +115,19 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
         back_button.pack(side="bottom", padx=30, pady=60)
         return
     
-    producto_vars = [f"{prod[1]} (Costo actual: €{prod[2]:.2f})" for prod in productos]
-    producto_var = tk.StringVar()
-    producto_var.set("Seleccione un producto")
-    producto_dropdown = tk.OptionMenu(center_frame, producto_var, *producto_vars)
-    producto_dropdown.config(
-        bg="#FFFFFF",
-        fg="#2C3E50",
-        font=("Arial", 10),
-        bd=2,
-        relief=tk.GROOVE,
-        width=40
-    )
+    producto_var = [f"{prod[1]} (Costo actual: €{prod[2]:.2f})" for prod in productos]
+    
+    #producto_var = tk.StringVar()
+    #producto_var.set("Seleccione un producto")    
+    producto_dropdown = ttk.Combobox(center_frame, values=producto_var, state="readonly", font=("Arial", 10), width=30)
+    # producto_dropdown.config(
+    #     bg="#FFFFFF",
+    #     fg="#2C3E50",
+    #     font=("Arial", 10),
+    #     bd=2,
+    #     relief=tk.GROOVE,
+    #     width=40
+    # )
     producto_dropdown.pack(anchor=tk.W, pady=(0, 15))
 
     # Label y Entry para el nuevo costo
@@ -219,8 +223,9 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
     metodo_var.trace_add("write", lambda *args: actualizar_tipo_parametro())
 
     # Función para limpiar campos
-    def limpiar_campos():
-        producto_var.set("")
+    def limpiar_campos(): # QUE CAMPOS SE LIMPIAN?
+        
+        producto_dropdown.set("")
         nuevo_costo_entry.delete(0, tk.END)
         recalcular_precio_var.set(0)
         metodo_var.set("factor")
@@ -241,7 +246,7 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
         #activebackground="#2980B9",
         #activeforeground="white",
         comando=lambda: actualizar_costo_produccion(
-            producto_var.get(),
+            producto_dropdown.get(),
             nuevo_costo_entry.get(),
             recalcular_precio_var.get(),
             metodo_var.get() if recalcular_precio_var.get() else None,
@@ -641,7 +646,7 @@ def abrir_formulario_crear_lote(parent_frame):
     productos_listbox.config(yscrollcommand=scrollbar.set)
 
     # Obtener y cargar los productos en el Listbox
-    productos = obtener_productos_para_costoventa()
+    productos = db_connect.obtener_productos_para_costoventa()
     for producto in productos:
         productos_listbox.insert(tk.END, f"{producto[1]} (Costo: €{producto[2]:.2f})")
 
@@ -710,7 +715,7 @@ def guardar_nuevo_lote(descripcion, unidades_str, productos_seleccionados, canti
         # Insertar los productos en la tabla Lote_Productos
         for producto_str in productos_seleccionados:
             codigo_producto = producto_str.split(" ")[0]
-            producto = next((prod for prod in obtener_productos_para_costoventa() if prod[1] == codigo_producto), None)
+            producto = next((prod for prod in db_connect.obtener_productos_para_costoventa() if prod[1] == codigo_producto), None)
             if producto:
                 id_producto = producto[0]
                 # insertar productos en la tabla lote_productos
@@ -845,7 +850,7 @@ def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio
         actualizar_costo_producto(nuevo_costo, id_producto)
 
         # Registrar el cambio en el historial
-        registrar_historial_costo(
+        db_connect.registrar_historial_costo(
             id_producto=id_producto,
             costo_anterior=costo_actual,
             costo_nuevo=nuevo_costo,
@@ -1050,7 +1055,7 @@ def abrir_actualizar_historial(root, mostrar_menu_principal, imagen_panel_tk, ro
             mes_año = f"{año}-{mes}"
 
             # Obtener todos los productos
-            productos = obtener_productos_para_acthistorial()
+            productos = db_connect.obtener_productos_para_acthistorial()
 
             # Calcular ganancias para cada producto
             ganancias = []
@@ -1058,10 +1063,10 @@ def abrir_actualizar_historial(root, mostrar_menu_principal, imagen_panel_tk, ro
                 id_producto, codigo, costo_produccion, precio_venta = producto
                 ganancia = precio_venta - costo_produccion
                 margen = (ganancia / costo_produccion) * 100 if costo_produccion != 0 else 0
-
-                # Guardar en Historial_Ganancias
-                guardar_historial(id_producto, mes_año, ganancia, margen)
                 ganancias.append((codigo, ganancia, margen))
+                
+            # Guardar en Historial_Ganancias
+            db_connect.guardar_historial(id_producto, mes_año, ganancia, margen)
 
             # Mostrar resultados en el Text
             resultado_text.config(state="normal")
@@ -1074,7 +1079,7 @@ def abrir_actualizar_historial(root, mostrar_menu_principal, imagen_panel_tk, ro
                 resultado_text.insert(tk.END, f"{codigo}\t\t€{ganancia:.2f}\t\t{margen:.1f}%\n")
 
             resultado_text.config(state="disabled")
-            messagebox.showinfo("Éxito", f"Historial de ganancias actualizado para el mes {mes_año}.")
+            messagebox.showinfo("✅ Éxito", f"Historial de ganancias actualizado para el mes {mes_año}.")
 
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error: {e}")
@@ -1141,7 +1146,7 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
 
     opcion_var = tk.StringVar()
     opcion_var.set("producto_especifico")
-    opcion_dropdown = tk.OptionMenu(center_frame, opcion_var, "producto_especifico", "todos")
+    opcion_dropdown = tk.OptionMenu(center_frame, opcion_var, "producto_especifico", "todos los Productos")
     opcion_dropdown.config(
         bg="#FFFFFF",
         fg="#2C3E50",
@@ -1155,16 +1160,16 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
     # Dropdown para seleccionar producto (solo visible si se elige "producto_especifico")
     producto_frame = tk.Frame(center_frame, bg="#E0F2F7")
 
-    producto_label = tk.Label(
-        producto_frame,
-        text="Selecciona el producto:",
-        bg="#a0b9f0",
-        fg="#2C3E50",
-        font=("Arial", 11)
-    )
-    producto_label.pack(anchor=tk.W, pady=(0, 5))
+    # producto_label = tk.Label(
+    #     producto_frame,
+    #     text="Selecciona el producto:",
+    #     bg="#a0b9f0",
+    #     fg="#2C3E50",
+    #     font=("Arial", 11)
+    # )
+    # producto_label.pack(anchor=tk.W, pady=(0, 5))
 
-    productos = obtener_productos_para_costoventa()
+    productos = db_connect.obtener_productos_para_costoventa()
     
     # Verificar si la lista de productos está vacía
     if not productos:
@@ -1187,16 +1192,26 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
         return
     
     producto_vars = [f"{prod[1]}" for prod in productos]
-    producto_var = tk.StringVar()
-    producto_dropdown = tk.OptionMenu(producto_frame, producto_var, *producto_vars)
-    producto_dropdown.config(
-        bg="#FFFFFF",
-        fg="#2C3E50",
-        font=("Arial", 10),
-        bd=2,
-        relief=tk.GROOVE,
-        width=40
-    )
+    #producto_var = tk.StringVar()
+    # producto_dropdown = tk.OptionMenu(producto_frame, producto_var, *producto_vars)
+    # producto_dropdown.config(
+    #     bg="#FFFFFF",
+    #     fg="#2C3E50",
+    #     font=("Arial", 10),
+    #     bd=2,
+    #     relief=tk.GROOVE,
+    #     width=40
+    # )
+    # Etiqueta para mostrar el producto seleccionado.
+    
+    # Área para mostrar el historial
+    resultado_frame = tk.Frame(center_frame, bg="#a0b9f0", padx=20, pady=10) #E0F2F7
+    resultado_frame.pack(fill=tk.X)
+    
+    producto_seleccionado_label = tk.Label(resultado_frame, text=f"Historial de costos para: (No seleccionado)", font=8, bg="#a0b9f0")
+    producto_seleccionado_label.pack()
+    
+    producto_dropdown = ttk.Combobox(center_frame, values=producto_vars, state="readonly", font=("Arial", 10), width=30)
     producto_dropdown.pack(anchor=tk.W, pady=(0, 15))
 
     def toggle_producto_frame(*args):
@@ -1210,7 +1225,7 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
     # Botón para mostrar el historial
     show_button = crear_boton(
         center_frame,
-        texto="Mostrar Historial",
+        texto="Aceptar",
         ancho=30,
         alto=30,
         color_fondo="#466196",                
@@ -1220,14 +1235,14 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
         #relief=tk.FLAT,
         hover_color="#2ECC71",
         #activeforeground="black",
-        comando=lambda:mostrar_historial(opcion_var.get(), producto_var.get() if opcion_var.get() == "producto_especifico" else None),
+        comando=lambda:mostrar_historial(opcion_var.get(), producto_dropdown.get() if opcion_var.get() == "producto_especifico" else None),
         #width=20
     )
     show_button.pack(anchor=tk.W, pady=(0, 20))
-
-    # Área para mostrar el historial
-    resultado_frame = tk.Frame(center_frame, bg="#E0F2F7", padx=20, pady=10)
-    resultado_frame.pack(fill=tk.X)
+    
+    #tree_unitario = ttk.Treeview(resultado_frame, columns=("Fecha", "Costo Anterior", "Costo Nuevo", "Por Lote", "Unidades", "Motivo"), show="headings")
+    tree = ttk.Treeview(resultado_frame, columns=("Producto", "Fecha", "Costo Anterior" , "Costo Nuevo" , "Por Lote", "Unidades", "Motivo"), show="headings")
+    # Se movio el empacado dentro del if
 
     historial_text = tk.Text(
         resultado_frame,
@@ -1242,7 +1257,7 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
         padx=10,
         pady=10
     )
-    historial_text.pack()
+    # historial_text.pack()
 
     # Botón para volver
     back_button = crear_boton(
@@ -1276,14 +1291,15 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
         #relief=tk.FLAT,
         hover_color="#2ECC71",
         #activeforeground="black",
-        comando=lambda:limpiar_campos(),
+        comando=lambda:limpiar_campos(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk),
         #width=15
     )
     clear_button.pack(side="bottom", padx=30, pady=20)
 
     boton_imprimir_costos = None
 
-    def mostrar_historial(opcion, producto_str=None):
+    def mostrar_historial(opcion, producto_str=None):       
+        
         global boton_imprimir_costos
 
         # Eliminar el botón imprimir si existe
@@ -1294,27 +1310,68 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
         historial_text.delete(1.0, tk.END)
 
         if opcion == "producto_especifico":
-            historial_text.insert(tk.END, f"Historial de costos para {producto_str}:\n\n")
-            historial = mostrar_historial_costos_por_producto(producto_str)
+            # Limpiar tree
+            tree.delete(*tree.get_children())
+            producto_dropdown.configure(state="normal")
+            
+            #producto_seleccionado_label.configure(text=f"Historial de costos para: {producto_str}")
+            #historial_text.insert(tk.END, f"Historial de costos para {producto_str}:\n\n")
+            historial = db_connect.mostrar_historial_costos_por_producto(producto_str)
+            
+            # Encabezados
+            tree.heading("Producto", text="Producto")
+            tree.heading("Fecha", text="Fecha")
+            tree.heading("Costo Anterior", text="Costo Anterior")
+            tree.heading("Costo Nuevo", text="Costo Nuevo")
+            tree.heading("Por Lote", text="Por Lote")
+            tree.heading("Unidades", text="Unidades")
+            tree.heading("Motivo", text="Motivo")
+            
+            # Ajustar tamaño de columnas.
+            tree.column("Producto", width=100)
+            tree.column("Fecha", width=120)
+            tree.column("Costo Anterior", width=100)
+            tree.column("Costo Nuevo", width=100)
+            tree.column("Por Lote", width=70)
+            tree.column("Unidades", width=70)
+            tree.column("Motivo", width=140)
+            
+            tree.pack(fill="both", expand=True)
+            
+            # Insertar los resultados en el Treeview
+            for row in historial:
+                tree.insert("", tk.END, values=row)
+            #historial_text.insert(tk.END, "Fecha       | Costo Anterior | Costo Nuevo | Por Lote | Unidades | Motivo\n")
         else:
-            historial_text.insert(tk.END, "Historial de costos para TODOS los productos:\n\n")
-            historial = mostrar_historial_costos_general()
-
-        # Encabezados
-        if opcion == "producto_especifico":
-            historial_text.insert(tk.END, "Fecha       | Costo Anterior | Costo Nuevo | Por Lote | Unidades | Motivo\n")
-        else:
-            historial_text.insert(tk.END, "Producto    | Fecha       | Costo Anterior | Costo Nuevo | Por Lote | Unidades | Motivo\n")
-
-        historial_text.insert(tk.END, "-" * 80 + "\n")
-
-        for row in historial:
-            if opcion == "producto_especifico":
-                historial_text.insert(tk.END, f"{row[0]} | €{row[1]:.2f}       | €{row[2]:.2f}      | {'Sí' if row[3] else 'No'}   | {row[4] or 'N/A'}     | {row[5] or 'N/A'}\n")
-            else:
-                historial_text.insert(tk.END, f"{row[0]} | {row[1]} | €{row[2]:.2f}       | €{row[3]:.2f}      | {'Sí' if row[4] else 'No'}   | {row[5] or 'N/A'}     | {row[6] or 'N/A'}\n")
-
-        historial_text.config(state="disabled")
+            # Limpiar tree
+            tree.delete(*tree.get_children())
+            producto_dropdown.configure(state="disabled")
+            
+            #producto_seleccionado_label.configure(text=f"Historial de costos para TODOS los productos.")
+            #historial_text.insert(tk.END, "Historial de costos para TODOS los productos:\n\n")
+            historial = db_connect.mostrar_historial_costos_general()
+            
+            tree.heading("Producto", text="Producto")
+            tree.heading("Fecha", text="Fecha")
+            tree.heading("Costo Anterior", text="Costo Ant.")
+            tree.heading("Costo Nuevo", text="Costo Nvo")
+            tree.heading("Por Lote", text="Por Lote")
+            tree.heading("Unidades", text="Unidades")
+            tree.heading("Motivo", text="Motivo")
+            
+            tree.column("Producto", width=100)
+            tree.column("Fecha", width=120)
+            tree.column("Costo Anterior", width=100)
+            tree.column("Costo Nuevo", width=100)
+            tree.column("Por Lote", width=70)
+            tree.column("Unidades", width=70)
+            tree.column("Motivo", width=140)
+            
+            tree.pack(fill="both", expand=True)
+            
+            # Insertar los resultados en el Treeview
+            for row in historial:
+                tree.insert("", tk.END, values=row)
 
         # Botón para imprimir el historial
         boton_imprimir_costos = crear_boton(
@@ -1330,12 +1387,19 @@ def mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol,
             hover_color="#2ECC71",
             #activeforeground="black",
             comando=lambda: imprimir_historial_costos(historial, opcion)
+            
         )
         boton_imprimir_costos.pack(side="left", padx=5, pady=5)
-    # Función para limpiar campos
-    def limpiar_campos():
-        producto_var.set("")
         
+    # Función para limpiar campos
+    def limpiar_campos(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
+        global boton_imprimir_costos
+        producto_dropdown.set("") # Solo limpia el producto especifico
+        tree.destroy()
+        producto_seleccionado_label.configure(text="Historial de costos para: (No seleccionado)")
+        boton_imprimir_costos.destroy()
+        boton_imprimir_costos = None        
+        mostrar_historial_costos(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)
     
 # Muestra el historial de Ganancias por producto o todo 
 def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
@@ -1419,7 +1483,7 @@ def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, r
     )
     producto_label.pack(anchor=tk.W, pady=(0, 5))
 
-    productos = obtener_productos_para_costoventa()
+    productos = db_connect.obtener_productos_para_costoventa()
     
     # Verificar si la lista de productos está vacía
     if not productos:
@@ -1573,14 +1637,14 @@ def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, r
 
         if opcion == "producto_especifico":
             historial_text.insert(tk.END, f"Historial de ganancias para {producto_str}:\n\n")
-            historial = mostrar_historial_ganancias_producto(producto_str)
+            historial = db_connect.mostrar_historial_ganancias_producto(producto_str)
         else:
             if not mes_str:
                 messagebox.showerror("Error", "Debes ingresar un mes.")
                 historial_text.config(state="disabled")
                 return
             historial_text.insert(tk.END, f"Historial de ganancias para el mes {mes_str}:\n\n")
-            historial = mostrar_historial_general_mensual(mes_str)
+            historial = db_connect.mostrar_historial_general_mensual(mes_str)
 
         if not historial:
             messagebox.showerror("Error", "No hay datos en el historial de ganancias.")
@@ -1597,9 +1661,9 @@ def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, r
 
         for row in historial:
             if opcion == "producto_especifico":
-                historial_text.insert(tk.END, f"{row[0]} | €{row[1]:.2f}         | {row[2]:.1f}%\n")
+                historial_text.insert(tk.END, f"{row[0]} | €{row[1]:.2f}         | {row[2]:.2f}%\n")
             else:
-                historial_text.insert(tk.END, f"{row[0]} | €{row[1]:.2f}         | {row[2]:.1f}%\n")
+                historial_text.insert(tk.END, f"{row[0]} | €{row[1]:.2f}         | {row[2]:.2f}%\n")
 
         historial_text.config(state="disabled")
 

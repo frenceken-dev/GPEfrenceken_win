@@ -1,25 +1,30 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
-from db import (
-    obtener_nombres_proveedores,
-    #insertar_material, #insertar_factura,
-    #obtener_id_proveedor_por_nombre,
-    #obtener_id_factura_por_numero,
-    #obtener_id_material_por_codigo,
-    #insertar_detalle_factura,
-    #codigo_existe
-)
+# from db import (
+#     #obtener_nombres_proveedores,
+#     #insertar_material, #insertar_factura,
+#     #obtener_id_proveedor_por_nombre,
+#     #obtener_id_factura_por_numero,
+#     #obtener_id_material_por_codigo,
+#     #insertar_detalle_factura,
+#     #codigo_existe
+# )
 from recursos import crear_boton, configurar_toplevel
 from databasemanager import DataBaseManager
+from empaqueManager import CrearEmpaques
+
 
 db_connect = DataBaseManager()
+
 class InventarioManager:
     def __init__(self, root, imagen_panel_tk, volver_menu):
         self.root = root
         self.imagen_panel_tk = imagen_panel_tk
         self.volver_menu = volver_menu
         self.materiales_temporales = []
+        self.empaques_temporales = []
+        self.materia_prima = []
         self.datos_factura = {
             "proveedor": "",
             "numero_factura": "",
@@ -28,6 +33,7 @@ class InventarioManager:
         self.total_actual = []
         self.exite_codigo = False
         self.db_connect = DataBaseManager()  # Asegúrate de que DataBaseManager esté importado
+        self.agregar_empaque = CrearEmpaques(root, imagen_panel_tk, volver_menu)
 
     def limpiar_frame(self):
         for widget in self.root.winfo_children():
@@ -106,11 +112,11 @@ class InventarioManager:
         self.fecha_entry.grid(row=2, column=1, pady=5)
 
     def actualizar_proveedores(self):
-        self.proveedor_combobox["values"] = obtener_nombres_proveedores("")
+        self.proveedor_combobox["values"] = db_connect.obtener_nombres_proveedores("")
 
     def actualizar_opciones_proveedores(self, event):
         texto = self.proveedor_combobox.get()
-        proveedores_filtrados = obtener_nombres_proveedores(texto)
+        proveedores_filtrados = db_connect.obtener_nombres_proveedores(texto)
         self.proveedor_combobox['values'] = proveedores_filtrados
 
     def crear_botones_accion(self):
@@ -118,8 +124,8 @@ class InventarioManager:
         self.btn_agregar_material = crear_boton(
             self.form_frame,
             texto="Agregar Material",
-            ancho=30,
-            alto=30,
+            ancho=20,
+            alto=25,
             color_fondo="#073EAD",
             color_texto="white",
             font=("Arial", 11, "bold"),
@@ -127,13 +133,26 @@ class InventarioManager:
             state=tk.DISABLED
         )
         self.btn_agregar_material.grid(row=3, column=0, pady=20)
+        
+        self.btn_agregar_empaque = crear_boton(
+            self.form_frame,
+            texto="Agregar Empaque",
+            ancho=20,
+            alto=25,
+            color_fondo="#9E6D3F",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=lambda: self.agregar_empaque_temporal(self.frame),
+            state=tk.DISABLED
+        )
+        self.btn_agregar_empaque.grid(row=3, column=1, pady=20)
 
         # Botón Mostrar Datos
         self.btn_mostrar_datos = crear_boton(
             self.form_frame,
-            texto="Mostrar Datos Ingresados",
-            ancho=30,
-            alto=30,
+            texto="Ver Datos Ingresados",
+            ancho=20,
+            alto=25,
             color_fondo="#324f98",
             color_texto="white",
             font=("Arial", 11, "bold"),
@@ -143,14 +162,14 @@ class InventarioManager:
             ],
             state=tk.DISABLED
         )
-        self.btn_mostrar_datos.grid(row=3, column=1, pady=20)
+        self.btn_mostrar_datos.grid(row=3, column=2, pady=20)
 
         # Botón Guardar Factura
         self.btn_guardar_factura = crear_boton(
             self.form_frame,
             texto="Guardar Factura",
-            ancho=30,
-            alto=30,
+            ancho=20,
+            alto=25,
             color_fondo="#4283fa",
             color_texto="white",
             font=("Arial", 11, "bold"),
@@ -160,14 +179,14 @@ class InventarioManager:
             ],
             state=tk.DISABLED
         )
-        self.btn_guardar_factura.grid(row=4, column=0, columnspan=2, pady=20)
+        self.btn_guardar_factura.grid(row=4, column=1, pady=20) # , columnspan=2
 
         # Botón Volver
         self.back_button = crear_boton(
             self.frame_inferior,
             texto="Volver",
-            ancho=30,
-            alto=30,
+            ancho=20,
+            alto=25,
             color_fondo="#913131",
             color_texto="white",
             font=("Arial", 11, "bold"),
@@ -190,7 +209,7 @@ class InventarioManager:
 
     def actualizar_estado_botones(self, proveedor, num_factura, fecha):
         estado_activo = self.validar_campos_obligatorios(proveedor, num_factura, fecha)
-        botones = [self.btn_agregar_material, self.btn_mostrar_datos, self.btn_guardar_factura]
+        botones = [self.btn_agregar_material, self.btn_agregar_empaque, self.btn_mostrar_datos, self.btn_guardar_factura]
 
         for boton in botones:
             if hasattr(boton, "set_state"):
@@ -225,7 +244,7 @@ class InventarioManager:
 
     def agregar_material_temporal(self, frame_contenido):
         cod_materiales = self.db_connect.obtener_codigo_materiales()
-        print(f"Códigos obtenidos para el combobox: {cod_materiales}")
+        #print(f"Códigos obtenidos para el combobox: {cod_materiales}")
 
         material_window = tk.Toplevel(frame_contenido)
         configurar_toplevel(material_window, titulo="Agregar Material", ancho_min=300, alto_min=330, color_fondo="#101113")
@@ -312,7 +331,10 @@ class InventarioManager:
                 "precio": precio_entry.get(),
                 "costo_unitario": costo_unitario
             }
+            # Agregar en temporales para ver datos y insertar DB. 
             self.materiales_temporales.append(material)
+            self.materia_prima.append(material)
+            
             messagebox.showinfo("Éxito", "Material agregado temporalmente.")
             material_window.destroy()
 
@@ -345,6 +367,123 @@ class InventarioManager:
             comando=borrar_campos
         )
         boton_borrar_campos.grid(row=8, column=0, columnspan=2, padx=15, pady=10)
+        
+    def agregar_empaque_temporal(self, frame_contenido):
+        cod_empaques = self.db_connect.codigo_empaques()  # Llega una tupla
+        #print(f"Códigos obtenidos para el combobox: {cod_empaques}")
+
+        empaque_window = tk.Toplevel(frame_contenido)
+        configurar_toplevel(empaque_window, titulo="Agregar Material", ancho_min=335, alto_min=310, color_fondo="#101113")
+
+        # Campos de entrada (centrados)
+        tk.Label(empaque_window, text="Código Empaque:", bg="#101113", fg="#ffffff").grid(row=1, column=0, sticky="ns")
+        codigo_entry = ttk.Combobox(empaque_window, values=cod_empaques, state="normal")
+        codigo_entry.grid(row=1, column=1, sticky="ns", pady=5)
+
+        tk.Label(empaque_window, text="Nombre Empaque:", bg="#101113", fg="#ffffff").grid(row=2, column=0, sticky="ns")
+        nombre_entry = tk.Entry(empaque_window, width=25)
+        nombre_entry.grid(row=2, column=1, sticky="ns", pady=5)
+
+        tk.Label(empaque_window, text="Tamaño empaque:", bg="#101113", fg="#ffffff").grid(row=3, column=0, sticky="ns")
+        tamaño_entry = tk.Entry(empaque_window, width=25)
+        tamaño_entry.grid(row=3, column=1, sticky="ns", pady=5)
+
+        tk.Label(empaque_window, text="Cantidad empaque:", bg="#101113", fg="#ffffff").grid(row=4, column=0, sticky="ns")
+        cantidad_entry = tk.Entry(empaque_window, width=25)
+        cantidad_entry.grid(row=4, column=1, sticky="ns", pady=5)
+
+        tk.Label(empaque_window, text="Precio total:", bg="#101113", fg="#ffffff").grid(row=5, column=0, sticky="ns")
+        precio_entry = tk.Entry(empaque_window, width=25)
+        precio_entry.grid(row=5, column=1, sticky="ns", pady=5)
+
+        def filtrar_codigos_key(event):
+            texto_actual = codigo_entry.get().upper()
+            codigos_filtrados = [codigo for codigo in cod_empaques if codigo.startswith(texto_actual)] # ERROR AQUI
+            codigo_entry["values"] = codigos_filtrados
+
+        def filtrar_codigos_postcommand():
+            texto_actual = codigo_entry.get().upper()
+            codigos_filtrados = [codigo for codigo in cod_empaques if codigo.startswith(texto_actual)]
+            codigo_entry["values"] = codigos_filtrados
+
+        def auto_completar_entry(event):
+            codigo = codigo_entry.get()
+            print(f"Código seleccionado: {codigo}")
+            nombre, tamaño, cantidad, precio = self.db_connect.selecciona_empaque_por_codigo (codigo) # Cambiar consulta
+
+            if nombre or tamaño or cantidad or precio:
+                nombre_entry.delete(0, tk.END)
+                tamaño_entry.delete(0, tk.END)
+                cantidad_entry.delete(0, tk.END)
+                precio_entry.delete(0, tk.END)
+
+                nombre_entry.insert(0, nombre)
+                tamaño_entry.insert(0, tamaño)
+                #cantidad_entry.insert(0, cantidad)
+                #precio_entry.insert(0, precio)
+
+        codigo_entry["postcommand"] = filtrar_codigos_postcommand
+        codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
+        codigo_entry.bind("<KeyRelease>", lambda event: filtrar_codigos_key(event))
+
+        def guardar_material():
+            codigo = codigo_entry.get()
+            precio = self.convertir_a_float(precio_entry.get())
+            cantidad = self.convertir_a_float(cantidad_entry.get())
+            costo_unitario = precio / cantidad if cantidad != 0 else 0
+
+            try:
+                cantidad_float = float(cantidad)
+                precio_float = float(precio)
+            except ValueError:
+                messagebox.showerror("⚠️ Error", "La cantidad y el precio deben ser números válidos.")
+                return
+
+            empaque = {
+                "codigo": codigo_entry.get(),
+                "nombre": nombre_entry.get(),
+                "tamaño": tamaño_entry.get(),
+                "stock": cantidad_entry.get(),
+                "precio": precio_entry.get(),
+                "costo_unitario": costo_unitario
+            }
+            # Agregar en temporales para ver datos y insertar DB.
+            self.materiales_temporales.append(empaque)
+            self.empaques_temporales.append(empaque)
+            
+            messagebox.showinfo("Éxito", "Material agregado temporalmente.")
+            empaque_window.destroy()
+
+        def borrar_campos():
+            nombre_entry.delete(0, tk.END)
+            tamaño_entry.delete(0, tk.END)
+            cantidad_entry.delete(0, tk.END)
+            precio_entry.delete(0, tk.END)
+
+        boton_guardar_material = crear_boton(
+            empaque_window,
+            texto="Guardar Empaque",
+            ancho=30,
+            alto=30,
+            color_fondo="#4283fa",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=guardar_material
+        )
+        boton_guardar_material.grid(row=7, column=0, columnspan=2, padx=15, pady=10)
+
+        boton_borrar_campos = crear_boton(
+            empaque_window,
+            texto="Borrar Materiales",
+            ancho=30,
+            alto=30,
+            color_fondo="#fa4242",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=borrar_campos
+        )
+        boton_borrar_campos.grid(row=8, column=0, columnspan=2, padx=15, pady=10)
+
 
     def convertir_a_float(self, valor_str):
         try:
@@ -364,7 +503,8 @@ class InventarioManager:
                         child.set('')
 
     def guardar_factura_y_materiales(self, frame_contenido):
-        
+        print(f"DATOS DE LOS EMPAQUES: {self.empaques_temporales}")
+        print(f"DATOS DE LA MATERIA PRIMA: { self.materia_prima}")
         if not self.datos_factura["proveedor"] or not self.datos_factura["numero_factura"] or not self.datos_factura["fecha"]:
             messagebox.showerror("⚠️ Error", "Faltan datos de la factura (proveedor, número o fecha).")
             return
@@ -373,75 +513,111 @@ class InventarioManager:
             messagebox.showerror("⚠️ Error", "No se han ingresado materiales.")
             return
         
-        #try:
-        db_connect.insertar_factura(
-            self.datos_factura["numero_factura"],
-            self.datos_factura["fecha"],
-            self.datos_factura["proveedor"]
-        )
+        try:
+            db_connect.insertar_factura(
+                self.datos_factura["numero_factura"],
+                self.datos_factura["fecha"],
+                self.datos_factura["proveedor"]
+            )
 
-        id_proveedor = db_connect.obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
-        if isinstance(id_proveedor, tuple):
-            id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
-        
-        id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
-        
-        for material in self.materiales_temporales:
-            try:
-                material["costo_unitario"] = round(material["costo_unitario"], 2)
-            except:
-                print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
-                material["costo_unitario"] = 0.0
+            id_proveedor = db_connect.obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
+            if isinstance(id_proveedor, tuple):
+                id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
+            
+            id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
+            
+            for material in self.materia_prima: #self.materiales_temporales:
+                try:
+                    material["costo_unitario"] = round(material["costo_unitario"], 2)
+                except:
+                    print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
+                    material["costo_unitario"] = 0.0
+                    
+                codigo_true = db_connect.codigo_existe(material["codigo"])
+                print(f"El valor de codigo_true: {codigo_true}")
+                # Verificar si el material existe en la base de datos
+                if codigo_true:
+                    # Si existe, actualizar el stock y el costo
+                    exito, mensaje = db_connect.actualizar_material(
+                        material["codigo"],
+                        int(material["stock"]),
+                        material["precio"],
+                        material["costo_unitario"]
+                    )
+                    if not exito:
+                        messagebox.showwarning("Advertencia", mensaje)
+                else:
+                    # Si no existe, insertar el material completo
+                    id_material = db_connect.insertar_material(
+                        material["codigo"],
+                        material["nombre"],
+                        material["tipo"],
+                        material["tamaño"],
+                        material["color"],
+                        material["stock"],
+                        material["precio"],
+                        material["costo_unitario"],
+                        id_proveedor
+                    )
+
+                # 4. Obtener el id_material
+                id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+                print(f"ID que de vuelve insertar material: {id_material}")
+                # 5. Insertar en Detalle_Factura
+                if id_material is not None:
+                    id_detalle = db_connect.insertar_detalle_factura(
+                        id_factura,
+                        id_material,
+                        material["stock"],
+                        material["precio"],
+                        material["costo_unitario"]
+                    )
+                else:
+                    messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
                 
-            codigo_true = db_connect.codigo_existe(material["codigo"])
-            print(f"El valor de codigo_true: {codigo_true}")
-            # Verificar si el material existe en la base de datos
-            if codigo_true:
-                # Si existe, actualizar el stock y el costo
-                exito, mensaje = db_connect.actualizar_material(
-                    material["codigo"],
-                    int(material["stock"]),
-                    material["precio"],
-                    material["costo_unitario"]
-                )
-                if not exito:
-                    messagebox.showwarning("Advertencia", mensaje)
-            else:
-                # Si no existe, insertar el material completo
-                id_material = db_connect.insertar_material(
-                    material["codigo"],
-                    material["nombre"],
-                    material["tipo"],
-                    material["tamaño"],
-                    material["color"],
-                    material["stock"],
-                    material["precio"],
-                    material["costo_unitario"],
-                    id_proveedor
-                )
+            # Guardar Empaques  OJO al guardar una lista vacia.
+            for material in self.empaques_temporales: #self.materiales_temporales:
+                try:
+                    material["costo_unitario"] = round(material["costo_unitario"], 2)
+                except:
+                    print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
+                    material["costo_unitario"] = 0.0
+                    
+                codigo_true = db_connect.codigo_existe_emp(material["codigo"])
+                print(f"El valor de codigo_true: {codigo_true}")
+                # Verificar si el material existe en la base de datos
+                if codigo_true:
+                    print("DENTRO DEL IF ACTUALIZAR EMPAQUE")
+                    # Si existe, actualizar el stock y el costo
+                    exito, mensaje = db_connect.actualizar_empaque(
+                        material["codigo"],
+                        int(material["stock"]),
+                        material["precio"],
+                        material["costo_unitario"]
+                    )
+                    if not exito:
+                        messagebox.showwarning("Advertencia", mensaje)
+                else:
+                    print("DENTRO DEL ELES INSERTAR EMPAQUE")
+                    # Si no existe, insertar el material completo
+                    id_material = db_connect.insertar_empaque(
+                        material["codigo"],
+                        material["nombre"],
+                        material["tamaño"],
+                        material["stock"],
+                        material["precio"],
+                        material["costo_unitario"],
+                    )
 
-            # 4. Obtener el id_material
-            id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
-            print(f"ID que deveulve insertar material: {id_material}")
-            # 5. Insertar en Detalle_Factura
-            if id_material is not None:
-                id_detalle = db_connect.insertar_detalle_factura(
-                    id_factura,
-                    id_material,
-                    material["stock"],
-                    material["precio"],
-                    material["costo_unitario"]
-                )
-            else:
-                messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
+            # 6. Mostrar mensaje de éxito
+            messagebox.showinfo("Éxito", "Factura y materiales guardados correctamente.")
+            self.limpiar_campos(frame_contenido)
+            self.materiales_temporales.clear()
+            self.materia_prima.clear()
+            self.empaques_temporales.clear()
 
-        # 6. Mostrar mensaje de éxito
-        messagebox.showinfo("Éxito", "Factura y materiales guardados correctamente.")
-        self.limpiar_campos(frame_contenido)
-        self.materiales_temporales.clear()
-
-        # except Exception as e:
-        #     messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
+        except Exception as e:
+            messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
 
     def mostrar_datos_ingresados(self):
         if not self.materiales_temporales:
@@ -475,7 +651,7 @@ class InventarioManager:
         def cargar_datos():
             for item in tree.get_children():
                 tree.delete(item)
-
+            print("Los Materiales temporales son: ", self.materiales_temporales)
             for material in self.materiales_temporales:
                 precio = self.convertir_a_float(material["precio"])
                 cantidad = self.convertir_a_float(material["stock"])
@@ -483,13 +659,13 @@ class InventarioManager:
                 self.total_actual.append(precio)
 
                 tree.insert("", tk.END, values=(
-                    material["codigo"],
-                    material["nombre"],
-                    material["tipo"],
-                    material["tamaño"],
-                    material["color"],
-                    material["stock"],
-                    material["precio"],
+                    material.get("codigo", "-"),
+                    material.get("nombre", "-"),
+                    material.get("tipo", "-"),
+                    material.get("tamaño", "-"),
+                    material.get("color", "-"),
+                    material.get("stock", "-"),
+                    material.get("precio", "-"),
                     f"{precio_uni:.2f}"
                 ))
 

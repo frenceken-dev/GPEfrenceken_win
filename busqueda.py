@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
-from db import buscar_en_bd, encotrar_notas_entrega, encontrar_facturas #actualizar_en_bd, obtener_materiales
+from db import encontrar_facturas #actualizar_en_bd, obtener_materiales, buscar_en_bd, encotrar_notas_entrega, 
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
 #from inventario import convertir_a_float
 from databasemanager import DataBaseManager
@@ -90,7 +90,7 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
             messagebox.showerror("⚠️ Error", "Debe seleccionar un tipo de búsqueda")# y proporcionar un valor.")
             return
 
-        resultados = buscar_en_bd(tipo, valor)
+        resultados = db_connect.search(tipo, valor)
         mostrar_resultados(resultados, tipo, root, usuario_actual, volver_menu)
         
         
@@ -137,7 +137,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         return
     
     resultados_window = tk.Toplevel() 
-    configurar_toplevel(resultados_window, titulo="Resultados de la Búsqueda", ancho_min=900, alto_min=400, color_fondo="#101113")
+    configurar_toplevel(resultados_window, titulo="Resultados de la Búsqueda", ancho_min=900, color_fondo="#101113")
     #resultados_window.configure(bg="#a0b9f0")
     
     frame_datos= tk.Frame(resultados_window, pady="5")
@@ -315,6 +315,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         tree.heading("Cliente", text="Cliente")
         tree.heading("Total", text="Total")
         tree.heading("Estado", text="Estado")
+        
         tree.column("ID", width=70)
         tree.column("Fecha", width=70)
         tree.column("Cliente", width=70)
@@ -327,7 +328,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
             
             for item in tree.get_children():
                 tree.delete(item)
-            notas_entrega = encotrar_notas_entrega()
+            notas_entrega = db_connect.encotrar_notas_entrega()
             
             for row in notas_entrega:
                 tree.insert("", tk.END, values=row)
@@ -428,12 +429,23 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         tree.heading("Descuento", text="Descuento")
         tree.heading("Impuesto", text="Impuesto")
         tree.heading("Total", text="Total")
+        
+        tree.column("N° Factura", width=60)
+        tree.column("Fecha", width=60)
+        tree.column("Cliente", width=60)
+        tree.column("Subtotal", width=60)
+        tree.column("Descuento", width=60)
+        tree.column("Impuesto", width=60)
+        tree.column("Total", width=60)
         tree.pack(fill=tk.BOTH, expand=True)
 
         def cargar_facturas():
             for item in tree.get_children():
                 tree.delete(item)
-            facturas = encontrar_facturas()
+                
+            facturas = db_connect.encontrar_facturas()
+            #print("LO QUE LLEGA A LA BUSQUEDA", facturas)
+            
             for row in facturas:
                 tree.insert("", tk.END, values=row)
 

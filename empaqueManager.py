@@ -17,7 +17,7 @@ class CrearEmpaques():
         for widget in self.root.winfo_children():
             widget.destroy()
             
-    def iniciar_intefaz(self):
+    def iniciar_interfaz(self):
         self.limpiar_pantalla()
         self.incrementa_stock_empaque()
         
@@ -42,24 +42,24 @@ class CrearEmpaques():
         # Título
         self.title_label = tk.Label(
             self.frame_titulo,
-            text="Registrar Material de Empaque",
+            text="Crear nuevo Empaque",
             font=("Arial", 16, "bold"),
             bg="#a0b9f0",
             fg="#2C3E50"
         )
         self.title_label.pack(pady=15)
         
-        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Nuevo registro de Empaques.", bg="#a0b9f0")
+        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Nuevo kit de Empaque.", bg="#a0b9f0")
         self.frame_campos.pack(pady=20, padx=20, fill="both", expand=False)
         
         # Configurar el frame_campos para centrar el contenido
-        self.frame_campos.grid_columnconfigure(0, weight=1)  # Columna vacía a la izquierda
-        self.frame_campos.grid_columnconfigure(1, weight=1)  # Columna para etiquetas
-        self.frame_campos.grid_columnconfigure(2, weight=1)  # Columna para entradas
-        self.frame_campos.grid_columnconfigure(3, weight=1)  # Columna vacía a la derecha
+        self.frame_campos.grid_columnconfigure(0, weight=1)  # Columna vacía a la izquierda.
+        self.frame_campos.grid_columnconfigure(1, weight=1)  # Columna para etiquetas.
+        self.frame_campos.grid_columnconfigure(2, weight=1)  # Columna para entradas.
+        self.frame_campos.grid_columnconfigure(3, weight=1)  # Columna vacía a la derecha.
 
         # Campos de entrada (centrados)
-        tk.Label(self.frame_campos, text="Código para este Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=0, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Crear un código:", bg="#a0b9f0", fg="#2C3E50").grid(row=0, column=1, pady=5, sticky="ns")
         codigo_entry = tk.Entry(self.frame_campos, width=25)
         codigo_entry.grid(row=1, column=1, sticky="ns")
 

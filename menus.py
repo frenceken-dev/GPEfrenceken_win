@@ -11,12 +11,14 @@ from recursos import crear_boton
 from productManager import ProductoManager
 from inventarioManager import InventarioManager
 from empaqueManager import CrearEmpaques
+from kitEmpaquesManager import kitEmpaques
 
 # menus.py
 def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario):
     crear_producto = ProductoManager(root, imagen_panel_tk, mostrar_menu_principal)
     inventario_manager = InventarioManager(root, imagen_panel_tk, mostrar_menu_principal)
     gestion_empaque = CrearEmpaques(root, imagen_panel_tk, mostrar_menu_principal)
+    kit_de_empaques = kitEmpaques(root, imagen_panel_tk, mostrar_menu_principal, usuario)
     
     def usuario_actual_main(usuario):
         """Obtiene el usuario actual y su ID."""
@@ -139,7 +141,22 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: gestion_empaque.iniciar_intefaz(),
+            comando=lambda: gestion_empaque.iniciar_interfaz(),
+            
+        ).pack(pady=15)
+        crear_boton(
+            frame_botones,
+            texto="Kit de Empaques",
+            ancho=160,
+            alto=30,
+            color_fondo="#113949",                
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            #bd=0,
+            #relief=tk.FLAT,
+            hover_color="#2ECC71",
+            #activeforeground="black",
+            comando=lambda: kit_de_empaques.iniciar_interfaz(),
             
         ).pack(pady=15)
         crear_boton(
