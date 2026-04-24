@@ -57,6 +57,7 @@ def crear_boton(
     border_width=None,
     font=None,
     cursor=None,
+    relieve=None,
     hover_color=None,   # color al pasar el cursor
     focus_color=None,   # color al recibir foco (solo si se pasa)
     focus_width=None,   # grosor del borde de foco
@@ -81,6 +82,9 @@ def crear_boton(
     font = font or ("Arial", 10, "bold")
     cursor = cursor or "hand2"
     
+    # Valores válidos para 'relieve'
+    relieves_validos = ["raised", "sunken", "flat", "ridge", "solid", "groove"]
+    relieve = relieve if relieve in relieves_validos else "raised"  # Valor por defecto: "raised"
 
     # Colores interactivos
     hover_color_local = hover_color or _darker(color_fondo, 0.15)
@@ -196,7 +200,7 @@ def crear_boton(
 
     # --- Windows / Linux ---
     active_bg = hover_color_local
-
+    
     boton = tk.Button(
         parent,
         text=texto,
@@ -206,8 +210,8 @@ def crear_boton(
         activebackground=active_bg,
         activeforeground=color_texto,
         font=font,
-        relief="flat",
-        borderwidth=0,
+        relief=relieve,
+        borderwidth=border_width,
         cursor=cursor,
         takefocus=1,
         width=ancho,

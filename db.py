@@ -373,13 +373,13 @@ def init_db():
 
 
 # Obtener código del materia por su nombre NO SE USA 
-def obtener_codigo_material_por_nombre(nombre_material):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT codigo FROM Materiales WHERE nombre = ?', (nombre_material,))
-    resultado = cursor.fetchone()
-    conn.close()
-    return resultado[0] if resultado else None
+# def obtener_codigo_material_por_nombre(nombre_material):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT codigo FROM Materiales WHERE nombre = ?', (nombre_material,))
+#     resultado = cursor.fetchone()
+#     conn.close()
+#     return resultado[0] if resultado else None
 
 
 # Materiales por nombre, tipo, tamaño para crear producto nuevo.

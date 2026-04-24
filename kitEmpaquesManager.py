@@ -166,6 +166,8 @@ class kitEmpaques:
             texto="Guardar Kit",
             ancho=30,
             alto=30,
+            relieve="raised",
+            border_width=3,
             color_fondo=self.colores["boton_guardar"],
             color_texto=self.colores["texto_claro"],
             font=("Arial", 11, "bold"),
@@ -205,29 +207,32 @@ class kitEmpaques:
         self.cargar_kits_disponibles()
 
         # Botón para editar el kit seleccionado
-        self.boton_editar_kit = tk.Button(
+        self.boton_editar_kit = crear_boton(
             self.frame_kits,
-            text="Editar Kit Seleccionado",
-            width=20,
-            height=1,
-            bg="#FFC107",  # Amarillo para destacar
-            fg=self.colores["texto_oscuro"],
+            texto="Editar kit Seleccionado",
+            ancho=30,
+            alto=30,
+            relieve="raised",
+            border_width=1,
+            color_fondo="#FFC107",
+            color_texto=self.colores["texto_oscuro"],
             font=("Arial", 11, "bold"),
-            relief="raised",
-            bd=3,
-            state=tk.DISABLED,
-            command=lambda: self.cargar_datos_kit()
-        )# crear_boton(
-        #     self.frame_campos,
-        #     texto="Guardar Kit",
-        #     ancho=30,
-        #     alto=30,
-        #     color_fondo="#FFC107",
-        #     color_texto=self.colores["texto_oscuro"],
+            hover_color="#2ECC71",
+            comando=lambda: self.cargar_datos_kit()
+            )
+        # tk.Button(
+        #     self.frame_kits,
+        #     text="Editar Kit Seleccionado",
+        #     width=20,
+        #     height=1,
+        #     bg="#FFC107",  # Amarillo para destacar
+        #     fg=self.colores["texto_oscuro"],
         #     font=("Arial", 11, "bold"),
-        #     hover_color="#2ECC71",
-        #     comando=lambda: self.cargar_datos_kit()
-        #     )
+        #     relief="raised", 
+        #     bd=3,
+        #     state=tk.DISABLED,
+        #     command=lambda: self.cargar_datos_kit()
+        # )
         self.boton_editar_kit.pack(pady=10)
 
         # Asociar evento de selección del kit
@@ -238,9 +243,11 @@ class kitEmpaques:
             texto="Volver",
             ancho=30,
             alto=30,
+            relieve="raised",
             color_fondo=self.colores["boton_volver"],
             color_texto=self.colores["texto_claro"],
             font=("Arial", 11, "bold"),
+            border_width=1,
             hover_color="#222423",
             comando=self.cerrar_ventana
         )# tk.Button(
