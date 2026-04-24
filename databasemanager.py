@@ -1742,13 +1742,14 @@ class DataBaseManager():
         Returns:
             List[str]: - Retorna una lista con los nombres filtrados
         """
+        print(f"Esto llega para actualizar proveedores: {texto}")
         query = "SELECT nombre FROM Proveedores WHERE nombre LIKE ?"
         params = (f'%{texto}%',)
         
         proveedores_filtrados = self.select(query, params)
         
         proveedores = [proveedores_filtrados[0]["nombre"]]
-        print(proveedores)
+        print(f"Los Proveedores a Actualizar son: {proveedores}")
         return proveedores
             
             
@@ -2315,11 +2316,11 @@ class DataBaseManager():
             List[Dict[str,any]]: Retorna una lista de diccionarios con el resultado.
         """
         query = "SELECT id_factura FROM Facturas WHERE numero_factura = ?"
-        
+        print(f"El número de factura a buscar es: {numero_factura}")
         datos = self.select(query, (numero_factura,))
-        
+        print(f"DICCIONARIO NUMERO FACTURA: {datos}")
         retorna_datos = datos[0]["id_factura"]
-        
+        print(f"El valor del diccionario es: {retorna_datos}")
         if retorna_datos:
             return retorna_datos
         else:
@@ -2345,10 +2346,10 @@ class DataBaseManager():
             factura = {
                 "nombre": nombre_proveedor,
             }
-            nombre = self.insert("Proveedores", factura)
+            id_p = self.insert("Proveedores", factura)
             
-            if datos:
-                return nombre
+            if id_p:
+                id_proveedor = id_p
             else:
                 messagebox.showerror("⚠️ Error", "Error al guardar Nombre de Proveedor")
         
@@ -2365,7 +2366,6 @@ class DataBaseManager():
             "id_proveedor": id_proveedor
         }
         datos = self.insert("Facturas", datos_factura)
-        
         if datos:
             return datos
         else:
