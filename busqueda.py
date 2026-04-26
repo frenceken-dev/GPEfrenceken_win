@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
-from db import encontrar_facturas #actualizar_en_bd, obtener_materiales, buscar_en_bd, encotrar_notas_entrega, 
+#from db import encontrar_facturas #actualizar_en_bd, obtener_materiales, buscar_en_bd, encotrar_notas_entrega, 
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
 #from inventario import convertir_a_float
 from databasemanager import DataBaseManager

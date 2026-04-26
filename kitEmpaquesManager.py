@@ -264,13 +264,6 @@ class kitEmpaques:
         # )
         self.boton_cerrar.pack(side="bottom", pady=40)
 
-    def cargar_kits_disponibles(self):
-        """Carga los kits disponibles en el Listbox"""
-        self.listbox_kits.delete(0, tk.END)
-        kits = self.db_connect.obtener_kits()  # Asegúrate de implementar este método en DataBaseManager
-        for kit in kits:
-            self.listbox_kits.insert(tk.END, kit)  # kit[1] es el nombre del kit
-
     def habilitar_boton_editar(self, event):
         """Habilita el botón de editar si hay un kit seleccionado"""
         seleccion = self.listbox_kits.curselection()
@@ -483,6 +476,13 @@ class kitEmpaques:
         self.toplevel_kit.destroy()
         self.cargar_kits_disponibles()  # Actualizar la lista de kits
 
+    def cargar_kits_disponibles(self):
+        """Carga los kits disponibles en el Listbox"""
+        self.listbox_kits.delete(0, tk.END)
+        kits = self.db_connect.obtener_kits()  # Asegúrate de implementar este método en DataBaseManager
+        for kit in kits:
+            self.listbox_kits.insert(tk.END, kit)  # kit[1] es el nombre del kit
+        
     def crear_logo_panel(self):
         frame_imagen_panel = tk.Frame(
             self.frame_menu,
@@ -518,6 +518,7 @@ class kitEmpaques:
         if codigo_kit:
             kit_costo, mensaje = self.db_connect.guardar_kit(codigo_kit, empaques, usuario)
             messagebox.showinfo("Éxito", f"{mensaje}\nValor: {kit_costo} Euros")
+            self.cargar_kits_disponibles()
         else:
             messagebox.showwarning("Advertencia", "Ingresa un código para el kit.")
 

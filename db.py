@@ -1017,29 +1017,29 @@ def init_db():
 #     print(notas_entregas)
 #     return notas_entregas
 
-def encontrar_facturas():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            v.id_venta, 
-            v.fecha, 
-            c.nombre, 
-            v.subtotal, 
-            v.descuento, 
-            v.impuesto, 
-            v.total
-        FROM Ventas v
-        JOIN Clientes c ON v.id_cliente = c.id_cliente
-        WHERE v.tipo_documento = 'factura'
-        ORDER BY v.fecha DESC
-    """)
-    facturas = cursor.fetchall()
-    conn.close()
-    print(facturas)
-    return facturas
+# def encontrar_facturas():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT 
+#             v.id_venta, 
+#             v.fecha, 
+#             c.nombre, 
+#             v.subtotal, 
+#             v.descuento, 
+#             v.impuesto, 
+#             v.total
+#         FROM Ventas v
+#         JOIN Clientes c ON v.id_cliente = c.id_cliente
+#         WHERE v.tipo_documento = 'factura'
+#         ORDER BY v.fecha DESC
+#     """)
+#     facturas = cursor.fetchall()
+#     conn.close()
+#     print(facturas)
+#     return facturas
 
-    
+"""  
 def verificar_datos():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -1102,7 +1102,7 @@ def verificar_campo_en_bd():
         print(columna)
 
     conn.close()
-    
+"""  
 # Crear nuevo usuario.
 # def insertar_usuario(usuario, clave, rol):
 #     conn = sqlite3.connect(db_path)
@@ -2178,7 +2178,7 @@ if __name__ == "__main__":
     #mostrar_historial_general_mensual("2026-02")
     #obtener_nombres_proveedores("TEM")
     #encotrar_notas_entrega()
-    encontrar_facturas()
+    #encontrar_facturas()
     
     
     
