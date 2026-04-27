@@ -315,7 +315,7 @@ class kitEmpaques:
             bg=self.colores["fondo_principal"],
             fg=self.colores["texto_oscuro"],
             font=("Arial", 11)
-        ).pack(anchor="w", pady=5)
+        ).pack(anchor="w", pady=2)
 
         codigo_label = tk.Label(
             frame_principal,
@@ -330,6 +330,29 @@ class kitEmpaques:
             pady=5
         )
         codigo_label.pack(fill=tk.X, pady=5)
+        
+        # Costo del Kit
+        tk.Label(
+            frame_principal,
+            text="Costo del kit:",
+            bg=self.colores["fondo_frame"],
+            fg=self.colores["texto_oscuro"],
+            font=("Arial", 11)
+        ).pack(anchor="w", pady=2)
+        
+        costo_label = tk.Label(
+            frame_principal,
+            text=kit_data[-1]["costo_kit"], # kit_data["codigo"], 
+            bg=self.colores["fondo_frame"],
+            fg=self.colores["texto_oscuro"],
+            font=("Arial", 11, "bold"),
+            relief="groove",
+            bd=2,
+            width=30,
+            padx=5,
+            pady=5
+        )
+        costo_label.pack(fill=tk.X, pady=5)
 
         # Lista de ítems actuales del kit
         tk.Label(
@@ -517,7 +540,8 @@ class kitEmpaques:
         empaques = [self.listbox_items.get(i) for i in seleccion]
         if codigo_kit:
             kit_costo, mensaje = self.db_connect.guardar_kit(codigo_kit, empaques, usuario)
-            messagebox.showinfo("Éxito", f"{mensaje}\nValor: {kit_costo} Euros")
+            self.costo_kit = kit_costo
+            messagebox.showinfo("Éxito", f"{mensaje}\nValor: {self.costo_kit} Euros")
             self.cargar_kits_disponibles()
         else:
             messagebox.showwarning("Advertencia", "Ingresa un código para el kit.")

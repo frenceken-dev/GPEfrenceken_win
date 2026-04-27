@@ -2253,7 +2253,7 @@ class DataBaseManager():
         Returns:
             List[any]: - Retorna una lista con los items
         """
-        query = "SELECT id_kit, items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        query = "SELECT id_kit, items_del_kit, costo_kit FROM KitEmpaque WHERE codigo_kit = ?"
         params = (codigo_kit,)
         items_dic = self.select(query, params)
         
