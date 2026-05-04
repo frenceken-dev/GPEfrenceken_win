@@ -1,7 +1,7 @@
 # gestion_usuario.py
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import registrar_usuario, buscar_usuarios, actualizar_usuario, eliminar_usuario_bd
+#from db import eliminar_usuario_bd # registrar_usuario, buscar_usuarios, actualizar_usuario, 
 from recursos import crear_boton, configurar_toplevel
 from keygen_user import validar_clave_segura
 from databasemanager import DataBaseManager
@@ -75,6 +75,14 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
     rol_combobox = ttk.Combobox(center_frame, values=["administrador", "usuario", "invitado"], width=28)
     rol_combobox.grid(row=4, column=1, pady=5)
 
+    def limpiar_pantalla():
+        # Limpiar campos.
+        nuevo_usuario_entry.delete(0, tk.END)
+        pregunta_seguridad_entry.delete(0, tk.END)
+        respuesta_seguridad_entry.delete(0, tk.END)
+        nueva_contrasena_entry.delete(0, tk.END)
+        rol_combobox.set("")
+        
     # Función para agregar un nuevo usuario
     def agregar_usuario():
         usuario = nuevo_usuario_entry.get()
@@ -90,6 +98,7 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
                 exito, mensaje_registro = db_connect.registrar_usuario(usuario, clave,  rol, pregunta_seguridad, respuesta_seguridad.lower())
                 if exito:
                     messagebox.showinfo("Registro Exitoso", f"{mensaje_registro}")
+                    limpiar_pantalla() 
                     mostrar_menu_principal
                 else:
                     messagebox.showerror("Error de Registro", f"{mensaje_registro}")
@@ -202,7 +211,7 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
     # Función para realizar la búsqueda
     def realizar_busqueda():
         valor = valor_busqueda_entry.get()
-        resultados = buscar_usuarios(valor)
+        resultados = db_connect.buscar_usuarios(valor)
         mostrar_resultados_usuarios(resultados, root, volver_menu)
 
     # Botón para realizar la búsqueda
@@ -239,7 +248,7 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
     ).pack(side=tk.LEFT, padx=30, pady=40)
 
 # Mostrar los resultados de la busqueda.  
-def mostrar_resultados_usuarios(resultados, root, volver_menu):
+def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
     if not resultados:
         messagebox.showinfo("Resultado", "No se encontraron usuarios.")
         return
@@ -297,10 +306,13 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu):
             usuario_id = item['values'][0]
             confirmar = messagebox.askyesno("Confirmar", "¿Estás seguro de que deseas eliminar este usuario?")
             if confirmar:
-                eliminar_usuario_bd(usuario_id)
-                messagebox.showinfo("Éxito", "Usuario eliminado correctamente.")
-                resultados_window.destroy()
-                formulario_buscar_usuario(root, volver_menu)
+                eliminado = db_connect.eliminar_usuario_bd(usuario_id)
+                if eliminado:
+                    messagebox.showinfo("✅ Éxito", f"Usuario {usuario_id} eliminado correctamente.")
+                    resultados_window.destroy()
+                    formulario_buscar_usuario(root, volver_menu, imagen_panel_tk)
+                else:
+                    messagebox.showerror("⚠️ Error", f"El usuario {usuario_id} no se pudo eliminar.")
         else:
             messagebox.showerror("⚠️ Error", "Selecciona un usuario para eliminar.")
 
@@ -365,16 +377,26 @@ def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol
     tk.Label(form_frame, text="Contraseña (dejar vacío para no cambiar):", bg="#a0b9f0").grid(row=2, column=0, sticky="e", pady=5)
     contrasena_entry = tk.Entry(form_frame, width=30, show="*")
     contrasena_entry.grid(row=2, column=1, pady=5)
+    
+    tk.Label(form_frame, text="Pregunta de seguridad:", bg="#a0b9f0").grid(row=3, column=0, sticky="e", pady=5)
+    pregunta_entry = tk.Entry(form_frame, width=30)
+    pregunta_entry.grid(row=3, column=1, pady=5)
+    
+    tk.Label(form_frame, text="Respuesta de seguridad:", bg="#a0b9f0").grid(row=4, column=0, sticky="e", pady=5)
+    respuesta_entry = tk.Entry(form_frame, width=30)
+    respuesta_entry.grid(row=4, column=1, pady=5)
+    
 
     # Función para actualizar el usuario
     def actualizar():
         nuevo_usuario = usuario_entry.get()
         nuevo_rol = rol_combobox.get()
         nueva_contrasena = contrasena_entry.get()
+        nueva_pregunta = pregunta_entry.get()
+        nueva_respuesta = respuesta_entry.get()
 
         if nuevo_usuario and nuevo_rol:
-            actualizar_usuario(id_usuario, nuevo_usuario, nuevo_rol, nueva_contrasena if nueva_contrasena else None)
-            messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
+            db_connect.actualizar_usuario(id_usuario, nuevo_usuario, nuevo_rol, nueva_pregunta, nueva_respuesta, nueva_contrasena if nueva_contrasena else None)
             volver_menu()
         else:
             messagebox.showerror("⚠️ Error", "El nombre de usuario y el rol son obligatorios.")
@@ -393,7 +415,7 @@ def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol
             #activeforeground="black",
             #bg=0,
             comando=actualizar, 
-            ).grid(row=3, column=0, columnspan=2, pady=10)
+            ).grid(row=5, column=0, columnspan=2, pady=10)
 
     # Botón para volver al menú
     crear_boton(frame_botones, 

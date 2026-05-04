@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 from db import eliminar_proveedor_bd, eliminar_material_bd, eliminar_producto_bd # obtener_materiales, obtener_productos, 
-from db import obtener_nombres_usuarios, eliminar_usuario_bd_nombre
+#from db import eliminar_usuario_bd_nombre # obtener_nombres_usuarios, 
 from PIL import Image, ImageTk
 from recursos import crear_boton
 from databasemanager import DataBaseManager
@@ -381,7 +381,7 @@ def eliminar_usuario(root, volver_menu, imagen_tk, imagen_panel_tk):
     tk.Label(eliminar_usuario_frame, text="Selecciona el usuario a eliminar:", bg="#a0b9f0", font=("Arial", 12)).pack(pady=10)
 
     # Obtener los nombres de los usuarios
-    usuarios = obtener_nombres_usuarios()
+    usuarios = db_connect.obtener_nombres_usuarios()
 
     usuario_combobox = ttk.Combobox(eliminar_usuario_frame, values=usuarios, width=30)
     usuario_combobox.pack(pady=5)
@@ -394,9 +394,12 @@ def eliminar_usuario(root, volver_menu, imagen_tk, imagen_panel_tk):
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al usuario {usuario_seleccionado}?")
         if confirmar:
-            eliminar_usuario_bd_nombre(usuario_seleccionado)
-            messagebox.showinfo("Éxito", f"Usuario {usuario_seleccionado} eliminado correctamente.")
-            volver_menu()
+            eliminado = db_connect.eliminar_usuario_bd_nombre(usuario_seleccionado)
+            if eliminado:
+                messagebox.showinfo("✅ Exito", f"El Usuario {usuario_seleccionado} ha sido eliminado.")
+                volver_menu()
+            else:
+                messagebox.showerror("⚠️ Error", f"El usuario {usuario_seleccionado} no se pudo eliminar.")
 
     crear_boton(eliminar_usuario_frame, 
                 texto="Eliminar", 

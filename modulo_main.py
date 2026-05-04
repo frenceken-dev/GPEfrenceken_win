@@ -9,7 +9,7 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
 from menus import menu_gestion_inventario
 from busqueda import busqueda_articulos
-from db import obtener_nombres_usuarios, verificar_stock_bajo
+from db import verificar_stock_bajo # obtener_nombres_usuarios, 
 from gestion_usuarios import gestion_usuarios, actualizar_clave
 from costos_ganancias import abrir_modulo_costos_ganancias
 from crea_factura_nota_entrega import VentanaVentas
@@ -81,7 +81,7 @@ class PantallaPrincipal:
         login_frame.place(relx=0.5, rely=0.55, anchor=tk.CENTER)
 
         tk.Label(login_frame, text="Nombre de Usuario:", bg="#a0b9f0").grid(row=0, column=0, sticky="w", pady=5)
-        usuarios = obtener_nombres_usuarios()
+        usuarios = db_connect.obtener_nombres_usuarios()
         usuario_combobox = ttk.Combobox(login_frame, values=usuarios, width=20)
         usuario_combobox.grid(row=0, column=1, pady=5)
 

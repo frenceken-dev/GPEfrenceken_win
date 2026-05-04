@@ -1,18 +1,6 @@
 import tkinter as tk
 import json
 from tkinter import messagebox, simpledialog, ttk
-#from db import (
-    #obtener_materiales_pro, #actualizar_stock_material, #insertar_producto, id_usuario_nombre_actual
-    #insertar_detalle_producto, #obtener_id_producto_por_codigo, guardar_borrador_db, buscar_codigos_like, 
-    #obtener_costo_unitario_material, #obtener_id_material_por_codigo, borradores_pendientes, obtener_nombre_material_por_codigo, 
-    #obtener_codigo_material_por_nombre_color_tipo_tamaño,
-    #obtener_tipos_por_material_y_color,
-    #obtener_tamaños_por_material_color_tipo, #obtener_color_por_material,
-    #obtener_material_por_codigo,
-    
-    #cargar_borrador_db, #marcar_borrador_como_creado, #obtener_codigo_materiales,
-#)
-#from inventario import convertir_a_float
 from recursos import crear_boton, configurar_toplevel
 from databasemanager import DataBaseManager
 
@@ -676,7 +664,7 @@ class ProductoManager:
     def mostrar_borradores_pendientes(self):
         """Muestra una ventana con los borradores pendientes."""
         borradores_window = tk.Toplevel(self.root)
-        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=795, alto_min=300, color_fondo="#101113")
+        configurar_toplevel(borradores_window, titulo="Borradores Pendiente", ancho_min=830, alto_min=300, color_fondo="#101113")
         
         # Crear un frame principal para el Canvas y el Scrollbar
         borradores_main = tk.Frame(borradores_window)
@@ -771,15 +759,20 @@ class ProductoManager:
     def calcular_costo_producto(self):
         """Calcula el costo total de producción del producto."""
         costo_materiales = 0.0
+        costo_hora = 12
         
+        tiempo_float = self.convertir_a_float(self.tiempo_entry.get())        
+        costo_tiempo = (tiempo_float / 60) * costo_hora
+        
+        # Calculo de costo del producto.
         for material in self.materiales_usados:
             costo_unitario = db_connect.obtener_costo_unitario_material(material["codigo"])
             costo_materiales += material["cantidad"] * costo_unitario
         
         # Retorna el costo de Material de empaque,
         costos = db_connect.costo_embalaje(self.empaques_seleccionados) # Los  kit de Empaques
-        costo_total = sum(costos) + costo_materiales
-        
+        costo_total = sum(costos) + costo_materiales + costo_tiempo
+        print(f"Costo del Material: {costo_materiales}, Costo de empaques: {costos}, Costo de tiempo: {costo_tiempo}")
         return round(costo_total, 2)
     
 

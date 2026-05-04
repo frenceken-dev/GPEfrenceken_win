@@ -189,7 +189,7 @@ class DataBaseManager():
         """
         if not self.connection:
             self.connect()
-
+        print(f"los datos de la actualización son: {table, updates, where_condition, where_params}")
         try:
             set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
             query = f"UPDATE {table} SET {set_clause} WHERE {where_condition}"
@@ -856,8 +856,142 @@ class DataBaseManager():
             return id_usuario
         else:
             messagebox.showerror("⚠️ Error", f"El usuario {nombre_usuario} no tiene un ID")
-            
+    
+    def buscar_usuarios(self, text_busqueda: str) -> List[tuple]:
+        """
+        Realiza la busque de un Usuario en la base de datos.
 
+        Args:
+            text_busqueda (str): El nombre de usuario.
+
+        Returns:
+            List[tuple]: - Retorna una lista de tuplas.
+        """
+        query = "SELECT id_usuario, nombre_usuario, rol FROM Usuarios WHERE nombre_usuario LIKE ?"
+        params = text_busqueda
+        
+        busqueda_dic = self.select(query, (f"%{params}%",))
+        
+        campos_usuario = [
+            "id_usuario",
+            "nombre_usuario",
+            "rol"
+        ]
+        
+        busqueda_list = [
+            tuple(diccionario.get(campo) for campo in campos_usuario)
+            for diccionario in busqueda_dic
+        ]
+        return busqueda_list
+    
+    def actualizar_usuario(self, id_usuario: int, nombre_usuario: str, rol: str, pregunta: str, respuesta: str, contraseña: str=None) -> bool:
+        """
+        Actualizar cualquier información de un Usuario.
+
+        Args:
+            id_usuario (int): _description_
+            nombre_usuario (str): _description_
+            rol (str): _description_
+            contrasena (str, optional): _description_. Defaults to None:str.
+
+        Returns:
+            bool: - Retorna True si la actualización se realiza sin errores O False si fallo la actualización.
+        """
+        actualizar_usuario_ = None
+        if contraseña:
+            actualizar_usuario_ = {
+                    "nombre_usuario": nombre_usuario,
+                    "clave": contraseña,
+                    "rol": rol,
+                    "pregunta_seguridad": pregunta,
+                    "respuesta_seguridad": respuesta
+                }
+        
+        else:
+            actualizar_usuario_ = {
+                    "nombre_usuario": nombre_usuario,
+                    "rol": rol,
+                    "pregunta_seguridad": pregunta,
+                    "respuesta_seguridad": respuesta
+                }
+        print(actualizar_usuario_)
+        actualizado = self.update(
+            table="Usuarios",
+            updates=actualizar_usuario_,
+            where_condition="id_usuario = ?",
+            where_params=(id_usuario,)
+        )
+        print(actualizado)
+        if actualizado:
+            messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
+        else:
+            messagebox.showerror("⚠️ Error", f"El usuario {nombre_usuario} no se pudo actualizar")
+            
+    
+    def obtener_nombres_usuarios(self) -> List[tuple]:
+        """
+        Selecciona todos los nombres de usuario.
+
+        Returns:
+            List[tuple]: - Retorna una lista con los datos.
+        """
+        
+        query = 'SELECT nombre_usuario FROM Usuarios'
+        
+        nombres_dic = self.select(query)
+        
+        nombres_list = [nombre["nombre_usuario"] for nombre in nombres_dic]
+        
+        print(nombres_list)
+        return nombres_list
+    
+    
+    def eliminar_usuario_bd_nombre(self, nombre_usuario: str) -> bool:
+        """
+        Eliminar usuario por el nombre.
+
+        Args:
+            nombre_usuario (str): El nombre del usuario que se desea eliminar.
+        Returns:
+            bool: - Returna True si se completa la eliminación False si no.
+        """
+        query = "nombre_usuario = ?"
+        
+        params = nombre_usuario
+        
+        eliminado = self.delete(
+            table= "Usuarios",
+            where_condition= query,
+            where_params= (params,)
+        )
+        
+        if eliminado:
+            return True
+        else:
+            return False
+        
+    def eliminar_usuario_bd(self, id_usuario) -> bool:
+        """
+        Elimina usuario por el id de usuario.
+
+        Returns:
+            bool: - Retorna True si la eliminación es exitosa, False si no.
+        """
+        query = "id_usuario = ?"
+        params = id_usuario
+        
+        eliminado = self.delete(
+            table= "Usuarios",
+            where_condition= query,
+            where_params= (params,)
+        )
+        
+        if eliminado:
+            return True
+        else:
+            return False
+        
+        
 #######################################################################################################################
 ################################################ SECCIÓN DE PROVEEDOR #################################################
 #######################################################################################################################
@@ -942,8 +1076,6 @@ class DataBaseManager():
                 - Retorna True si todas las actualizaciones fueron exitosas.
                 - Retorna False si existe algún error en alguna actualización.
         """
-        print(f"DEBUG: materiales_requeridos = {materiales_requeridos}")
-        print(f"DEBUG: cantidad_a_fabricar = {cantidad_a_fabricar}")
 
         try:
             for material in materiales_requeridos:
@@ -951,8 +1083,6 @@ class DataBaseManager():
                 cantidad_requerida_por_producto = material["cantidad"]
                 cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
                 stock_actual = material["stock"]  # Usar el stock obtenido en la consulta inicial
-
-                print(f"DEBUG: Descontando {cantidad_total_a_descontar} unidades del material {material['nombre']} (Stock actual: {stock_actual})")
 
                 # Verificar que no se vaya a valores negativos
                 if stock_actual < cantidad_total_a_descontar:
@@ -1014,6 +1144,7 @@ class DataBaseManager():
         )
 
         return exito
+    
     
     def validar_codigo_producto(self) -> List[str]:
         """
@@ -1835,9 +1966,6 @@ class DataBaseManager():
         datos = self.select(query, tuple(empaques_list))
         costos = [costo["costo_unitario_emp"] for costo in datos]
         #print(costos)
-        
-        costos_sum = sum(costos)
-        #print(costos_sum)
         return costos
     
     
@@ -2297,6 +2425,7 @@ class DataBaseManager():
         )
         
         if actualiza:
+            print(actualiza)
             return costo_actualizado, "Kit actualizado correctamente"
         else:
             messagebox.showerror("⚠️ Error", "No se pudo Actualizar el Kit de empaque.")
@@ -2496,7 +2625,7 @@ class DataBaseManager():
         if datos_registrados:
             messagebox.showinfo("Información", "✅ Historial de Costos guardado exitosamente.")
         else:
-            messagebox.showerror("⚠️ Error", f"No se Ha podido Guardar el historial de Costos.")
+            messagebox.showerror("⚠️ Error", f"No se ha podido Guardar el historial de Costos.")
     
     
     def mostrar_historial_costos_por_producto(self, codigo_producto) -> List[Tuple[Any]]:
@@ -2642,8 +2771,100 @@ class DataBaseManager():
         print(historial_general_mensual_tupla)
         return historial_general_mensual_tupla
     
+    
+    def actualizar_costo_producto(self, nuevo_costo: float, id_producto: int) -> bool:
+        """
+        Actualiza el Costo de un producto en Base de datos.
+
+        Args:
+            nuevo_costo (float): Nuevo Costo del producto.
+            id_producto (int): id del producto que se actualiza.
+
+        Returns:
+            bool: - Retorna True Si la actialización es exitosa o False si no.
+        """
+        actualiza_coto = {
+            "costo_producto": nuevo_costo
+        }
+        params = id_producto
+        print(params, type(params))
+        print(actualiza_coto)
+        costo_actualizado = self.update(
+            table= "Productos",
+            updates= actualiza_coto,
+            where_condition= "id_producto = ?",
+            where_params= (params,)
+        )
+        
+        if costo_actualizado:
+            print(f"COSTO ACTUALIZADO? {costo_actualizado}")
+            return True
+        else: 
+            return False
+    
+    def datos_costo_d_producto_actualizar(self, codigo_producto: str) -> bool:
+        """
+        Selecciona los datos de costos de producción de un articulo.
+
+        Args:
+            codigo_producto (str): Codigo del producto 
+
+        Returns:
+            bool: - Retorna True si la actualización es exitosa o False si no.
+        """
+        query = "SELECT id_producto, costo_producto, precio_venta FROM Productos WHERE codigo = ?"
+        params = codigo_producto
+        
+        datos_dic = self.select(query, (params,))
+        
+        campos_dic = [
+            "id_producto",
+            "costo_producto",
+            "precio_venta"
+        ]
+        
+        datos_list = [
+            tuple(diccionario.get(campo) for campo in campos_dic)
+            for diccionario in datos_dic
+        ]
+
+        if datos_list:
+            return datos_list
+        else:
+            messagebox.showerror("⚠️ Error", f"No se encontró el producto seleccionado con código {codigo_producto}")
+            
+    
+    def actualizar_precio_venta(self, precio: float, id_producto: int) -> bool:
+        """
+        Actualizar el precio_venta en la base de datos.
+
+        Args:
+            precio (float): Nuevo precio de venta.
+            id_producto (int): id del producto a actualizar.
+
+        Returns:
+            bool: - Retorna True si la actualización es exitosa o False si no.
+        """
+        actualizar_campos = {
+            "precio_venta": precio
+        }
+        
+        precio_actualizado = self.update(
+            table="Productos",
+            updates= actualizar_campos,
+            where_condition="id_producto = ?",
+            where_params= (id_producto,)
+        )
+        
+        if precio_actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el nuevo precio de venta del producto.")
+            return False
+        
+    
 #######################################################################################################################
-######################################### SECCIÓN DE FACTURAS Y NOTAS ETREGA ##########################################
+######################################### SECCIÓN DE VENTAS Y NOTAS ETREGA ############################################
 #######################################################################################################################
 
     def encotrar_notas_entrega(self) -> List[Tuple]:
@@ -2715,9 +2936,181 @@ class DataBaseManager():
         ]
         print("ESTOS SON LOS DATOS DE LA CONSULTA DE LAS FACTURAS", facturas_tupla)
         return facturas_tupla
+    
+    
+    def verificar_stock_suficiente(self, id_producto: int, cantidad_solicitada: int) -> bool:
+        """
+        Verificar cantidad del producto para poder realizar la venta.
 
+        Args:
+            id_producto (int): Id del producto de venta.
+            cantidad_solicitada (int): La cantidad que se desea vender.
+
+        Returns:
+            bool: - Retorna True si hay la cantidad requerida, cantidad actual, mensaje.
+        """
+        query = "SELECT cantidad FROM Productos WHERE id_producto = ?"
+        params1 = id_producto
+        params2 = cantidad_solicitada
+        
+        cantidad_act = self.select(query, (params1,))
+        
+        if not cantidad_act:
+            return False, 0, "Producto no encontrado en la base de datos."
+
+        stock_actual = cantidad_act[0]["cantidad"]
+        print(f"Stock disponible: {stock_actual}")
+        if stock_actual <= 0:
+            print(f"⚠️ No hay stock disponible para este producto: {stock_actual}")
+            return False, stock_actual, "No hay stock disponible para este producto."
+        elif stock_actual < cantidad_solicitada:
+            print(f"⚠️ No hay suficiente stock. Stock disponible: {stock_actual}")
+            return False, stock_actual, f"No hay suficiente stock. Stock disponible: {stock_actual}"
+        else:
+            print(f"✅ Stock suficiente: {stock_actual}")
+            return True, stock_actual, "Stock suficiente."
+        
+    
+    def nuevo_cliente(self, nombre: str, direccion: str, casa_num: str, zona_postal: str, 
+                        identificacion_fiscal: str, email: str, telefono: str) -> int:
+        """
+        Agregar nuevo Cliente en la base de datos.
+
+        Args:
+            nombre (str): Nombre del nuevo cliente.
+            direccion (str): Dirección de casa u oficina del cliente.
+            casa_num (str): Número de casa u oficina.
+            zona_postal (str): Zona postal del país donde se ubica.
+            identificacion_fiscal (str): Número de registro fiscal si posee.
+            email (str): Correo electronico del cliente.
+            telefono (str): Número telefonico del cliente.
+
+        Returns:
+            int: - Retorna el id del nuevo cliente.
+        """
+        query = {
+            "nombre": nombre,
+            "direccion": direccion,
+            "casa_num": casa_num,
+            "zona_postal": zona_postal,
+            "identificacion_fiscal": identificacion_fiscal,
+            "email": email,
+            "telefono": telefono
+        }
+        print(f"Datos del nuevo cliente: {query}") 
+        cliente_id = self.insert("Clientes", query)
+        print(f"El id del nuevo cliente es: {cliente_id}")
+        return cliente_id
     
     
+    def cargador_clientes(self) -> List[Tuple[Any]]:
+        """
+        Cargar los clientes disponibles para generar una factura.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas.
+        """
+        query = "SELECT id_cliente, nombre FROM Clientes"
+        
+        clientes_dicc = self.select(query)
+        
+        campos_cliente = [
+            "id_cliente",
+            "nombre"
+        ]
+        
+        clientes_list = [
+            tuple(diccionario.get(campo) for campo in campos_cliente)
+            for diccionario in clientes_dicc
+        ]
+
+        return clientes_list
+    
+    def cargador_productos(self) -> List[Tuple[Any]]:
+        """
+        Cargar productos disponibles para la venta con factura.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas con los productos disponible.
+        """
+        query = "SELECT id_producto, codigo, tipo, precio_venta, cantidad FROM Productos WHERE cantidad > 0"
+        
+        productos_dicc = self.select(query)
+        
+        campos_productos = [
+            "id_producto",
+            "codigo",
+            "tipo",
+            "precio_venta",
+            "cantidad"
+        ]
+        
+        productos_list = [
+            tuple(diccionario.get(campo) for campo in campos_productos)
+            for diccionario in productos_dicc
+        ]
+        
+        return productos_list
+    
+    
+    def detalle_producto_venta(self, id_producto: int) -> List[Tuple[Any]]:
+        """
+        Obtener codigo y el precio de venta del producto a venta.
+
+        Args:
+            id_producto (int): Id del producto para la recuperación de los detalles.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas con los detalles del producto.
+        """
+        query = "SELECT codigo, precio_venta FROM Productos WHERE id_producto = ?"
+        params = id_producto
+        
+        datos_dicc = self.select(query, (params,))        
+    
+        codigo, precio_uni = datos_dicc[0].values()
+        print(f"Los datos del producto son: {codigo}, {precio_uni}")
+        return codigo, precio_uni
+        
+
+    def guarda_venta_bd(self, id_venta: int,
+                        id_cliente: int, fecha_actual: str,
+                        tipo_documento: str, subtotal: float,
+                        descuento: float, impuesto: float, total: float) -> bool:
+        """
+        Insertar la venta en la base de datos "FACTURA"
+
+        Args:
+            id_venta (int): id de la venta realizada.
+            id_cliente (int): id del comprador.
+            fecha_actual (str): Fecha que se realiza la venta.
+            tipo_documento (str): Tipo factura.
+            subtotal (float): Subtotal de la factura.
+            descuento (float): Descuento dado al comprador (opcional).
+            impuesto (float): Taza del impuesto actual.
+            total (float): Total del monto de la factua.
+
+        Returns:
+            bool: - Retorna True si se guarda correctamente False si se genera algún error.
+        """
+        query = {
+            "id_venta": id_venta,
+            "id_cliente": id_cliente,
+            "fecha": fecha_actual,
+            "tipo_documento": tipo_documento,
+            "subtotal": subtotal,
+            "descuento": descuento,
+            "impuesto": impuesto,
+            "total": total
+            }
+        
+        venta_realizada = self.insert("Ventas", query)
+        
+        return venta_realizada
+        
+        
+        
+
 if __name__ == "__main__":
     probar = DataBaseManager()
     #probar.actualiza_stock_db(70,"EMP-1") #"Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])
@@ -2734,8 +3127,17 @@ if __name__ == "__main__":
     #probar.obtener_tamaños_por_material_color_tipo("P-AC", "Azul celeste", "Acrilicas")
     #probar.descripcion_kit_empaque(["KIT-1"])
     #probar.obtener_kits()
-    probar.obtener_detalles_kit("KIT-1")
-    
-    
+    #probar.obtener_detalles_kit("KIT-1")
+    #probar.buscar_usuarios("Adm")
+    #probar.obtener_nombres_usuarios()
+    #probar.datos_costo_d_producto_actualizar()
+    #probar.actualizar_costo_producto(2.50, 40)
+    #probar.actualizar_precio_venta(10.25, 40)
+    #probar.verificar_stock_suficiente(3, 1)
+    #probar.nuevo_cliente("Joseline Sequera", "Drosselstr", "22", "73079 Suessen", "LT5248HJ4", "jjsequera@gmail.com", "018533333333")
+    #probar.cargador_clientes()
+    #probar.cargador_productos()
+    #probar.detalle_producto_venta(3)
+    #probar.guarda_venta_bd(20, 3, "2026-04-30", "factura", 110, 10, 19, 119)
 
     

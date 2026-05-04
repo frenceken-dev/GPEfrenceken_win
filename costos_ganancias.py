@@ -13,11 +13,11 @@ from db import (
     #mostrar_historial_general_mensual, 
     datos_imprimir_historial_costo, 
     datos_imprimir_historial_ganancia,
-    calcular_costo_produccion, 
+    #calcular_costo_produccion, 
     #obtener_productos_para_costoventa, 
-    actualizar_precio_venta, 
-    datos_costo_d_producto_actualizar, 
-    actualizar_costo_producto, 
+    #actualizar_precio_venta, 
+    #datos_costo_d_producto_actualizar, 
+    #actualizar_costo_producto, 
     #registrar_historial_costo,
     registrar_producto_en_lote, 
     obtener_lotes, 
@@ -99,6 +99,7 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
     if not productos:
         tk.Label(center_frame, text="Actualmente no hay productos registrados.", font=("Arial", 12)).pack(pady=20)
         messagebox.showwarning("Advertencia", "No hay datos que mostrar en este momento")
+        
         back_button = crear_boton(frame_menu, 
                 texto="Volver",
                 ancho=140,
@@ -223,7 +224,7 @@ def abrir_actualizar_costo_por_unidad(root, mostrar_menu_principal, imagen_panel
     metodo_var.trace_add("write", lambda *args: actualizar_tipo_parametro())
 
     # Función para limpiar campos
-    def limpiar_campos(): # QUE CAMPOS SE LIMPIAN?
+    def limpiar_campos():
         
         producto_dropdown.set("")
         nuevo_costo_entry.delete(0, tk.END)
@@ -566,7 +567,6 @@ def abrir_actualizar_costo_por_lote(root, mostrar_menu_principal, imagen_panel_t
         hover_color="#2ECC71",
         #activeforeground="black",
         comando=lambda: limpiar_campos(),
-    
     )
     clear_button.pack(side="bottom", padx=30, pady=20)
     
@@ -702,11 +702,11 @@ def guardar_nuevo_lote(descripcion, unidades_str, productos_seleccionados, canti
         costo_lote = float(costo_lote_str)
 
         if unidades <= 0 or cantidad <= 0:
-            messagebox.showerror("Error", "La cantidad de unidades y la cantidad por producto deben ser mayores que cero.")
+            messagebox.showerror("⚠️ Error", "La cantidad de unidades y la cantidad por producto deben ser mayores que cero.")
             return
 
         if not productos_seleccionados:
-            messagebox.showerror("Error", "Debes seleccionar al menos un producto.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar al menos un producto.")
             return
 
         # Insertar el lote en la tabla Lotes
@@ -721,29 +721,28 @@ def guardar_nuevo_lote(descripcion, unidades_str, productos_seleccionados, canti
                 # insertar productos en la tabla lote_productos
                 insertar_lote_productos(id_lote, id_producto, cantidad)
                 
-        messagebox.showinfo("Éxito", "El lote se ha creado correctamente.")
+        messagebox.showinfo("✅ Éxito", "El lote se ha creado correctamente.")
         window.destroy()
     except ValueError:
-        messagebox.showerror("Error", "Las cantidades y el costo deben ser números válidos.")
+        messagebox.showerror("⚠️ Error", "Las cantidades y el costo deben ser números válidos.")
     except Exception as e:
-        messagebox.showerror("Error", f"Ocurrió un error al guardar el lote: {e}")
+        messagebox.showerror("⚠️ Error", f"Ocurrió un error al guardar el lote: {e}")
 
 
 # Guarda la actulización del precio de Costo        
 def actualizar_costo_de_lote(nuevo_costo_str, recalcular_precio, metodo, parametro_str, tipo_costo, lote_str):
-    import sqlite3
     
     try:
         # Validar que el nuevo costo sea un número
         if not nuevo_costo_str:
-            messagebox.showerror("Error", "Debes ingresar un nuevo costo.")
+            messagebox.showerror("⚠️ Error", "Debes ingresar un nuevo costo.")
             return
         nuevo_costo = convertir_a_float(nuevo_costo_str)
 
         if tipo_costo == "lote":
             # Validar que se haya seleccionado un lote
             if not lote_str or lote_str == "No hay lotes disponibles":
-                messagebox.showerror("Error", "Debes seleccionar un lote.")
+                messagebox.showerror("⚠️ Error", "Debes seleccionar un lote.")
                 return
 
             id_lote = int(lote_str.split(" - ")[0])
@@ -757,12 +756,12 @@ def actualizar_costo_de_lote(nuevo_costo_str, recalcular_precio, metodo, paramet
             # Recalcular el precio de venta si el usuario lo desea
             if recalcular_precio:
                 if not metodo or not parametro_str:
-                    messagebox.showerror("Error", "Debes seleccionar un método e ingresar un parámetro.")
+                    messagebox.showerror("⚠️ Error", "Debes seleccionar un método e ingresar un parámetro.")
                     return
                 try:
                     parametro = float(parametro_str)
                 except ValueError:
-                    messagebox.showerror("Error", "El parámetro debe ser un número válido.")
+                    messagebox.showerror("⚠️ Error", "El parámetro debe ser un número válido.")
                     return
 
                 # Calcular el nuevo precio según el método
@@ -792,16 +791,17 @@ def actualizar_costo_de_lote(nuevo_costo_str, recalcular_precio, metodo, paramet
                 )
 
     except ValueError:
-        messagebox.showerror("Error", "El nuevo costo debe ser un número válido.")
+        messagebox.showerror("⚠️ Error", "El nuevo costo debe ser un número válido. l-794")
     except Exception as e:
-        messagebox.showerror("Error", f"Ocurrió un error: {e}")
+        messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
 
 
 def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio, metodo, parametro_str, tipo_costo, unidades_str, lote_str, unidades_lote_str):
+    "Actualiza el costo del producto."
     try:
         # Validar que se haya seleccionado un producto
         if not producto_str:
-            messagebox.showerror("Error", "Debes seleccionar un producto.")
+            messagebox.showerror("⚠️ Error", "Debes seleccionar un producto.")
             return
 
         # Extraer el código del producto
@@ -809,46 +809,52 @@ def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio
 
         # Validar que el nuevo costo sea un número
         if not nuevo_costo_str:
-            messagebox.showerror("Error", "Debes ingresar un nuevo costo.")
+            messagebox.showerror("⚠️ Error", "Debes ingresar un nuevo costo.")
             return
-
+        
         nuevo_costo = convertir_a_float(nuevo_costo_str)
-
+        
         # Obtener el id_producto y el costo actual
-        producto = datos_costo_d_producto_actualizar(codigo_producto)
+        producto = db_connect.datos_costo_d_producto_actualizar(codigo_producto)
         if producto is None:
             return
 
-        id_producto, costo_actual, precio_venta_actual = producto
+        id_producto, costo_actual, precio_venta_actual = producto[0]
 
         # Validar unidades si es por lote
         unidades = None
         if tipo_costo == "lote":
             if not unidades_str:
-                messagebox.showerror("Error", "Debes ingresar el número de unidades en el lote.")
+                messagebox.showerror("⚠️ Error", "Debes ingresar el número de unidades en el lote.")
                 return
             try:
                 unidades = int(unidades_str)
             except ValueError:
-                messagebox.showerror("Error", "El número de unidades debe ser un entero válido.")
+                messagebox.showerror("⚠️ Error", "El número de unidades debe ser un entero válido.")
                 return
 
         # Validar y registrar el lote
         if lote_str:
             id_lote = int(lote_str.split(" - ")[0])
             if not unidades_lote_str:
-                messagebox.showerror("Error", "Debes ingresar el número de unidades del producto en el lote.")
+                messagebox.showerror("⚠️ Error", "Debes ingresar el número de unidades del producto en el lote.")
                 return
             try:
                 unidades_lote = int(unidades_lote_str)
                 registrar_producto_en_lote(id_lote, id_producto, unidades_lote)
             except ValueError:
-                messagebox.showerror("Error", "El número de unidades del producto en el lote debe ser un entero válido.")
+                messagebox.showerror("⚠️ Error", "El número de unidades del producto en el lote debe ser un entero válido.")
                 return
-
+        print(f"NUEVO COSTO: {nuevo_costo}")
         # Actualizar el costo en la base de datos
-        actualizar_costo_producto(nuevo_costo, id_producto)
-
+        costo_nuevo = db_connect.actualizar_costo_producto(nuevo_costo, id_producto)
+        
+        if costo_nuevo:
+            messagebox.showinfo("✅ Actualizado", "El nuevo costo del producto se actualizo correctamente.")
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el nuevo costo del producto, se mantiene el viejo costo.")
+            nuevo_costo = costo_actual
+        
         # Registrar el cambio en el historial
         db_connect.registrar_historial_costo(
             id_producto=id_producto,
@@ -862,12 +868,12 @@ def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio
         # Recalcular el precio de venta si el usuario lo desea
         if recalcular_precio:
             if not metodo or not parametro_str:
-                messagebox.showerror("Error", "Debes seleccionar un método e ingresar un parámetro.")
+                messagebox.showerror("⚠️ Error", "Debes seleccionar un método e ingresar un parámetro.")
                 return
             try:
                 parametro = float(parametro_str)
             except ValueError:
-                messagebox.showerror("Error", "El parámetro debe ser un número válido.")
+                messagebox.showerror("⚠️ Error", "El parámetro debe ser un número válido.")
                 return
 
             # Calcular el nuevo precio según el método
@@ -879,7 +885,9 @@ def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio
                 nuevo_precio = nuevo_costo + (nuevo_costo * 1) * parametro
 
             # Actualizar el precio de venta
-            actualizar_precio_venta(nuevo_precio, id_producto)
+            precio_actualizado = db_connect.actualizar_precio_venta(nuevo_precio, id_producto)
+            if not precio_actualizado:
+                nuevo_precio = costo_actual * 5
 
             messagebox.showinfo(
                 "Éxito",
@@ -897,12 +905,12 @@ def actualizar_costo_produccion(producto_str, nuevo_costo_str, recalcular_precio
                 f"Costo anterior: €{costo_actual:.2f}\n"
                 f"Nuevo costo: €{nuevo_costo:.2f}"
             )
-    except ValueError:
-        messagebox.showerror("Error", "El nuevo costo debe ser un número válido.")
+        
+    except ValueError as v:
+        messagebox.showerror("⚠️ Error", "El nuevo costo debe ser un número válido. l-909")
     except Exception as e:
-        messagebox.showerror("Error", f"Ocurrió un error: {e}")
-    
-
+        messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
+        
 
 # Variables globales para los botones de impresión
 boton_imprimir_costos = None
@@ -910,7 +918,7 @@ boton_imprimir_ganancias = None
 
 # Función para actualizar historial de ganancias
 def abrir_actualizar_historial(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
-     # Limpiar pantalla
+    # Limpiar pantalla
     for widget in root.winfo_children():
         widget.destroy()
 
@@ -1082,7 +1090,7 @@ def abrir_actualizar_historial(root, mostrar_menu_principal, imagen_panel_tk, ro
             messagebox.showinfo("✅ Éxito", f"Historial de ganancias actualizado para el mes {mes_año}.")
 
         except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error: {e}")
+            messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
             
 
 # Muestra el historial de costos por productos o todo
@@ -1640,14 +1648,14 @@ def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, r
             historial = db_connect.mostrar_historial_ganancias_producto(producto_str)
         else:
             if not mes_str:
-                messagebox.showerror("Error", "Debes ingresar un mes.")
+                messagebox.showerror("⚠️ Error", "Debes ingresar un mes.")
                 historial_text.config(state="disabled")
                 return
             historial_text.insert(tk.END, f"Historial de ganancias para el mes {mes_str}:\n\n")
             historial = db_connect.mostrar_historial_general_mensual(mes_str)
 
         if not historial:
-            messagebox.showerror("Error", "No hay datos en el historial de ganancias.")
+            messagebox.showerror("⚠️ Error", "No hay datos en el historial de ganancias.")
             historial_text.config(state="disabled")
             return
 
@@ -1691,7 +1699,7 @@ def mostrar_historial_ganancias(root, mostrar_menu_principal, imagen_panel_tk, r
 
 def imprimir_historial_costos(historial, tipo):
     if not historial:
-        messagebox.showerror("Error", "No hay datos en el historial de costos.")
+        messagebox.showerror("⚠️ Error", "No hay datos en el historial de costos.")
         return
 
     # Preparar los datos para el PDF
@@ -1701,8 +1709,8 @@ def imprimir_historial_costos(historial, tipo):
             fecha, costo_anterior, costo_nuevo, es_por_lote, unidades, motivo = registro
             datos.append([
                 str(fecha),                     # Fecha
-                f"${float(costo_anterior):.2f}", # Costo anterior
-                f"${float(costo_nuevo):.2f}",   # Costo nuevo
+                f"€{float(costo_anterior):.2f}", # Costo anterior
+                f"€{float(costo_nuevo):.2f}",   # Costo nuevo
                 "Sí" if es_por_lote else "No",   # Por lote
                 str(unidades or "N/A"),         # Unidades
                 str(motivo or "N/A")             # Motivo
@@ -1735,7 +1743,7 @@ def imprimir_historial_costos(historial, tipo):
 
 def imprimir_historial_ganancias(historial, tipo, mes_str=None):
     if not historial:
-        messagebox.showerror("Error", "No hay datos en el historial de ganancias.")
+        messagebox.showerror("⚠️ Error", "No hay datos en el historial de ganancias.")
         return
 
     # Preparar los datos para el PDF
@@ -1768,8 +1776,6 @@ def imprimir_historial_ganancias(historial, tipo, mes_str=None):
         columnas=columnas,
         nombre_archivo=f"historial_ganancias_{tipo}_{mes_str if tipo == 'por_mes' else ''}"
     )
-
-
 
 
 # Inicia el módulo de costos y ganancias
@@ -1928,9 +1934,10 @@ def abrir_modulo_costos_ganancias(root, mostrar_menu_principal, imagen_panel_tk,
 
 
 def convertir_a_float(valor_str):
-        try:
-            valor_str = str(valor_str).replace(",", ".")
-            return float(valor_str)
-        except ValueError:
-            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
-            return None
+    print(f"EL NUEVO COSTO PARA CONVERTIR A FLOAT ES: {valor_str} DE TIPO {type(valor_str)}")
+    try:
+        valor_str = str(valor_str).replace(",", ".")
+        return float(valor_str)
+    except ValueError:
+        print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+        return None

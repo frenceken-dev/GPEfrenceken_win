@@ -1112,35 +1112,34 @@ def verificar_campo_en_bd():
 #     conn.close()
 
 
-def registrar_usuario(usuario, clave, rol, pregunta, respuesta):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def registrar_usuario(usuario, clave, rol, pregunta, respuesta):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    print(f"El Usuario a insertar es: {usuario}")
-    print(f"La Clave hash es : {clave}")
-    print(f"El rol de este usuario será: {rol}")
-    print(f"La pregunta de seguridad es: {pregunta}")
-    print(f"La respuesta de seguridad es: {respuesta}")
+#     print(f"El Usuario a insertar es: {usuario}")
+#     print(f"La Clave hash es : {clave}")
+#     print(f"El rol de este usuario será: {rol}")
+#     print(f"La pregunta de seguridad es: {pregunta}")
+#     print(f"La respuesta de seguridad es: {respuesta}")
     
-    # Validar que el usuario no exista
-    cursor.execute("SELECT nombre_usuario FROM Usuarios WHERE nombre_usuario = ?", (usuario,))
-    if cursor.fetchone() is not None:
-        conn.close()
-        return False, "El usuario ya existe."
+#     # Validar que el usuario no exista
+#     cursor.execute("SELECT nombre_usuario FROM Usuarios WHERE nombre_usuario = ?", (usuario,))
+#     if cursor.fetchone() is not None:
+#         conn.close()
+#         return False, "El usuario ya existe."
 
-    # Cifrar la clave y guardar el hash
-    hash_clave = hashlib.sha256(clave.encode()).hexdigest()
+#     # Cifrar la clave y guardar el hash
+#     hash_clave = hashlib.sha256(clave.encode()).hexdigest()
 
-    # Insertar el nuevo usuario
-    cursor.execute('''
-        INSERT INTO Usuarios (nombre_usuario, clave, rol, pregunta_seguridad, respuesta_seguridad)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (usuario, hash_clave, rol, pregunta, respuesta.lower()))
+#     # Insertar el nuevo usuario
+#     cursor.execute('''
+#         INSERT INTO Usuarios (nombre_usuario, clave, rol, pregunta_seguridad, respuesta_seguridad)
+#         VALUES (?, ?, ?, ?, ?)
+#     ''', (usuario, hash_clave, rol, pregunta, respuesta.lower()))
 
-    conn.commit()
-    conn.close()
-    return True, f"Usuario '{usuario}' registrado con éxito."
-
+#     conn.commit()
+#     conn.close()
+#     return True, f"Usuario '{usuario}' registrado con éxito."
 
 
 # Validar entrada de un usuario. NO ESTA SIENDO USADO EN SISTEMA AL PARECER.
@@ -1260,123 +1259,123 @@ def registrar_usuario(usuario, clave, rol, pregunta, respuesta):
 
 
 # Buscar usuarios en la base de datos.
-def buscar_usuarios(texto_busqueda):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id_usuario, nombre_usuario, rol
-        FROM Usuarios
-        WHERE nombre_usuario LIKE ?
-    ''', (f"%{texto_busqueda}%",))
-    resultados = cursor.fetchall()
-    conn.close()
-    return resultados
+# def buscar_usuarios(texto_busqueda):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT id_usuario, nombre_usuario, rol
+#         FROM Usuarios
+#         WHERE nombre_usuario LIKE ?
+#     ''', (f"%{texto_busqueda}%",))
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     return resultados
 
 
 # Actualizar datos de Usuarios.
-def actualizar_usuario(id_usuario, nombre_usuario, rol, contrasena=None):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def actualizar_usuario(id_usuario, nombre_usuario, rol, contrasena=None):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    if contrasena:
-        cursor.execute('''
-            UPDATE Usuarios
-            SET nombre_usuario = ?, rol = ?, contraseña = ?
-            WHERE id_usuario = ?
-        ''', (nombre_usuario, rol, contrasena, id_usuario))
-    else:
-        cursor.execute('''
-            UPDATE Usuarios
-            SET nombre_usuario = ?, rol = ?
-            WHERE id_usuario = ?
-        ''', (nombre_usuario, rol, id_usuario))
+#     if contrasena:
+#         cursor.execute('''
+#             UPDATE Usuarios
+#             SET nombre_usuario = ?, rol = ?, contraseña = ?
+#             WHERE id_usuario = ?
+#         ''', (nombre_usuario, rol, contrasena, id_usuario))
+#     else:
+#         cursor.execute('''
+#             UPDATE Usuarios
+#             SET nombre_usuario = ?, rol = ?
+#             WHERE id_usuario = ?
+#         ''', (nombre_usuario, rol, id_usuario))
 
-    conn.commit()
-    conn.close()
-
+#     conn.commit()
+#     conn.close()
 
 # Obtener los usuarios del sistema.
-def obtener_nombres_usuarios():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT nombre_usuario FROM Usuarios')
-    resultados = cursor.fetchall()
-    conn.close()
-    return [resultado[0] for resultado in resultados]
+# def obtener_nombres_usuarios():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT nombre_usuario FROM Usuarios')
+#     resultados = cursor.fetchall()
+#     conn.close()
+#     print([resultado[0] for resultado in resultados])
+#     return [resultado[0] for resultado in resultados]
 
 
 # Eliminar a usuarios de la base de datos por nombre.
-def eliminar_usuario_bd_nombre(nombre_usuario):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM Usuarios WHERE nombre_usuario = ?', (nombre_usuario,))
-    conn.commit()
-    conn.close()
+# def eliminar_usuario_bd_nombre(nombre_usuario):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE FROM Usuarios WHERE nombre_usuario = ?', (nombre_usuario,))
+#     conn.commit()
+#     conn.close()
 
 
 # Eliminar a usuarios de la base de datos por ID.
-def eliminar_usuario_bd(id_usuario):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM Usuarios WHERE id_usuario = ?', (id_usuario,))
-    conn.commit()
-    conn.close()
+# def eliminar_usuario_bd(id_usuario):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE FROM Usuarios WHERE id_usuario = ?', (id_usuario,))
+#     conn.commit()
+#     conn.close()
 
 
-# Calcular el costo de un producto.
-def calcular_costo_produccion(id_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# Calcular el costo de un producto. SE HACE DIRECTO EN ProductManager
+# def calcular_costo_produccion(id_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Obtener materiales usados en el producto
-    cursor.execute('''
-        SELECT m.costo_unitario, dp.cantidad
-        FROM detalle_producto dp
-        JOIN Materiales m ON dp.id_material = m.id_material
-        WHERE dp.id_producto = ?
-    ''', (id_producto,))
-    materiales = cursor.fetchall()
+#     # Obtener materiales usados en el producto
+#     cursor.execute('''
+#         SELECT m.costo_unitario, dp.cantidad
+#         FROM detalle_producto dp
+#         JOIN Materiales m ON dp.id_material = m.id_material
+#         WHERE dp.id_producto = ?
+#     ''', (id_producto,))
+#     materiales = cursor.fetchall()
 
-    # Sumar el costo total
-    costo_total = sum(material[0] * material[1] for material in materiales)
+#     # Sumar el costo total
+#     costo_total = sum(material[0] * material[1] for material in materiales)
 
-    conn.close()
-    return costo_total
+#     conn.close()
+#     return costo_total
 
 
-def actualizar_costo_producto(nuevo_costo, id_producto): # Acualizar aqui los datos
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-            "UPDATE Productos SET costo_producto = ? WHERE id_producto = ?",
-            (nuevo_costo, id_producto))
-    conn.commit()
-    conn.close()
+# def actualizar_costo_producto(nuevo_costo, id_producto): # Acualizar aqui los datos
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#             "UPDATE Productos SET costo_producto = ? WHERE id_producto = ?",
+#             (nuevo_costo, id_producto))
+#     conn.commit()
+#     conn.close()
 
 
 # Actualizar los costos de producción.
-def datos_costo_d_producto_actualizar(codigo_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_producto, costo_producto, precio_venta FROM Productos WHERE codigo = ?",
-            (codigo_producto,))
-    producto = cursor.fetchone()
-
-    if not producto:
-        messagebox.showerror("⚠️ Error", f"No se encontró el producto seleccionado con código {codigo_producto}")
-    return producto
+# def datos_costo_d_producto_actualizar(codigo_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_producto, costo_producto, precio_venta FROM Productos WHERE codigo = ?",
+#             (codigo_producto,))
+#     producto = cursor.fetchone()
+#     print(producto)
+#     if not producto:
+#         messagebox.showerror("⚠️ Error", f"No se encontró el producto seleccionado con código {codigo_producto}")
+#     return producto
 
 
 # Actualizar el precio_venta en la base de datos
-def actualizar_precio_venta(precio, id_producto):
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE Productos SET precio_venta = ? WHERE id_producto = ?",
-            (precio, id_producto)
-        )
-        conn.commit()
-        conn.close()
+# def actualizar_precio_venta(precio, id_producto):
+#         conn = sqlite3.connect(db_path)
+#         cursor = conn.cursor()
+#         cursor.execute(
+#             "UPDATE Productos SET precio_venta = ? WHERE id_producto = ?",
+#             (precio, id_producto)
+#         )
+#         conn.commit()
+#         conn.close()
         
 
 # Modulo de simulacion de precios.
@@ -1407,56 +1406,56 @@ def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_ma
     }
 
 
-def incrementar_stock_producto(id_producto, cantidad):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+# def incrementar_stock_producto(id_producto, cantidad):
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
 
-    try:
-        # Verificar que el producto exista
-        cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
-        resultado = cursor.fetchone()
+#     try:
+#         # Verificar que el producto exista
+#         cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
+#         resultado = cursor.fetchone()
 
-        if not resultado:
-            messagebox.showerror("⚠️ Error", "Producto no encontrado en la base de datos.")
-            return False
+#         if not resultado:
+#             messagebox.showerror("⚠️ Error", "Producto no encontrado en la base de datos.")
+#             return False
 
-        stock_actual = resultado[0]
-        nuevo_stock = stock_actual + cantidad
+#         stock_actual = resultado[0]
+#         nuevo_stock = stock_actual + cantidad
 
-        # Actualizar el stock en la base de datos
-        cursor.execute("UPDATE Productos SET cantidad = ? WHERE id_producto = ?", (nuevo_stock, id_producto))
-        conn.commit()
-        messagebox.showinfo("Éxito", f"Stock del producto actualizado. Nuevo stock: {nuevo_stock}")
-        return True
+#         # Actualizar el stock en la base de datos
+#         cursor.execute("UPDATE Productos SET cantidad = ? WHERE id_producto = ?", (nuevo_stock, id_producto))
+#         conn.commit()
+#         messagebox.showinfo("Éxito", f"Stock del producto actualizado. Nuevo stock: {nuevo_stock}")
+#         return True
 
-    except Exception as e:
-        messagebox.showerror("⚠️ Error", f"No se pudo actualizar el stock: {e}")
-        conn.rollback()
-        return False
+#     except Exception as e:
+#         messagebox.showerror("⚠️ Error", f"No se pudo actualizar el stock: {e}")
+#         conn.rollback()
+#         return False
 
-    finally:
-        conn.close()
+#     finally:
+#         conn.close()
 
 
 # Verificar cantidad de producto para la venta.
-def verificar_stock_suficiente(id_producto, cantidad_solicitada):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
-    resultado = cursor.fetchone()
-    conn.close()
+# def verificar_stock_suficiente(id_producto, cantidad_solicitada):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
+#     resultado = cursor.fetchone()
+#     conn.close()
 
-    if not resultado:
-        return False, 0, "Producto no encontrado en la base de datos."
+#     if not resultado:
+#         return False, 0, "Producto no encontrado en la base de datos."
 
-    stock_actual = resultado[0]
+#     stock_actual = resultado[0]
 
-    if stock_actual <= 0:
-        return False, stock_actual, "No hay stock disponible para este producto."
-    elif stock_actual < cantidad_solicitada:
-        return False, stock_actual, f"No hay suficiente stock. Stock disponible: {stock_actual}"
-    else:
-        return True, stock_actual, "Stock suficiente."
+#     if stock_actual <= 0:
+#         return False, stock_actual, "No hay stock disponible para este producto."
+#     elif stock_actual < cantidad_solicitada:
+#         return False, stock_actual, f"No hay suficiente stock. Stock disponible: {stock_actual}"
+#     else:
+#         return True, stock_actual, "Stock suficiente."
 
 
 # Verificar cantidad de producto para la venta.
@@ -1471,91 +1470,95 @@ def verificar_stock_suficiente(id_producto, cantidad_solicitada):
 
 
 # Restar la venta de un producto en la base de datos.
-def actualizar_stock_después_venta(id_producto, cantidad_vendida):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def actualizar_stock_despues_venta(id_producto, cantidad_vendida):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Restar la cantidad vendida del stock actual
-    cursor.execute("""
-        UPDATE Productos
-        SET cantidad = cantidad - ?
-        WHERE id_producto = ?
-    """, (cantidad_vendida, id_producto))
-    conn.commit()
-    conn.close()
+#     # Restar la cantidad vendida del stock actual
+#     cursor.execute("""
+#         UPDATE Productos
+#         SET cantidad = cantidad - ?
+#         WHERE id_producto = ?
+#     """, (cantidad_vendida, id_producto))
+#     conn.commit()
+#     conn.close()
     
 
 # Agregar nuevo Cliente.
-def nuevo_cliente(nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO Clientes (nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono))
-    conn.commit()
-    conn.close()
+# def nuevo_cliente(nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         INSERT INTO Clientes (nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono)
+#         VALUES (?, ?, ?, ?, ?, ?, ?)
+#         """, (nombre, direccion, casa_num, zona_postal, identificacion_fiscal, email, telefono))
+#     conn.commit()
+#     conn.close()
 
 
 # Cargar los clientes para factura.
-def cargador_clientes():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_cliente, nombre FROM Clientes")
-    clientes = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return clientes
-
+# def cargador_clientes():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_cliente, nombre FROM Clientes")
+#     clientes = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(f"Los clientes disponibles son: {clientes}")
+#     return clientes
+# cargador_clientes()
 
 # Cargar productos disponibles para factura.
-def cargador_productos():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_producto, codigo, tipo, precio_venta, cantidad FROM Productos WHERE cantidad > 0")
-    productos = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return productos
-
+# def cargador_productos():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_producto, codigo, tipo, precio_venta, cantidad FROM Productos WHERE cantidad > 0")
+#     productos = cursor.fetchall()
+#     conn.commit()
+#     conn.close()
+#     print(f"Los productos disponibles son: {productos}")
+#     return productos
+# cargador_productos()
 
 # Validar stock del producto.
-def validar_stock_del_producto(id_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
-    stock_actual = cursor.fetchone()[0]
-    conn.commit()
-    conn.close()
-    return stock_actual
+# def validar_stock_del_producto(id_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT cantidad FROM Productos WHERE id_producto = ?", (id_producto,))
+#     stock_actual = cursor.fetchone()[0]
+#     conn.commit()
+#     conn.close()
+#     return stock_actual
 
 
 # Obtener detalle del producto para venta.
-def detalle_producto_venta(id_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT codigo, precio_venta FROM Productos WHERE id_producto = ?", (id_producto,))
-    nombre, precio_unitario = cursor.fetchone()
-    conn.commit()
-    conn.close()
-    return nombre, precio_unitario
+# def detalle_producto_venta(id_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT codigo, precio_venta FROM Productos WHERE id_producto = ?", (id_producto,))
+#     nombre, precio_unitario = cursor.fetchone()
+#     conn.commit()
+#     conn.close()
+#     print(f"Los datos del producto son: {nombre}, {precio_unitario}")
+#     return nombre, precio_unitario
+# detalle_producto_venta(3)
 
 
 # Insertar la venta en la base de datos "FACTURA"
-def guarda_venta_bd(id_venta, id_cliente, fecha_actual, tipo_documento, subtotal, descuento, impuesto, total):
+# def guarda_venta_bd(id_venta, id_cliente, fecha_actual, tipo_documento, subtotal, descuento, impuesto, total):
     
-    #fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     #fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO Ventas (id_venta, id_cliente, fecha, tipo_documento, subtotal, descuento, impuesto, total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (id_venta, id_cliente, fecha_actual, tipo_documento, subtotal, descuento, impuesto, total))
-    id_venta = cursor.lastrowid
-    conn.commit()
-    conn.close()
-    return id_venta
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         INSERT INTO Ventas (id_venta, id_cliente, fecha, tipo_documento, subtotal, descuento, impuesto, total)
+#         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#         """, (id_venta, id_cliente, fecha_actual, tipo_documento, subtotal, descuento, impuesto, total))
+#     id_venta = cursor.lastrowid
+#     conn.commit()
+#     conn.close()
+#     return id_venta
 
 
 # Insertar datos en detalle factura.
@@ -2179,6 +2182,7 @@ if __name__ == "__main__":
     #obtener_nombres_proveedores("TEM")
     #encotrar_notas_entrega()
     #encontrar_facturas()
-    
+    #obtener_nombres_usuarios()
+    #datos_costo_d_producto_actualizar("BORRADORR")
     
     

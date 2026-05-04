@@ -6,13 +6,13 @@ import sqlite3
 from db import (
     guardar_nota_entrega, 
     agregar_detalle_nota_entrega,
-    cargador_clientes, 
-    cargador_productos, 
-    validar_stock_del_producto, 
-    detalle_producto_venta, 
-    guarda_venta_bd, agregar_detalle_venta, 
+    #cargador_clientes, 
+    #cargador_productos, 
+    #validar_stock_del_producto, 
+    #detalle_producto_venta, guarda_venta_bd, 
+    agregar_detalle_venta, 
     actualizar_stock_producto_venta, 
-    nuevo_cliente,
+    #nuevo_cliente,
     obtener_estado_nota_entrega,
     obtener_datos_nota_entrega,
     obtener_ultimo_numero_factura,
@@ -26,13 +26,14 @@ from db import (
     datos_nota_entrega,
     detalle_nota_entrega,
     siguiente_numero_factura,
-    verificar_stock_suficiente
+    #verificar_stock_suficiente
 )
 from datetime import datetime
 from PIL import Image, ImageTk
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
+from databasemanager import DataBaseManager
 
-
+db_connect = DataBaseManager()
 class VentanaVentas:
     def __init__(self, root, usuario_actual, volver_menu, mostra_pantalla=True):
         self.root = root
@@ -308,7 +309,7 @@ class VentanaVentas:
     
     # Cargar los clientes.
     def cargar_clientes(self):
-        clientes = cargador_clientes()
+        clientes = db_connect.cargador_clientes()
         
         self.combobox_clientes["values"] = [f"{id_cliente} - {nombre}" for id_cliente, nombre in clientes]
         
@@ -329,7 +330,7 @@ class VentanaVentas:
 
     # Cargar los Productos.
     def cargar_productos(self):  # MODIFICAR AQUI QUITAR NOMBRE
-        productos = cargador_productos()
+        productos = db_connect.cargador_productos()
         # donde esta tipo estaba nombre igualmente en el for
         self.combobox_productos["values"] = [f"{id_producto} - {codigo} - {tipo} (Stock: {cantidad})" for id_producto, codigo, tipo, precio_venta, cantidad in productos]
 
@@ -389,19 +390,20 @@ class VentanaVentas:
             email = entry_email.get()
             telefono = entry_telefono.get()
 
-            if not nombre:
-                messagebox.showerror("Error", "El nombre del cliente es obligatorio.")
+            if not nombre or not direccion or not casa_num or not zona_postal:
+                messagebox.showerror("⚠️ Error", "Los Campos nombre, dirección, número de casa y zona postal son obligatorios.")
                 return
 
             try:
                 # guarda en bd clientes.
-                nuevo_cliente(nombre, direccion, casa_num, zona_postal, id_fiscal, email, telefono)
-                
-                messagebox.showinfo("Éxito", "Cliente registrado correctamente.")
-                ventana_cliente.destroy()
-                self.cargar_clientes()  # Actualizar la lista de clientes
+                id_num = db_connect.nuevo_cliente(nombre, direccion, casa_num, zona_postal, id_fiscal, email, telefono)
+                print(f"ID del nuevo cliente registrado: {id_num}")
+                if id_num:
+                    messagebox.showinfo("✅ Éxito", "Cliente registrado correctamente.")
+                    ventana_cliente.destroy()
+                    self.cargar_clientes()  # Actualizar la lista de clientes
             except sqlite3.Error as e:
-                messagebox.showerror("Error", f"No se pudo registrar el cliente: {e}")
+                messagebox.showerror("⚠️ Error", f"No se pudo registrar el cliente: {e}")
 
         # Botón para guardar
         boton_guardar = crear_boton(
@@ -442,14 +444,14 @@ class VentanaVentas:
             return
 
         # Validar stock del producto
-        stock_suficiente, stock_actual, mensaje = verificar_stock_suficiente(id_producto, self.cantidad.get())
+        stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, self.cantidad.get())
 
         if not stock_suficiente:
             messagebox.showerror("Error", mensaje)
             return
 
         # Obtener detalles del producto
-        codigo, precio_unitario = detalle_producto_venta(id_producto)
+        codigo, precio_unitario = db_connect.detalle_producto_venta(id_producto)
 
         self.iva_incluido = tk.BooleanVar(value=True)  # Por defecto: sí incluye IVA
         self.check_iva = tk.Checkbutton(
@@ -519,7 +521,7 @@ class VentanaVentas:
             id_producto = item["id_producto"]
             cantidad_solicitada = item["cantidad"]
 
-            stock_suficiente, stock_actual, mensaje = verificar_stock_suficiente(id_producto, cantidad_solicitada)
+            stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, cantidad_solicitada)
             if not stock_suficiente:
                 messagebox.showerror("Error", mensaje)
                 return
@@ -543,7 +545,7 @@ class VentanaVentas:
             id_venta = siguiente_numero_factura()
 
             # Guardar la factura en la base de datos
-            factura = guarda_venta_bd(
+            factura = db_connect.guarda_venta_bd(
                 id_venta,
                 id_cliente,
                 datetime.now().strftime("%Y-%m-%d"),
@@ -609,7 +611,7 @@ class VentanaVentas:
             id_producto = item["id_producto"]
             cantidad_solicitada = item["cantidad"]
 
-            stock_suficiente, stock_actual, mensaje = verificar_stock_suficiente(id_producto, cantidad_solicitada)
+            stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, cantidad_solicitada)
             if not stock_suficiente:
                 messagebox.showerror("Error", mensaje)
                 return

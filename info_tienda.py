@@ -154,6 +154,14 @@ def ingresar_datos_tienda(frame_contenido, frame_imagen_panel, imagen_panel_tk, 
     correo_entry = tk.Entry(center_frame, width=30)
     correo_entry.grid(row=4, column=1, pady=5)
 
+    def limpiar_pantalla():
+        # Limpiar campos.
+        nombre_tienda_entry.delete(0, tk.END)
+        direccion_entry.delete(0, tk.END)
+        id_fiscal_entry.delete(0, tk.END)
+        telefono_entry.delete(0, tk.END)
+        correo_entry.delete(0, tk.END)
+        
     # Función para agregar un nuevo usuario
     def agregar_tienda_db():
         tienda = nombre_tienda_entry.get()
@@ -165,6 +173,7 @@ def ingresar_datos_tienda(frame_contenido, frame_imagen_panel, imagen_panel_tk, 
         if tienda and direccion and id_fiscal and telefono and correo:
             guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo)
             messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
+            limpiar_pantalla()
             mostrar_menu_principal()
         else:
             messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
@@ -229,6 +238,12 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
     actualiza_correo_entry = tk.Entry(center_frame, width=30)
     actualiza_correo_entry.grid(row=2, column=1, pady=5)
     
+    def limpiar_pantalla():
+        # Limpiar campos.
+        actualiza_direccion_entry.delete(0, tk.END)
+        actualiza_telefono_entry.delete(0, tk.END)
+        actualiza_correo_entry.delete(0, tk.END)
+    
     # Función para agregar un nuevo usuario
     def actualiza_tienda_db():
         direccion_actualizar = actualiza_direccion_entry.get()
@@ -253,6 +268,7 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
             actualizar_datos_tienda(direccion, telefono, email, id_tienda)
 
             messagebox.showinfo("Éxito", "Datos actualizados correctamente.")
+            limpiar_pantalla()
             mostrar_menu_principal()
         else:
             messagebox.showerror("⚠️ Error", "No se encontraron datos para actualizar.")
