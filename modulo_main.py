@@ -484,7 +484,7 @@ class PantallaPrincipal:
             # Eliminar datos
             crear_boton(
                 frame_botones,
-                texto="Eliminar dato", 
+                texto="Eliminar dato",
                 ancho=30,
                 alto=30,
                 color_fondo="#FA2E2E",                

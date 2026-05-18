@@ -1,7 +1,7 @@
 # eliminar_datos.py
 import tkinter as tk
 from tkinter import messagebox, ttk
-from db import eliminar_proveedor_bd, eliminar_material_bd, eliminar_producto_bd # obtener_materiales, obtener_productos, 
+#from db import eliminar_material_bd, eliminar_producto_bd # obtener_materiales, obtener_productos, eliminar_proveedor_bd,  
 #from db import eliminar_usuario_bd_nombre # obtener_nombres_usuarios, 
 from PIL import Image, ImageTk
 from recursos import crear_boton
@@ -170,7 +170,7 @@ def eliminar_proveedor(root, volver_menu, imagen_tk, imagen_panel_tk):
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al proveedor {proveedor_seleccionado}?")
         if confirmar:
-            eliminar_proveedor_bd(proveedor_seleccionado)
+            db_connect.eliminar_proveedor_bd(proveedor_seleccionado)
             messagebox.showinfo("Éxito", f"Proveedor {proveedor_seleccionado} eliminado correctamente.")
             volver_menu()
 
@@ -233,7 +233,7 @@ def eliminar_material(root, volver_menu, imagen_tk, imagen_panel_tk):
 
     # Obtener los nombres de los materiales
     materiales = db_connect.obtener_materiales_pro()
-    nombres_materiales = [material[1:6] for material in materiales]  # quite [2]
+    nombres_materiales = [" ".join(str(item) for item in material[1:6] if item is not None) for material in materiales]  # quite [2]
 
     material_combobox = ttk.Combobox(eliminar_material_frame, values=nombres_materiales, width=35)
     material_combobox.pack(pady=5)
@@ -246,8 +246,9 @@ def eliminar_material(root, volver_menu, imagen_tk, imagen_panel_tk):
         # print("El material seleccionado es: ",material_seleccionado)
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar el material {material_seleccionado}?")
         if confirmar:
-            eliminar_material_bd(material_seleccionado)
-            messagebox.showinfo("Éxito", f"Material {material_seleccionado} eliminado correctamente.")
+            eliminado = db_connect.eliminar_material_bd(material_seleccionado)
+            if eliminado:
+                messagebox.showinfo("✅ Éxito", f"Material {material_seleccionado} eliminado correctamente.")
             volver_menu()
 
     crear_boton(eliminar_material_frame, 
@@ -321,8 +322,9 @@ def eliminar_producto(root, volver_menu, imagen_tk, imagen_panel_tk):
 
         confirmar = messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar el producto {producto_seleccionado}?")
         if confirmar:
-            eliminar_producto_bd(producto_seleccionado)
-            messagebox.showinfo("Éxito", f"Producto {producto_seleccionado} eliminado correctamente.")
+            eliminado = db_connect.eliminar_producto_bd(producto_seleccionado)
+            if eliminado:
+                messagebox.showinfo("✅ Éxito", f"Producto {producto_seleccionado} eliminado correctamente.")
             volver_menu()
 
     crear_boton(eliminar_producto_frame, 

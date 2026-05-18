@@ -1562,116 +1562,116 @@ def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_ma
 
 
 # Insertar datos en detalle factura.
-def agregar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            INSERT INTO Detalle_Venta (id_venta, id_producto, cantidad, precio_unitario, subtotal)
-            VALUES (?, ?, ?, ?, ?)
-        """, (id_venta, id_producto, cantidad, precio_unitario, subtotal,))
-    conn.commit()
-    conn.close()
+# def agregar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             INSERT INTO Detalle_Venta (id_venta, id_producto, cantidad, precio_unitario, subtotal)
+#             VALUES (?, ?, ?, ?, ?)
+#         """, (id_venta, id_producto, cantidad, precio_unitario, subtotal,))
+#     conn.commit()
+#     conn.close()
     
 
-def guardar_nota_entrega(id_cliente, fecha, subtotal, descuento, impuesto, total):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            INSERT INTO NotasEntrega (id_cliente, fecha, subtotal, descuento, impuesto, total)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (id_cliente, fecha, subtotal, descuento, impuesto, total))
-    id_nota_entrega = cursor.lastrowid  # Obtener el ID de la nota de entrega generada
-    conn.commit()
-    conn.close()
-    return id_nota_entrega
+# def guardar_nota_entrega(id_cliente, fecha, subtotal, descuento, impuesto, total):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             INSERT INTO NotasEntrega (id_cliente, fecha, subtotal, descuento, impuesto, total)
+#             VALUES (?, ?, ?, ?, ?, ?)
+#         """, (id_cliente, fecha, subtotal, descuento, impuesto, total))
+#     id_nota_entrega = cursor.lastrowid  # Obtener el ID de la nota de entrega generada
+#     conn.commit()
+#     conn.close()
+#     return id_nota_entrega
 
 
-def agregar_detalle_nota_entrega(nota_entrega, id_producto, cantidad, precio_unitario, subtotal):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            INSERT INTO DetalleNotaEntrega (id_nota_entrega, id_producto, cantidad, precio_unitario, subtotal)
-            VALUES (?, ?, ?, ?, ?)
-        """, (nota_entrega, id_producto, cantidad, precio_unitario, subtotal))
-    conn.commit()
-    conn.close()
+# def agregar_detalle_nota_entrega(nota_entrega, id_producto, cantidad, precio_unitario, subtotal):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             INSERT INTO DetalleNotaEntrega (id_nota_entrega, id_producto, cantidad, precio_unitario, subtotal)
+#             VALUES (?, ?, ?, ?, ?)
+#         """, (nota_entrega, id_producto, cantidad, precio_unitario, subtotal))
+#     conn.commit()
+#     conn.close()
     
 
 # Actualiza el stock del producto vendido.
-def actualizar_stock_producto_venta(cantidad, id_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            UPDATE Productos
-            SET cantidad = cantidad - ?
-            WHERE id_producto = ?
-        """, (cantidad, id_producto))
-    conn.commit()
-    conn.close()
+# def actualizar_stock_producto_venta(cantidad, id_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             UPDATE Productos
+#             SET cantidad = cantidad - ?
+#             WHERE id_producto = ?
+#         """, (cantidad, id_producto))
+#     conn.commit()
+#     conn.close()
  
 # Consulta el historial de costos en la base de datos
-def datos_imprimir_historial_costo(): 
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT p.nombre, hc.fecha, hc.costo_anterior, hc.costo_nuevo, hc.motivo
-        FROM Historial_Costos hc
-        JOIN Productos p ON hc.id_producto = p.id_producto
-    """)
-    historial = cursor.fetchall()
-    conn.close()
-    return historial
+# def datos_imprimir_historial_costo(): 
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT p.nombre, hc.fecha, hc.costo_anterior, hc.costo_nuevo, hc.motivo
+#         FROM Historial_Costos hc
+#         JOIN Productos p ON hc.id_producto = p.id_producto
+#     """)
+#     historial = cursor.fetchall()
+#     conn.close()
+#     return historial
    
    
 # Consulta el historial de Ganancias en la base de datos
-def datos_imprimir_historial_ganancia():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT p.nombre, hg.mes, hg.ganancia_total, hg.margen_promedio
-        FROM Historial_Ganancias hg
-        JOIN Productos p ON hg.id_producto = p.id_producto
-    """)
-    historial = cursor.fetchall()
-    conn.close()
-    return historial
+# def datos_imprimir_historial_ganancia():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT p.nombre, hg.mes, hg.ganancia_total, hg.margen_promedio
+#         FROM Historial_Ganancias hg
+#         JOIN Productos p ON hg.id_producto = p.id_producto
+#     """)
+#     historial = cursor.fetchall()
+#     conn.close()
+#     return historial
 
 
 # Eliminar Proveedores de la base de datos
-def eliminar_proveedor_bd(nombre_proveedor):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM Proveedores WHERE nombre = ?', (nombre_proveedor,))
-    conn.commit()
-    conn.close()
+# def eliminar_proveedor_bd(nombre_proveedor):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE FROM Proveedores WHERE nombre = ?', (nombre_proveedor,))
+#     conn.commit()
+#     conn.close()
     
 # Eliminar materiales de la base de datos
-def eliminar_material_bd(nombre_material):
-    codigo_material = nombre_material.split(" ")
-    # print("El Codigo a eliminar es: ", codigo_material[0])
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM Materiales WHERE codigo = ?', (codigo_material[0],))
-    conn.commit()
-    conn.close()
+# def eliminar_material_bd(nombre_material):
+#     codigo_material = nombre_material.split(" ")
+#     # print("El Codigo a eliminar es: ", codigo_material[0])
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE FROM Materiales WHERE codigo = ?', (codigo_material[0],))
+#     conn.commit()
+#     conn.close()
     
     
 # Eliminar Productos.
-def eliminar_producto_bd(codigo_producto):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM Productos WHERE codigo = ?', (codigo_producto,))
-    conn.commit()
-    conn.close()
+# def eliminar_producto_bd(codigo_producto):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE FROM Productos WHERE codigo = ?', (codigo_producto,))
+#     conn.commit()
+#     conn.close()
     
 # Obtener los lotes 
-def obtener_lotes():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_lote, fecha_creacion, descripcion, cantidad_unidades FROM Lotes")
-    lotes = cursor.fetchall()
-    conn.close()
-    return lotes
+# def obtener_lotes():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_lote, fecha_creacion, descripcion, cantidad_unidades FROM Lotes")
+#     lotes = cursor.fetchall()
+#     conn.close()
+#     return lotes
 
 # Registrar el nuevo lote
 def registrar_producto_en_lote(id_lote, id_producto, unidades_lote):
@@ -1839,6 +1839,7 @@ def datos_de_la_venta(id_venta):
                 t.nombre AS tienda_nombre,
                 t.direccion AS tienda_direccion,
                 t.identificacion_fiscal AS tienda_identificacion_fiscal,
+                t.telefono,
                 v.descuento,
                 v.subtotal,
                 v.impuesto
@@ -1893,7 +1894,8 @@ def datos_nota_entrega(id_nota_entrega):
             ne.impuesto,
             t.nombre AS tienda_nombre,
             t.direccion AS tienda_direccion,
-            t.identificacion_fiscal AS tienda_identificacion_fiscal
+            t.identificacion_fiscal AS tienda_identificacion_fiscal,
+            t.telefono
         FROM
             NotasEntrega ne
         JOIN
@@ -1989,6 +1991,7 @@ def siguiente_numero_factura():
     id_venta = nuevo_numero
     conn.commit()
     conn.close()
+    print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta}")
     return id_venta
 
 

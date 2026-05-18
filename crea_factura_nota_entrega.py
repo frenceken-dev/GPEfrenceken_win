@@ -4,14 +4,14 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3  
 from db import (
-    guardar_nota_entrega, 
-    agregar_detalle_nota_entrega,
+    #guardar_nota_entrega, 
+    #agregar_detalle_nota_entrega,
     #cargador_clientes, 
     #cargador_productos, 
     #validar_stock_del_producto, 
     #detalle_producto_venta, guarda_venta_bd, 
-    agregar_detalle_venta, 
-    actualizar_stock_producto_venta, 
+    #agregar_detalle_venta, 
+    #actualizar_stock_producto_venta, 
     #nuevo_cliente,
     obtener_estado_nota_entrega,
     obtener_datos_nota_entrega,
@@ -475,7 +475,8 @@ class VentanaVentas:
             "codigo": codigo,
             "cantidad": self.cantidad.get(),
             "precio_unitario": precio_unitario,
-            "subtotal": subtotal
+            "subtotal": subtotal,
+            "descuento": descuento
         })
         self.tree_resumen.insert("", "end", values=(codigo, self.cantidad.get(), f"€ {precio_unitario:.2f}", f"€ {subtotal:.2f}"))
 
@@ -548,7 +549,7 @@ class VentanaVentas:
             factura = db_connect.guarda_venta_bd(
                 id_venta,
                 id_cliente,
-                datetime.now().strftime("%Y-%m-%d"),
+                datetime.now().strftime("%d/%m/%Y"),
                 "factura",
                 round(subtotal, 2),
                 descuento,
@@ -558,14 +559,15 @@ class VentanaVentas:
 
             # Guardar los detalles de la factura y actualizar el stock
             for item in self.lista_productos_venta:
-                agregar_detalle_venta(
+                id_factura = db_connect.agregar_detalle_venta(
                     id_venta,
                     item["id_producto"],
                     item["cantidad"],
                     item["precio_unitario"],
-                    item["subtotal"]
+                    item["subtotal"],
+                    item["descuento"]
                 )
-                actualizar_stock_producto_venta(item["cantidad"], item["id_producto"])
+                actualizado = db_connect.actualizar_stock_producto_venta(item["cantidad"], item["id_producto"])
 
             # Mostrar el botón de imprimir
             self.id_venta_actual = id_venta
@@ -633,9 +635,9 @@ class VentanaVentas:
             total = subtotal - descuento + impuesto
 
             # Guardar la nota de entrega en la base de datos
-            id_nota_entrega = guardar_nota_entrega(
+            id_nota_entrega = db_connect.guardar_nota_entrega(
                 id_cliente,
-                datetime.now().strftime("%Y-%m-%d"),
+                datetime.now().strftime("%d/%m/%Y"),
                 round(subtotal, 2),
                 descuento,
                 round(impuesto, 2),
@@ -644,14 +646,15 @@ class VentanaVentas:
 
             # Guardar los detalles de la nota de entrega y actualizar el stock
             for item in self.lista_productos_venta:
-                agregar_detalle_nota_entrega(
+                id_nota = db_connect.agregar_detalle_nota_entrega(
                     id_nota_entrega,
                     item["id_producto"],
                     item["cantidad"],
                     item["precio_unitario"],
-                    item["subtotal"]
+                    item["subtotal"],
+                    item["descuento"]
                 )
-                actualizar_stock_producto_venta(item["cantidad"], item["id_producto"])
+                actualizado = db_connect.actualizar_stock_producto_venta(item["cantidad"], item["id_producto"])
 
             # Mostrar el botón de imprimir
             self.id_nota_entrega_actual = id_nota_entrega
@@ -663,7 +666,7 @@ class VentanaVentas:
 
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo generar la nota de entrega: {e}")
-   
+    
     
     def limpiar_pantalla(self):
         # Limpiar formulario
@@ -715,7 +718,6 @@ class VentanaVentas:
         from tkinter import filedialog
         import webbrowser
         import os
-        # ... (código existente para generar el PDF)
 
         # Diálogo para guardar el archivo
         ruta_pdf = filedialog.asksaveasfilename(
@@ -810,7 +812,7 @@ def imprimir_factura(id_venta, es_copia=False):
         return
 
     (id_venta, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
-    total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal,
+    total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel,
     descuento, subtotal, impuesto) = venta_data
 
     # Ruta del archivo PDF
@@ -886,8 +888,9 @@ def imprimir_factura(id_venta, es_copia=False):
     # Datos de la tienda alineados a la derecha
     datos_tienda = [
         [Paragraph(f"{tienda_nombre}", right_aligned_style)],
-        [Paragraph(f"{tienda_direccion}", right_aligned_style)],
-        [Paragraph(f"{tienda_identificacion_fiscal}", right_aligned_style)]
+        [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
+        [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
+        [Paragraph(f"Tel.: {tel}", right_aligned_style)]
     ]
     tabla_tienda = Table(datos_tienda, colWidths=[450])
     tabla_tienda.setStyle(TableStyle([
@@ -898,15 +901,15 @@ def imprimir_factura(id_venta, es_copia=False):
 
     # Información del cliente
     info_factura_cliente = [
-        [Paragraph(f"Kunde:  {nombre_cliente}", left_aligned_style)],
-        [Paragraph(f"Adresse:  {direccion_cliente}", left_aligned_style)],
-        [Paragraph(f"Hausnummer:  {casa_numero}", left_aligned_style)],
-        [Paragraph(f"Postleitzahl:  {zona_postal}", left_aligned_style)],
-        [Paragraph(f"Identifikationsnummer:  {identificacion_fiscal_cliente}", left_aligned_style)],
-        [Paragraph(f"Email:  {email}", left_aligned_style)],
-        [Paragraph(f"Telefonnummer:  {telefono}", left_aligned_style)],
-        [Paragraph(f"Ausgabedatum:  {fecha}", left_aligned_style)],
-        [Paragraph(f"Dokumenttyp:  Rechnung", left_aligned_style)]
+        [Paragraph(f"Kunde: {nombre_cliente}", left_aligned_style)],
+        [Paragraph(f"Adresse: {direccion_cliente}", left_aligned_style)],
+        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
+        [Paragraph(f"Postleitzahl: {zona_postal}", left_aligned_style)],
+        #[Paragraph(f"Steuer-ID:  {identificacion_fiscal_cliente}", left_aligned_style)],
+        [Paragraph(f"Email: {email}", left_aligned_style)],
+        [Paragraph(f"Tel.: {telefono}", left_aligned_style)],
+        [Paragraph(f"Leistungsdatum: {fecha}", left_aligned_style)]
+        #[Paragraph(f"Dokumenttyp:  Rechnung", left_aligned_style)]
     ]
     tabla_factura_cliente = Table(info_factura_cliente, colWidths=[465])
     tabla_factura_cliente.setStyle(TableStyle([
@@ -1033,7 +1036,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
         return
 
     (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
-    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal) = nota_data
+    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel_nota) = nota_data
 
     # Detalles de la nota de entrega
     detalles = detalle_nota_entrega(id_nota_entrega,)
@@ -1104,8 +1107,11 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     # Datos de la tienda alineados a la derecha
     datos_tienda = [
         [Paragraph(f"{tienda_nombre}", right_aligned_style)],
-        [Paragraph(f"{tienda_direccion}", right_aligned_style)],
-        [Paragraph(f"{tienda_identificacion_fiscal}", right_aligned_style)]
+        [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
+        [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
+        [Paragraph(f"Tel.: {tel_nota}", right_aligned_style)]
+        
+        
     ]
     tabla_tienda = Table(datos_tienda, colWidths=[450])
     tabla_tienda.setStyle(TableStyle([
@@ -1118,13 +1124,13 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde:  {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse:  {direccion_cliente}", left_aligned_style)],
-        [Paragraph(f"Hausnummer:  {casa_numero}", left_aligned_style)],
+        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
         [Paragraph(f"Postleitzahl:  {zona_postal}", left_aligned_style)],
-        [Paragraph(f"Identifikationsnummer:  {identificacion_fiscal_cliente}", left_aligned_style)],
+        #[Paragraph(f"Steuer-ID:  {identificacion_fiscal_cliente}", left_aligned_style)],
         [Paragraph(f"Email:  {email}", left_aligned_style)],
-        [Paragraph(f"Telefonnummer:  {telefono}", left_aligned_style)],
-        [Paragraph(f"Ausgabedatum:  {fecha}", left_aligned_style)],
-        [Paragraph(f"Dokumenttyp:  Lieferschein", left_aligned_style)]
+        [Paragraph(f"Tel.:  {telefono}", left_aligned_style)],
+        [Paragraph(f"Leistungsdatum:  {fecha}", left_aligned_style)]
+        #[Paragraph(f"Dokumenttyp:  Lieferschein", left_aligned_style)]
     ]
     tabla_factura_cliente = Table(info_factura_cliente, colWidths=[465])
     tabla_factura_cliente.setStyle(TableStyle([

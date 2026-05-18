@@ -11,8 +11,8 @@ from db import (
     #mostrar_historial_costos_general, 
     #mostrar_historial_ganancias_producto,
     #mostrar_historial_general_mensual, 
-    datos_imprimir_historial_costo, 
-    datos_imprimir_historial_ganancia,
+    #datos_imprimir_historial_costo, 
+    #datos_imprimir_historial_ganancia,
     #calcular_costo_produccion, 
     #obtener_productos_para_costoventa, 
     #actualizar_precio_venta, 
@@ -20,7 +20,7 @@ from db import (
     #actualizar_costo_producto, 
     #registrar_historial_costo,
     registrar_producto_en_lote, 
-    obtener_lotes, 
+    #obtener_lotes, 
     obtener_lotes_con_productos, 
     obtener_costo_actual_lote,
     insertar_lote,
@@ -372,23 +372,24 @@ def abrir_actualizar_costo_por_lote(root, mostrar_menu_principal, imagen_panel_t
     )
     lote_label.pack(anchor=tk.W, pady=(0, 5))
 
-    lotes = obtener_lotes()
-    lote_vars = [f"{lote[0]} - {lote[2]}" for lote in lotes]
+    lotes = db_connect.obtener_lotes()
+    if lotes:
+        lote_vars = [f"{lote[0]} - {lote[2]}" for lote in lotes]
 
-    if not lote_vars:
-        lote_vars = ["No hay lotes disponibles"]
+        if not lote_vars:
+            lote_vars = ["No hay lotes disponibles"]
 
-    lote_var = tk.StringVar()
-    lote_dropdown = tk.OptionMenu(center_frame, lote_var, *lote_vars, command=lambda lote: mostrar_costo_actual_lote(lote))
-    lote_dropdown.config(
-        bg="#FFFFFF",
-        fg="#2C3E50",
-        font=("Arial", 10),
-        bd=2,
-        relief=tk.GROOVE,
-        width=40
-    )
-    lote_dropdown.pack(anchor=tk.W, pady=(0, 15))
+        lote_var = tk.StringVar()
+        lote_dropdown = tk.OptionMenu(center_frame, lote_var, *lote_vars, command=lambda lote: mostrar_costo_actual_lote(lote))
+        lote_dropdown.config(
+            bg="#FFFFFF",
+            fg="#2C3E50",
+            font=("Arial", 10),
+            bd=2,
+            relief=tk.GROOVE,
+            width=40
+        )
+        lote_dropdown.pack(anchor=tk.W, pady=(0, 15))
     
     # Etiqueta para mostrar el costo actual del lote
     costo_actual_lote_label = tk.Label(
@@ -574,7 +575,7 @@ def abrir_actualizar_costo_por_lote(root, mostrar_menu_principal, imagen_panel_t
 def abrir_formulario_crear_lote(parent_frame):
     # Crear una ventana emergente para el formulario de creación de lotes
     lote_window = tk.Toplevel(parent_frame)
-    configurar_toplevel(lote_window, titulo="Crear_nuevo Lote", ancho_min=500, alto_min=450)
+    configurar_toplevel(lote_window, titulo="Crear_nuevo Lote", ancho_min=500, alto_min=550)
     lote_window.transient(parent_frame)
 
     # Frame para el formulario

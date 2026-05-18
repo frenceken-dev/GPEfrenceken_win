@@ -74,7 +74,8 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
                                                     "Todos los Productos",
                                                     "Producto especifico",
                                                     "Facturas Ventas",
-                                                    "Borradores Nuevos Productos"], width=28)  # Nuevo Agregado
+                                                    "Borradores Nuevos Productos",
+                                                    "Materiales de Empaque"], width=28)  # Nuevo Agregado
     tipo_busqueda.grid(row=0, column=1, pady=5)
 
     # Campo para ingresar el valor de búsqueda
@@ -526,12 +527,44 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         # Insertar los resultados en el Treeview
         for resultado in resultados:
             tree.insert("", tk.END, values=resultado)
+            
+    elif tipo_busqueda == "Materiales de Empaque":
+        # muestra todos los tipos de materiales para el embalaje.
+        # Configurar el estilo del Treeview
+        style = ttk.Style()
+        style.configure("mystyle.Treeview", background="#101113", fieldbackground="#101113", foreground="#ffffff")
+        style.configure("mystyle.Treeview.Heading", background="#ffffff", foreground="#101113")
+        
+        # Crear un Treeview para mostrar los resultados de productos (Se elimino el campo Nombre)
+        tree = ttk.Treeview(frame_datos, columns=("Código", "Nombre", "Tamaño", "Cantidad", "Precio Compra", "Costo Unitario"),
+                            show="headings",
+                            style="mystyle.Treeview")
 
+        # Configurar las columnas
+        tree.heading("Código", text="Código.")
+        tree.heading("Nombre", text="Nombre")
+        tree.heading("Tamaño", text="Tamaño")
+        tree.heading("Cantidad", text="Cantidad")
+        tree.heading("Precio Compra", text="Precio Compra")
+        tree.heading("Costo Unitario", text="Costo Unitario")
+
+        # Ajustar el ancho de las columnas
+        tree.column("Código", width=70)
+        tree.column("Nombre", width=70)
+        tree.column("Tamaño", width=50)
+        tree.column("Cantidad", width=40)
+        tree.column("Precio Compra", width=40)
+        tree.column("Costo Unitario", width=40)
+
+        # Insertar los resultados en el Treeview
+        for resultado in resultados:
+            tree.insert("", tk.END, values=resultado)
+            
     # Agregar un Scrollbar
     scrollbar = ttk.Scrollbar(resultados_window, orient="vertical", command=tree.yview)
-    tree.configure(yscroll=scrollbar.set)
-    
-    
+    tree.configure(yscroll=scrollbar.set)        
+        
+        
     def editar_item():
         # Obtener el ítem seleccionado en el Treeview
         selected_item = tree.selection()
@@ -603,8 +636,14 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                             "Fecha R": 7,
                             "Descripción": 8}
             
-        # elif tipo_busqueda == Borradores Nuevos Productos:
-            #pass
+        elif tipo_busqueda == "Materiales de Empaque":
+            campos = ["Código", "Nombre", "Tamaño", "Stock", "Costo", "Costo Unit."]
+            campo_indice = {"Código": 0,
+                            "Nombre": 1,
+                            "Tamaño": 2,
+                            "Stock": 3,
+                            "Costo": 4,
+                            "Costo Unit.": 5}
             
         else:
             messagebox.showerror("⚠️ Error", "Tipo de búsqueda no soportado para edición.")
