@@ -1674,138 +1674,138 @@ def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_ma
 #     return lotes
 
 # Registrar el nuevo lote
-def registrar_producto_en_lote(id_lote, id_producto, unidades_lote):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO Lote_Productos (id_lote, id_producto, cantidad_asignada) VALUES (?, ?, ?)",
-        (id_lote, id_producto, unidades_lote)
-    )
-    conn.commit()
-    conn.close()
+# def registrar_producto_en_lote(id_lote, id_producto, unidades_lote):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         "INSERT INTO Lote_Productos (id_lote, id_producto, cantidad_asignada) VALUES (?, ?, ?)",
+#         (id_lote, id_producto, unidades_lote)
+#     )
+#     conn.commit()
+#     conn.close()
     
 # Obtener lotes y sus productos.
-def obtener_lotes_con_productos():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT
-            l.id_lote,
-            l.descripcion,
-            l.cantidad_unidades,
-            GROUP_CONCAT(p.codigo || ' (' || lp.cantidad_asignada || ')', ', ') as productos
-        FROM Lotes l
-        LEFT JOIN Lote_Productos lp ON l.id_lote = lp.id_lote
-        LEFT JOIN Productos p ON lp.id_producto = p.id_producto
-        GROUP BY l.id_lote
-    """)
-    lotes = cursor.fetchall()
-    conn.close()
+# def obtener_lotes_con_productos():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT
+#             l.id_lote,
+#             l.descripcion,
+#             l.cantidad_unidades,
+#             GROUP_CONCAT(p.codigo || ' (' || lp.cantidad_asignada || ')', ', ') as productos
+#         FROM Lotes l
+#         LEFT JOIN Lote_Productos lp ON l.id_lote = lp.id_lote
+#         LEFT JOIN Productos p ON lp.id_producto = p.id_producto
+#         GROUP BY l.id_lote
+#     """)
+#     lotes = cursor.fetchall()
+#     conn.close()
     return lotes
 
 
-def obtener_costo_actual_lote(id_lote):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT costo_lote FROM Lotes WHERE id_lote = ?", (id_lote,))
-    costo_actual = cursor.fetchone()
-    conn.close()
-    return costo_actual[0] if costo_actual else 0.0
+# def obtener_costo_actual_lote(id_lote):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT costo_lote FROM Lotes WHERE id_lote = ?", (id_lote,))
+#     costo_actual = cursor.fetchone()
+#     conn.close()
+#     return costo_actual[0] if costo_actual else 0.0
 
 
-def guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO Tienda (nombre, direccion, identificacion_fiscal, telefono, email) VALUES (?, ?, ?, ?, ?)",
-                   (tienda, direccion, id_fiscal, telefono, correo))
-    conn.commit()
-    conn.close()
+# def guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("INSERT INTO Tienda (nombre, direccion, identificacion_fiscal, telefono, email) VALUES (?, ?, ?, ?, ?)",
+#                    (tienda, direccion, id_fiscal, telefono, correo))
+#     conn.commit()
+#     conn.close()
     
 
-def datos_registrados_tienda():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_tienda, direccion, telefono, email FROM Tienda WHERE id_tienda = 1")
-    datos_tienda = cursor.fetchall()
-    conn.close()
-    return datos_tienda
+# def datos_registrados_tienda():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_tienda, direccion, telefono, email FROM Tienda WHERE id_tienda = 1")
+#     datos_tienda = cursor.fetchall()
+#     conn.close()
+#     return datos_tienda
 
 
-def actualizar_datos_tienda(direccion, telefono, correo, id_tienda):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""UPDATE Tienda SET direccion = ?, telefono = ?,email = ? WHERE id_tienda = ?""", (direccion, telefono, correo, id_tienda ))
-    conn.commit()
-    conn.close()    
+# def actualizar_datos_tienda(direccion, telefono, correo, id_tienda):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""UPDATE Tienda SET direccion = ?, telefono = ?,email = ? WHERE id_tienda = ?""", (direccion, telefono, correo, id_tienda ))
+#     conn.commit()
+#     conn.close()    
 
 
-def obtener_estado_nota_entrega(id_nota_entrega):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT estado FROM NotasEntrega WHERE id_nota_entrega = ?", (id_nota_entrega,))
-    estado = cursor.fetchone()
-    conn.close()
+# def obtener_estado_nota_entrega(id_nota_entrega):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT estado FROM NotasEntrega WHERE id_nota_entrega = ?", (id_nota_entrega,))
+#     estado = cursor.fetchone()
+#     conn.close()
 
-    if estado:
-        return estado[0]
-    else:
-        return None
+#     if estado:
+#         return estado[0]
+#     else:
+#         return None
     
 
-def obtener_datos_nota_entrega(id_nota_entrega):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id_cliente, fecha, subtotal, descuento, impuesto, total
-        FROM NotasEntrega
-        WHERE id_nota_entrega = ?
-    """, (id_nota_entrega,))
-    nota_data = cursor.fetchone()
-    conn.close()
-    return nota_data
+# def obtener_datos_nota_entrega(id_nota_entrega):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT id_cliente, fecha, subtotal, descuento, impuesto, total
+#         FROM NotasEntrega
+#         WHERE id_nota_entrega = ?
+#     """, (id_nota_entrega,))
+#     nota_data = cursor.fetchone()
+#     conn.close()
+#     return nota_data
 
-def obtener_ultimo_numero_factura():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1")
-    ultimo_numero = cursor.fetchone()[0]
-    conn.close()
-    return ultimo_numero
+# def obtener_ultimo_numero_factura():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1")
+#     ultimo_numero = cursor.fetchone()[0]
+#     conn.close()
+#     return ultimo_numero
 
-def actualizar_ultimo_numero_factura(nuevo_numero):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE Configuracion SET ultimo_numero_factura = ? WHERE id_configuracion = 1", (nuevo_numero,))
-    conn.commit()
-    conn.close()
+# def actualizar_ultimo_numero_factura(nuevo_numero):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE Configuracion SET ultimo_numero_factura = ? WHERE id_configuracion = 1", (nuevo_numero,))
+#     conn.commit()
+#     conn.close()
 
-def insertar_factura_venta(id_venta, id_cliente, fecha, subtotal, descuento, impuesto, total):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO Ventas (id_venta, id_cliente, fecha, tipo_documento, subtotal, descuento, impuesto, total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (id_venta, id_cliente, fecha, "Factura", subtotal, descuento, impuesto, total))
-    conn.commit()
-    conn.close()
+# def insertar_factura_venta(id_venta, id_cliente, fecha, subtotal, descuento, impuesto, total):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         INSERT INTO Ventas (id_venta, id_cliente, fecha, tipo_documento, subtotal, descuento, impuesto, total)
+#         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#     """, (id_venta, id_cliente, fecha, "Factura", subtotal, descuento, impuesto, total))
+#     conn.commit()
+#     conn.close()
 
-def obtener_detalles_nota_entrega(id_nota_entrega):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id_producto, cantidad, precio_unitario, subtotal FROM DetalleNotaEntrega WHERE id_nota_entrega = ?", (id_nota_entrega,))
-    detalles = cursor.fetchall()
-    conn.close()
-    return detalles
+# def obtener_detalles_nota_entrega(id_nota_entrega):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT id_producto, cantidad, precio_unitario, subtotal FROM DetalleNotaEntrega WHERE id_nota_entrega = ?", (id_nota_entrega,))
+#     detalles = cursor.fetchall()
+#     conn.close()
+#     return detalles
 
-def insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO Detalle_Venta (id_venta, id_producto, cantidad, precio_unitario, subtotal)
-        VALUES (?, ?, ?, ?, ?)
-    """, (id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle))
-    conn.commit()
-    conn.close()
+# def insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         INSERT INTO Detalle_Venta (id_venta, id_producto, cantidad, precio_unitario, subtotal)
+#         VALUES (?, ?, ?, ?, ?)
+#     """, (id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle))
+#     conn.commit()
+#     conn.close()
 
 def actualizar_estado_nota_entrega(id_nota_entrega, estado):
     conn = sqlite3.connect(db_path)
@@ -1855,6 +1855,7 @@ def datos_de_la_venta(id_venta):
 
     venta_data = cursor.fetchone()
     conn.close()
+    print(venta_data)
     return venta_data
 
 
@@ -1939,45 +1940,45 @@ def insertar_lote(descripcion, unidades, costo_lote):
     return id_lote
 
 
-# Insertar en la tabla lote_productos
-def insertar_lote_productos(id_lote, id_producto, cantidad):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO Lote_Productos (id_lote, id_producto, cantidad_asignada) VALUES (?, ?, ?)",
-        (id_lote, id_producto, cantidad)
-    )
-    conn.commit()
-    conn.close()
+# # Insertar en la tabla lote_productos
+# def insertar_lote_productos(id_lote, id_producto, cantidad):
+    # conn = sqlite3.connect(db_path)
+    # cursor = conn.cursor()
+    # cursor.execute(
+    #     "INSERT INTO Lote_Productos (id_lote, id_producto, cantidad_asignada) VALUES (?, ?, ?)",
+    #     (id_lote, id_producto, cantidad)
+    # )
+    # conn.commit()
+    # conn.close()
     
 
-# Actualizar el costo del lote.
-def actualizar_costo_lote(nuevo_costo, id_lote):
-    conn = sqlite3.connect(db_path)
-    conn = sqlite3.connect('ikigai_inventario.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE Lotes SET costo_lote = ? WHERE id_lote = ?", (nuevo_costo, id_lote))
-    conn.commit()
-    conn.close()
+# # Actualizar el costo del lote.
+# def actualizar_costo_lote(nuevo_costo, id_lote):
+#     conn = sqlite3.connect(db_path)
+#     conn = sqlite3.connect('ikigai_inventario.db')
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE Lotes SET costo_lote = ? WHERE id_lote = ?", (nuevo_costo, id_lote))
+#     conn.commit()
+#     conn.close()
 
 
-# Obtener el costo anterior del lote
-def costo_anterior_lote(id_lote):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT costo_lote FROM Lotes WHERE id_lote = ?", (id_lote,))
-    anterior_costo = cursor.fetchone()[0]
-    conn.close()
-    return anterior_costo
+# # Obtener el costo anterior del lote
+# def costo_anterior_lote(id_lote):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT costo_lote FROM Lotes WHERE id_lote = ?", (id_lote,))
+#     anterior_costo = cursor.fetchone()[0]
+#     conn.close()
+#     return anterior_costo
 
 
-# Actualizar el precio de venta del lote en la base de datos
-def actualiza_precio_venta_lote(nuevo_precio, id_lote):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE Lotes SET precio_venta_lote = ? WHERE id_lote = ?", (nuevo_precio, id_lote))
-    conn.commit()
-    conn.close()
+# # Actualizar el precio de venta del lote en la base de datos
+# def actualiza_precio_venta_lote(nuevo_precio, id_lote):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE Lotes SET precio_venta_lote = ? WHERE id_lote = ?", (nuevo_precio, id_lote))
+#     conn.commit()
+#     conn.close()
 
 
 # Obtener el ultimo número de factura y crear el siguiente úmero de factura.
@@ -2187,5 +2188,5 @@ if __name__ == "__main__":
     #encontrar_facturas()
     #obtener_nombres_usuarios()
     #datos_costo_d_producto_actualizar("BORRADORR")
-    
+    #datos_de_la_venta(21)
     

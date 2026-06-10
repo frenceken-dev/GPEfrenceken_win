@@ -2,9 +2,10 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import guardar_info_tienda, actualizar_datos_tienda, datos_registrados_tienda
 from recursos import crear_boton
+from databasemanager import DataBaseManager
 
+db_conect = DataBaseManager()
 
 def info_tienda(root, mostrar_menu_principal, imagen_tk, imagen_panel_tk):
     # Limpiar el frame de cualquier contenido
@@ -171,10 +172,13 @@ def ingresar_datos_tienda(frame_contenido, frame_imagen_panel, imagen_panel_tk, 
         correo = correo_entry.get()
 
         if tienda and direccion and id_fiscal and telefono and correo:
-            guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo)
-            messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
-            limpiar_pantalla()
-            mostrar_menu_principal()
+            id_del_registro = db_conect.guardar_info_tienda(tienda, direccion, id_fiscal, telefono, correo)
+            if id_del_registro:
+                messagebox.showinfo("✅ Éxito", "Usuario agregado correctamente.")
+                limpiar_pantalla()
+                mostrar_menu_principal()
+            else:
+                messagebox.showerror("⚠️ Error", f"No se ha podido Registrar los datos de la tienda.")
         else:
             messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
 
@@ -251,7 +255,7 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
         correo_actualizar = actualiza_correo_entry.get()
 
         # Recuperación de datos (dirección, telefono, email)
-        datos_actuales = datos_registrados_tienda()
+        datos_actuales = db_conect.datos_registrados_tienda()
         print(datos_actuales)
 
         if datos_actuales:
@@ -265,11 +269,13 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
             email = datos[3] if not correo_actualizar else correo_actualizar
 
             # Llamar a la función para actualizar los datos en la base de datos
-            actualizar_datos_tienda(direccion, telefono, email, id_tienda)
-
-            messagebox.showinfo("Éxito", "Datos actualizados correctamente.")
-            limpiar_pantalla()
-            mostrar_menu_principal()
+            actualizado = db_conect.actualizar_datos_tienda(direccion, telefono, email, id_tienda)
+            if actualizado:
+                messagebox.showinfo("✅ Éxito", "Datos actualizados correctamente.")
+                limpiar_pantalla()
+                mostrar_menu_principal()
+            else:
+                messagebox.showerror("⚠️ Error", "No se han podido actualizar los datos.")
         else:
             messagebox.showerror("⚠️ Error", "No se encontraron datos para actualizar.")
 

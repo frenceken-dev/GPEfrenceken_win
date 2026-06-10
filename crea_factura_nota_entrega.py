@@ -13,13 +13,13 @@ from db import (
     #agregar_detalle_venta, 
     #actualizar_stock_producto_venta, 
     #nuevo_cliente,
-    obtener_estado_nota_entrega,
-    obtener_datos_nota_entrega,
-    obtener_ultimo_numero_factura,
-    actualizar_ultimo_numero_factura,
-    insertar_factura_venta,
-    obtener_detalles_nota_entrega,
-    insertar_detalle_venta,
+    #obtener_estado_nota_entrega,
+    #obtener_datos_nota_entrega,
+    #obtener_ultimo_numero_factura,
+    #actualizar_ultimo_numero_factura,
+    #insertar_factura_venta,
+    #obtener_detalles_nota_entrega,
+    #insertar_detalle_venta,
     actualizar_estado_nota_entrega,
     detalle_de_la_venta,
     datos_de_la_venta,
@@ -39,7 +39,7 @@ class VentanaVentas:
         self.root = root
         self.usuario_actual = usuario_actual  # ID del usuario logueado
         self.logo_path = LOGO_PATH  # Imagen del Logo
-        
+        self.factura_id = None
         # Cargar logo para redimencionar a 50px
         try:
             self.imagen_panel = Image.open(self.logo_path)
@@ -285,6 +285,19 @@ class VentanaVentas:
                     #activeforeground="black",
                     comando=self.generar_nota_entrega)
         self.boton_generar_nota_entrega.pack(side="left", padx=5, pady=5)
+        
+        # En el método __init__, después de los otros botones:
+        self.boton_anular_factura = crear_boton(
+            self.frame_botones,
+            texto="Anular Factura",
+            ancho=20,
+            alto=30,
+            color_fondo="#8B0000",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=self.anular_factura
+        )
+        self.boton_anular_factura.pack(side="left", padx=5, pady=5)
 
         self.boton_cancelar = crear_boton(
             self.frame_botones,
@@ -427,12 +440,12 @@ class VentanaVentas:
     def agregar_producto_a_venta(self):
     # Validar cliente
         if not self.combobox_clientes.get():
-            messagebox.showerror("Error", "Debe seleccionar un cliente de la lista.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente de la lista.")
             return
 
         # Validar que se haya seleccionado un producto
         if not hasattr(self, 'producto_seleccionado') or not self.producto_seleccionado:
-            messagebox.showerror("Error", "Debe seleccionar un producto de la lista.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un producto de la lista.")
             return
 
         # Extraer el ID del producto desde el texto seleccionado
@@ -440,14 +453,14 @@ class VentanaVentas:
             producto_str = self.producto_seleccionado
             id_producto = int(producto_str.split(" - ")[0])
         except (ValueError, IndexError, AttributeError):
-            messagebox.showerror("Error", "Seleccione un producto válido de la lista.")
+            messagebox.showerror("⚠️ Error", "Seleccione un producto válido de la lista.")
             return
 
         # Validar stock del producto
         stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, self.cantidad.get())
 
         if not stock_suficiente:
-            messagebox.showerror("Error", mensaje)
+            messagebox.showerror("⚠️ Error", mensaje)
             return
 
         # Obtener detalles del producto
@@ -494,27 +507,27 @@ class VentanaVentas:
         import traceback
         # Validar que se hayan agregado productos a la venta
         if not self.lista_productos_venta:
-            messagebox.showerror("Error", "Debe agregar al menos un producto a la venta.")
+            messagebox.showerror("⚠️ Error", "Debe agregar al menos un producto a la venta.")
             return
 
         # Validar que se haya seleccionado un cliente válido
         if not hasattr(self, 'combobox_clientes') or not self.combobox_clientes.get():
-            messagebox.showerror("Error", "Debe seleccionar un cliente.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente.")
             return
 
         # Validar que el cliente seleccionado no sea "0" o un valor inválido
         cliente_seleccionado = self.combobox_clientes.get()
         if cliente_seleccionado.startswith("0 - "):
-            messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
             return
 
         try:
             id_cliente = int(cliente_seleccionado.split(" - ")[0])
             if id_cliente <= 0:
-                messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+                messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
                 return
         except (ValueError, IndexError):
-            messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
             return
 
         # Validar que todos los productos tengan stock suficiente
@@ -524,7 +537,7 @@ class VentanaVentas:
 
             stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, cantidad_solicitada)
             if not stock_suficiente:
-                messagebox.showerror("Error", mensaje)
+                messagebox.showerror("⚠️ Error", mensaje)
                 return
 
         # Confirmar generación de factura
@@ -575,37 +588,37 @@ class VentanaVentas:
             self.boton_imprimir.set_command(lambda: imprimir_factura(self.id_venta_actual))
             self.boton_imprimir.pack(side="left", padx=5, pady=5)
 
-            messagebox.showinfo("Éxito", "Factura generada correctamente.")
+            messagebox.showinfo("✅ Éxito", "Factura generada correctamente.")
 
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo generar la factura: {e}")      
+            messagebox.showerror("⚠️ Error", f"No se pudo generar la factura: {e}")      
 
     # Generar nosta de entrega
     def generar_nota_entrega(self):
         import traceback
         # Validar que se hayan agregado productos a la nota de entrega
         if not self.lista_productos_venta:
-            messagebox.showerror("Error", "Debe agregar al menos un producto a la nota de entrega.")
+            messagebox.showerror("⚠️ Error", "Debe agregar al menos un producto a la nota de entrega.")
             return
 
         # Validar que se haya seleccionado un cliente válido
         if not hasattr(self, 'combobox_clientes') or not self.combobox_clientes.get():
-            messagebox.showerror("Error", "Debe seleccionar un cliente.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente.")
             return
 
         # Validar que el cliente seleccionado no sea "0" o un valor inválido
         cliente_seleccionado = self.combobox_clientes.get()
         if cliente_seleccionado.startswith("0 - "):
-            messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
             return
 
         try:
             id_cliente = int(cliente_seleccionado.split(" - ")[0])
             if id_cliente <= 0:
-                messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+                messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
                 return
         except (ValueError, IndexError):
-            messagebox.showerror("Error", "Debe seleccionar un cliente válido.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un cliente válido.")
             return
 
         # Validar que todos los productos tengan stock suficiente
@@ -615,7 +628,7 @@ class VentanaVentas:
 
             stock_suficiente, stock_actual, mensaje = db_connect.verificar_stock_suficiente(id_producto, cantidad_solicitada)
             if not stock_suficiente:
-                messagebox.showerror("Error", mensaje)
+                messagebox.showerror("⚠️ Error", mensaje)
                 return
 
         # Confirmar generación de nota de entrega
@@ -662,10 +675,147 @@ class VentanaVentas:
             self.boton_imprimir.set_command(lambda: imprimir_nota_entrega(self.id_nota_entrega_actual))
             self.boton_imprimir.pack(side="left", padx=5, pady=5)
 
-            messagebox.showinfo("Éxito", f"Nota de entrega generada con éxito. ID: {id_nota_entrega}")
+            messagebox.showinfo("✅ Éxito", f"Nota de entrega generada con éxito. ID: {id_nota_entrega}")
 
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo generar la nota de entrega: {e}")
+            messagebox.showerror("⚠️ Error", f"No se pudo generar la nota de entrega: {e}")
+    
+    
+    def anular_factura(self):
+        # Ventana emergente para seleccionar la factura a anular
+        ventana_anulacion = tk.Toplevel(self.root)
+        configurar_toplevel(ventana_anulacion, titulo="Anular Factura", color_fondo="#101113", ancho_min=500, alto_min=300)
+
+        # Frame para el formulario
+        frame_formulario = tk.LabelFrame(ventana_anulacion, text="Seleccione la Factura a Anular", bg="#101113", fg="#FFFFFF", padx=10, pady=10)
+        frame_formulario.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Combobox para seleccionar la factura
+        tk.Label(frame_formulario, text="Número de Factura:", bg="#101113", fg="#FFFFFF").grid(row=0, column=0, sticky="w", pady=5)
+        self.combobox_facturas = ttk.Combobox(frame_formulario, state="readonly", width=25)
+        self.combobox_facturas.grid(row=0, column=1, padx=5, pady=5)
+
+        # Cargar las facturas no anuladas
+        self.cargar_facturas_no_anuladas()
+
+        # Campo para el motivo de la anulación
+        tk.Label(frame_formulario, text="Motivo de la Anulación:", bg="#101113", fg="#FFFFFF").grid(row=1, column=0, sticky="w", pady=5)
+        self.entry_motivo = tk.Entry(frame_formulario, width=25)
+        self.entry_motivo.grid(row=1, column=1, padx=5, pady=5)
+
+        # Botón para anular
+        boton_anular = crear_boton(
+            frame_formulario,
+            texto="Anular Factura",
+            ancho=20,
+            alto=30,
+            color_fondo="#913131",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=self.procesar_anulacion_factura
+        )
+        boton_anular.grid(row=2, column=1, pady=10, sticky="e")
+
+    def cargar_facturas_no_anuladas(self):
+        # Consulta a la base de datos para obtener facturas no anuladas
+        facturas = db_connect.obtener_facturas_no_anuladas()
+        self.combobox_facturas["values"] = [f"{id_factura} - {fecha} - {cliente}" for id_factura, fecha, cliente in facturas]
+        self.factura_id = facturas[0]
+        
+    def procesar_anulacion_factura(self):
+        # Validar que se haya seleccionado una factura
+        if not self.combobox_facturas.get():
+            messagebox.showerror("⚠️ Error", "Debe seleccionar una factura.")
+            return
+
+        # Validar que se haya ingresado un motivo
+        if not self.entry_motivo.get():
+            messagebox.showerror("⚠️ Error", "Debe ingresar un motivo para la anulación.")
+            return
+        
+        # Validar que la factura no esté ya anulada
+        print(f"Id de factura a anular : {self.factura_id}")
+        estado_actual = db_connect.obtener_estado_venta(self.factura_id[0])
+        if estado_actual == "Anulada":
+            messagebox.showerror("⚠️ Error", "Esta factura ya está anulada.")
+            return
+
+        # Validar que no sea una nota de entrega pendiente (opcional)
+        if estado_actual == "Pendiente":
+            messagebox.showerror("⚠️ Error", "No se puede anular una nota de entrega pendiente. Primero conviertala en factura.")
+            return
+
+        # Obtener el ID de la factura seleccionada
+        try:
+            id_factura = int(self.combobox_facturas.get().split(" - ")[0])
+        except (ValueError, IndexError):
+            messagebox.showerror("⚠️ Error", "Seleccione una factura válida.")
+            return
+
+        # Confirmar la anulación
+        confirmar = messagebox.askyesno("Confirmar", f"¿Está seguro de anular la factura # {id_factura}?")
+        if not confirmar:
+            return
+
+        #try:
+        # Obtener los datos de la factura original
+        datos_factura = db_connect.datos_de_la_venta(id_factura)
+        
+        if not datos_factura:
+            messagebox.showerror("⚠️ Error", "No se encontró la factura.")
+            return
+        print(datos_factura)
+        id_venta,fecha,id_cliente,nombre,direccion,casa_num,zona_postal,identificacion_fiscal,email,telefono,total,tipo_documento,tienda_nombre,tienda_direccion,tienda_identificacion_fiscal,telefono,descuento,subtotal,impuesto = datos_factura[0]
+        
+        # Obtener los detalles de la factura
+        detalles_factura = db_connect.detalle_de_la_venta(id_factura)
+        if not detalles_factura:
+            messagebox.showerror("⚠️ Error", "No se encontraron detalles para esta factura.")
+            return
+
+        # Crear la Gutschrift (factura de anulación)
+        id_gutschrift = db_connect.guardar_gutschrift(
+            id_factura,
+            id_cliente,
+            fecha,
+            subtotal,
+            descuento,
+            impuesto,
+            total,
+            self.entry_motivo.get()
+        )
+
+        # Actualizar el stock (si la anulación es por devolución)
+        for detalle in detalles_factura:  # Es un dicc
+            id_producto=  detalle["id_producto"]
+            codigo = detalle["codigo"]
+            cantidad = detalle["cantidad"]
+            precio_uni = detalle["precio_unitario"]
+            subtotal_detalle = detalle["subtotal"]
+            
+            # Insertar el detalle en la tabla detalles_gutschrift
+            db_connect.guardar_detalle_gutschrift(
+                id_gutschrift,
+                id_producto,
+                cantidad,
+                precio_uni,
+                subtotal_detalle
+            )
+            
+            db_connect.actualizar_stock_producto_devolucion(id_producto, cantidad)
+
+        # Marcar la factura original como anulada
+        db_connect.marcar_factura_como_anulada(id_factura)
+
+        messagebox.showinfo("✅ Éxito", f"Factura # {id_factura} anulada correctamente. ID de Gutschrift: {id_gutschrift}")
+        
+        # Opcional: Imprimir la Gutschrift
+        imprimir = messagebox.askyesno("Imprimir Gutschrift", "¿Desea imprimir la Gutschrift ahora?")
+        if imprimir:
+            imprimir_gutschrift(id_gutschrift)
+
+        #except Exception as e:
+            #messagebox.showerror("⚠️ Error", f"No se pudo anular la factura: {e}")
     
     
     def limpiar_pantalla(self):
@@ -683,7 +833,7 @@ class VentanaVentas:
         # Obtener el item seleccionado en el Treeview
         selected_item = self.tree_resumen.selection()
         if not selected_item:
-            messagebox.showerror("Error", "Debe seleccionar un producto para eliminar.")
+            messagebox.showerror("⚠️ Error", "Debe seleccionar un producto para eliminar.")
             return
 
         # Confirmar eliminación
@@ -736,9 +886,9 @@ class VentanaVentas:
         if os.path.exists(ruta_pdf):
             webbrowser.open(ruta_pdf)
         else:
-            messagebox.showerror("Error", "No se pudo generar el PDF.")
+            messagebox.showerror("⚠️ Error", "No se pudo generar el PDF.")
 
-        messagebox.showinfo("Éxito", f"Documento guardado en: {ruta_pdf}") 
+        messagebox.showinfo("✅ Éxito", f"Documento guardado en: {ruta_pdf}") 
         
 
 # Función para facturar una Nota de Entrega
@@ -749,40 +899,43 @@ def convertir_nota_a_factura(id_nota_entrega):
     
     try:
         # Verificar si la nota de entrega ya está facturada
-        estado = obtener_estado_nota_entrega(id_nota_entrega)
+        estado = db_connect.obtener_estado_nota_entrega(id_nota_entrega)
         
         if estado == "Facturado":
-            messagebox.showerror("Error", "Esta nota de entrega ya ha sido facturada.")
+            messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
             return
 
         # Obtener los datos de la nota de entrega
-        nota_data = obtener_datos_nota_entrega(id_nota_entrega)
+        nota_data = db_connect.obtener_datos_nota_entrega(id_nota_entrega)
         if not nota_data:
-            messagebox.showerror("Error", "No se encontró la nota de entrega.")
+            messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
             return
 
         id_cliente, fecha, subtotal, descuento, impuesto, total = nota_data
         
-        # Obtener el siguiente número de factura
-        ultimo_numero = obtener_ultimo_numero_factura()
-        nuevo_numero = ultimo_numero + 1
-        actualizar_ultimo_numero_factura(nuevo_numero)
+        # Obtener el siguiente número de factura y actualizarlo en la base de datos.
+        ultimo_numero = db_connect.obtener_ultimo_numero_factura()
+        if ultimo_numero:
+            nuevo_numero = ultimo_numero + 1
+            db_connect.actualizar_ultimo_numero_factura(nuevo_numero)
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido Obtener el ultimo número de factura. Correlación comprometida.")
 
         # Guardar la factura en la base de datos
-        insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total)
+        db_connect.insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total)
         id_venta = nuevo_numero
 
         # Copiar los detalles de la nota de entrega a la factura
-        detalles = obtener_detalles_nota_entrega(id_nota_entrega)
+        detalles = db_connect.obtener_detalles_nota_entrega(id_nota_entrega)
 
         for detalle in detalles:
-            id_producto, cantidad, precio_unitario, subtotal_detalle = detalle
-            insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle)
+            id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_ = detalle
+            id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
         
         # Actualizar el estado de la nota de entrega a 'Facturado'
         actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
 
-        messagebox.showinfo("Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
+        messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
 
         # Preguntar si desea imprimir la nueva factura
         imprimir = messagebox.askyesno("Imprimir Factura", "¿Deseas imprimir la nueva factura ahora?")
@@ -790,7 +943,7 @@ def convertir_nota_a_factura(id_nota_entrega):
             imprimir_factura(id_venta, es_copia=False)
 
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo convertir la nota de entrega en factura: {e}")
+        messagebox.showerror("⚠️ Error", f"No se pudo convertir la nota de entrega en factura: {e}")
 
 
 # Función para imprimir facturas
@@ -808,7 +961,7 @@ def imprimir_factura(id_venta, es_copia=False):
     venta_data = datos_de_la_venta(id_venta)
     
     if not venta_data:
-        messagebox.showerror("Error", "No se encontró la venta.")
+        messagebox.showerror("⚠️ Error", "No se encontró la venta.")
         return
 
     (id_venta, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
@@ -824,7 +977,7 @@ def imprimir_factura(id_venta, es_copia=False):
             os.makedirs("factura_original", exist_ok=True)
             ruta_pdf = f"factura_original/factura_{id_venta}.pdf"
     except Exception as e:
-        messagebox.showerror("Error", "Error al guardar la factura en carpeta.")
+        messagebox.showerror("⚠️ Error", "Error al guardar la factura en carpeta.")
         
 
     # Detalles de la venta
@@ -984,19 +1137,6 @@ def imprimir_factura(id_venta, es_copia=False):
     # Generar el PDF
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
 
-    # # Abrir el PDF automáticamente
-    # if os.path.exists(ruta_pdf):
-    #     try:
-    #         if platform.system() == "Darwin":
-    #             subprocess.run(["open", ruta_pdf])
-    #         else:
-    #             webbrowser.open(ruta_pdf)
-    #     except Exception:
-    #         # fallback universal
-    #         webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
-    # else:
-    #     messagebox.showerror("Error", "No se pudo generar el PDF.")
-
     # Abrir el PDF automáticamente
     if os.path.exists(ruta_pdf):
         try:
@@ -1013,7 +1153,7 @@ def imprimir_factura(id_venta, es_copia=False):
             # Fallback universal (abre con navegador)
             webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
     else:
-        messagebox.showerror("Error", "No se pudo generar el PDF.")
+        messagebox.showerror("⚠️ Error", "No se pudo generar el PDF.")
 
         
 
@@ -1032,7 +1172,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     nota_data = datos_nota_entrega(id_nota_entrega,)
 
     if not nota_data:
-        messagebox.showerror("Error", "No se encontró la nota de entrega.")
+        messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
         return
 
     (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
@@ -1050,7 +1190,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
             os.makedirs("notas_entrega", exist_ok=True)
             ruta_pdf = f"notas_entrega/factura_{id_nota_entrega}.pdf"
     except Exception as e:
-        messagebox.showerror("Error", "Error al guardar la factura en carpeta.")
+        messagebox.showerror("⚠️ Error", "Error al guardar la factura en carpeta.")
     
     # Preguntar al usuario si desea una copia de la factura
     if not es_copia:
@@ -1204,19 +1344,6 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     # Generar el PDF
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
 
-    # # Abrir el PDF automáticamente
-    # if os.path.exists(ruta_pdf):
-    #     try:
-    #         if platform.system() == "Darwin":
-    #             subprocess.run(["open", ruta_pdf, ruta_pdf])
-    #         else:
-    #             webbrowser.open(ruta_pdf)
-    #     except Exception:
-    #         # fallback universal
-    #         webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
-    # else:
-    #     messagebox.showerror("Error", "No se pudo generar el PDF.")
-
     # Abrir el PDF automáticamente
     if os.path.exists(ruta_pdf):
         try:
@@ -1233,6 +1360,219 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
             # Fallback universal (abre con navegador)
             webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
     else:
-        messagebox.showerror("Error", "No se pudo generar el PDF.")
+        messagebox.showerror("⚠️ Error", "No se pudo generar el PDF.")
 
-            
+
+def imprimir_gutschrift(id_gutschrift, es_copia=False):
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT, TA_LEFT
+    import webbrowser
+    import os
+    import subprocess, platform, pathlib
+
+    # Obtener los datos de la Gutschrift
+    gutschrift_data = db_connect.datos_gutschrift(id_gutschrift)
+    detalles_gutschrift = db_connect.detalle_gutschrift(id_gutschrift)
+
+    if not gutschrift_data or not detalles_gutschrift:
+        messagebox.showerror("⚠️ Error", "No se encontraron datos para esta Gutschrift.")
+        return
+
+    # Desempaquetar datos de la Gutschrift
+    (id_gutschrift, id_factura_original, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal,
+    identificacion_fiscal_cliente, email, telefono, total, tienda_nombre, tienda_direccion,
+    tienda_identificacion_fiscal, tel, descuento, subtotal, impuesto, motivo) = gutschrift_data[0]
+
+    # Ruta del archivo PDF
+    try:
+        if es_copia:
+            os.makedirs("gutschrift_copia", exist_ok=True)
+            ruta_pdf = f"gutschrift_copia/gutschrift_{id_gutschrift}_COPIA.pdf"
+        else:
+            os.makedirs("gutschrift_original", exist_ok=True)
+            ruta_pdf = f"gutschrift_original/gutschrift_{id_gutschrift}.pdf"
+    except Exception as e:
+        messagebox.showerror("⚠️ Error", f"Error al guardar la Gutschrift: {e}")
+        return
+
+    # Preguntar al usuario si desea una copia
+    if not es_copia:
+        imprimir_copia = messagebox.askyesno("Copia de Gutschrift", "¿Deseas imprimir una copia de esta Gutschrift?")
+        if imprimir_copia:
+            imprimir_gutschrift(id_gutschrift, es_copia=True)
+
+    # Configuración del PDF
+    doc = SimpleDocTemplate(ruta_pdf, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=100, bottomMargin=50)
+    styles = getSampleStyleSheet()
+
+    # Estilos personalizados
+    right_aligned_style = ParagraphStyle(
+        name="RightAligned",
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        alignment=TA_RIGHT,
+    )
+    right_aligned_style_title = ParagraphStyle(
+        name="RightAligned",
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        alignment=TA_RIGHT,
+    )
+    left_aligned_style = ParagraphStyle(
+        name="LeftAligned",
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        alignment=TA_LEFT,
+    )
+    left_aligned_style_detalle = ParagraphStyle(
+        name="LeftAligned",
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        alignment=TA_LEFT,
+    )
+
+    story = []
+
+    # Logo de la tienda
+    logo_path = LOGO_PATH
+
+    # Título del documento: GUTSCHRIFT
+    titulo_doc = f"GUTSCHRIFT: {id_gutschrift}"
+    if es_copia:
+        titulo_doc += " \n -K"
+
+    titulo_pdf = Paragraph(f"{titulo_doc}", right_aligned_style_title)
+    story.append(titulo_pdf)
+    story.append(Spacer(1, 25))
+
+    # Datos de la tienda (alineados a la derecha)
+    datos_tienda = [
+        [Paragraph(f"{tienda_nombre}", right_aligned_style)],
+        [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
+        [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
+        [Paragraph(f"Tel.: {tel}", right_aligned_style)]
+    ]
+    tabla_tienda = Table(datos_tienda, colWidths=[450])
+    tabla_tienda.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+    ]))
+    story.append(tabla_tienda)
+    story.append(Spacer(1, 30))
+
+    # Información del cliente (alineada a la izquierda)
+    info_factura_cliente = [
+        [Paragraph(f"Kunde: {nombre_cliente}", left_aligned_style)],
+        [Paragraph(f"Adresse: {direccion_cliente}", left_aligned_style)],
+        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
+        [Paragraph(f"Postleitzahl: {zona_postal}", left_aligned_style)],
+        [Paragraph(f"Email: {email}", left_aligned_style)],
+        [Paragraph(f"Tel.: {telefono}", left_aligned_style)],
+        [Paragraph(f"Leistungsdatum: {fecha}", left_aligned_style)],
+        [Paragraph(f"<b>Motivo:</b> {motivo}", left_aligned_style)]  # Motivo de la anulación
+    ]
+    tabla_factura_cliente = Table(info_factura_cliente, colWidths=[465])
+    tabla_factura_cliente.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    ]))
+    story.append(tabla_factura_cliente)
+    story.append(Spacer(1, 10))
+
+    # Detalles de la Gutschrift (con montos negativos)
+    titulo_detalles = [[Paragraph("Verkaufsdetails (Stornierung)", left_aligned_style_detalle)]]
+    tabla_detalles_titulo = Table(titulo_detalles, colWidths=[465])
+    tabla_detalles_titulo.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    ]))
+    story.append(tabla_detalles_titulo)
+    story.append(Spacer(1, 5))
+
+    # Columnas de la tabla
+    columnas = ["Produkt", "Menge", "Einzelpreis", "Zwischensumme"]
+    detalles_data = [columnas]
+
+    # Añadir cada producto con montos negativos
+    for producto, cantidad, precio, subtotal_detalle in detalles_gutschrift:
+        detalles_data.append([
+            producto,
+            str(cantidad),
+            f"€ -{abs(float(precio)):.2f}",  # Precio negativo
+            f"€ -{abs(subtotal_detalle):.2f}"  # Subtotal negativo
+        ])
+
+    tabla_detalles = Table(detalles_data, colWidths=[180, 80, 100, 100])
+    tabla_detalles.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    story.append(tabla_detalles)
+    story.append(Spacer(1, 100))
+
+    # Resumen de la Gutschrift (montos negativos, alineados a la derecha)
+    resumen_data = [
+        [Paragraph(f"Zwischensumme: € -{abs(subtotal):.2f}", right_aligned_style)],
+        [Paragraph(f"Rabatt: € -{abs(descuento):.2f}", right_aligned_style)],
+        [Paragraph(f"Steuer (MwSt. 19%): € -{abs(impuesto):.2f}", right_aligned_style)],
+        [Paragraph(f"Gesamt: € -{abs(total):.2f}", right_aligned_style)]
+    ]
+    tabla_resumen = Table(resumen_data, colWidths=[450])
+    tabla_resumen.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+    ]))
+    story.append(tabla_resumen)
+
+    # Función para header y footer
+    def header_footer(canvas, doc):
+        # Header con logo
+        if logo_path and os.path.exists(logo_path):
+            logo = Image(logo_path, width=120, height=60)
+            logo.drawOn(canvas, 50, letter[1] - 120)
+
+        # Marca de agua "STORNO" (anulación) en diagonal
+        if not es_copia:  # Solo en el original
+            canvas.saveState()
+            canvas.setFont("Helvetica", 80)
+            canvas.setFillColorRGB(0.9, 0.9, 0.9)  # Color gris muy claro
+            canvas.rotate(45)
+            canvas.drawString(200, -200, "STORNO")  # Posición ajustable
+            canvas.restoreState()
+
+        # Marca de agua "KOPIE" si es copia
+        if es_copia:
+            canvas.saveState()
+            canvas.setFont("Helvetica", 100)
+            canvas.setFillColorRGB(0.8, 0.8, 0.8)
+            canvas.rotate(45)
+            canvas.drawString(150, -100, "KOPIE")
+            canvas.restoreState()
+
+        # Footer con número de página
+        canvas.saveState()
+        canvas.setFont("Helvetica", 10)
+        canvas.drawCentredString(letter[0] / 2.0, 20, f"Seite {doc.page}")
+        canvas.restoreState()
+
+    # Generar el PDF
+    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+
+    # Abrir el PDF automáticamente
+    if os.path.exists(ruta_pdf):
+        try:
+            if platform.system() == "Darwin":  # macOS
+                subprocess.run(["open", ruta_pdf])
+            elif platform.system() == "Windows":
+                os.startfile(ruta_pdf)
+            else:  # Linux
+                subprocess.run(["xdg-open", ruta_pdf])
+        except Exception as e:
+            webbrowser.open(pathlib.Path(ruta_pdf).absolute().as_uri())
+    else:
+        messagebox.showerror("⚠️ Error", "No se pudo generar el PDF.")      

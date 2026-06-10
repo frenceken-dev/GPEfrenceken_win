@@ -2728,8 +2728,6 @@ class DataBaseManager():
     
     def mostrar_historial_costos_por_producto(self, codigo_producto) -> List[Tuple[Any]]:
         """
-        
-
         Args:
             codigo_producto (_type_): _description_
 
@@ -2961,6 +2959,66 @@ class DataBaseManager():
             return False
     
     
+    # insertar lote en la base de datos
+    def insertar_lote(self, codigo: str, descripcion: str, unidades: int, costo_lote: float, precio_venta: float) -> int:
+        """
+        Insertar lote en la base de datos.
+
+        Args:
+            codigo (str): Código asignado al lote.
+            descripcion (str): Pequeña descripción del lote.
+            unidades (int): Número de unidades que conforman el lote.
+            costo_lote (float): Costo del lote
+            precio_venta (float): Precio de venta de las unidades
+
+        Returns:
+            int: - Retorna el id si es exitosa la operación o -1 se se produce un error.
+        """
+        fecha = datetime.now().strftime("%d.%m.%Y %H:%M")     
+        query = {
+            "codigo_lote": codigo,
+            "fecha_creacion": fecha,
+            "descripcion": descripcion,
+            "cantidad_unidades": unidades,
+            "costo_lote": costo_lote,
+            "precio_venta_lote": precio_venta
+        }
+        
+        lote_id = self.insert("Lotes", query)
+        
+        if lote_id:
+            messagebox.showinfo("✅ Éxito", "Lote creado correctamente.")
+            return lote_id
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido crear el Lote.")
+            
+    
+    def registrar_lote_productos(self, id_lote: int, id_producto: int, cantidad: int) -> int: # Antes era insertar_lote_producto
+        """
+        Insertar en la tabla lote_productos
+
+        Args:
+            id_lote (int): Id del lote creado.
+            id_producto (int): Id de los productos que lo conforman.
+            cantidad (int): Cantidad de productos dentro del lote.
+
+        Returns:
+            int: -Retorna el id si la operación es exitosa o -1 si no lo es.
+        """
+        query = {
+            "id_lote": id_lote,
+            "id_producto": id_producto,
+            "cantidad_asignada": cantidad
+        }
+        insertado_id = self.insert("Lote_productos", query)
+        print(f"EL ID  ES: {insertado_id}")
+        if insertado_id:
+            pass
+            # messagebox.showinfo("✅ Éxito", "Lote actualizado correctamente.")
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el Lote.")
+            
+            
     def obtener_lotes(self) -> List[Tuple[Any]]:
         """
         Obtener todos los lotes existentes.
@@ -2984,7 +3042,263 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in lotes_dic
         ]
-        print(lotes_tupla)
+        return lotes_tupla
+    
+    
+    def obtener_costo_actual_lote(self, id_lote: int) -> float:
+        """
+        Recupera el costo actual de un lote.
+
+        Args:
+            id_lote (int): ID del lote actual
+
+        Returns:
+            float: - Retorna una lista de tuplas.
+        """        
+        
+        query = "SELECT costo_lote FROM Lotes WHERE id_lote = ?"
+        params = id_lote
+        costo_actual = self.select(query, (params,))
+        
+        return costo_actual[0]["costo_lote"] if costo_actual else 0.0
+    
+    
+    def costo_anterior_lote(self, id_lote: int) -> float:
+        """
+        Obtener el costo anterior del lote
+
+        Args:
+            id_lote (int): ID del lote actual.
+
+        Returns:
+            float: - Retorna los datos tipo float.
+        """        
+        query = "SELECT costo_lote FROM Lotes WHERE id_lote = ?"
+        params = id_lote
+        
+        anterior_costo = self.select(query, (params,))
+        
+        return anterior_costo[0]["costo_lote"]
+    
+    
+    def actualizar_costo_lote(self, nuevo_costo: float, id_lote: int) -> bool:
+        """
+        Actualizar el costo del lote.
+
+        Args:
+            nuevo_costo (float): Nuevo costo del Lote.
+            id_lote (int): ID del Lote Actual.
+
+        Returns:
+            bool: - Retorna True si la actualización es exitosa si no False.
+        """
+        actualizado = self.update(
+            table="Lotes",
+            updates= {"costo_lote": nuevo_costo},
+            where_condition="id_lote = ?",
+            where_params=(id_lote,)
+        )
+        if actualizado:
+            pass
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el costo del Lote.")
+            
+    
+    def actualiza_precio_venta_lote(self, nuevo_precio: float, id_lote: int) -> bool:
+        """
+        Actualizar el precio de venta del lote en la base de datos
+
+        Args:
+            nuevo_precio (float): Actualiza el precio de Venta del Lote.
+            id_lote (int): ID del lote actual.
+
+        Returns:
+            bool: - Si la actualización es exitosa retorna True si no retorna False.
+        """
+        actualizado = self.update(
+            table="Lotes",
+            updates= {"precio_venta_lote": nuevo_precio},
+            where_condition="id_lote = ?",
+            where_params=(id_lote,)
+        )
+        
+        if actualizado:
+            pass
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el precio de venta del Lote.")
+            
+    
+    def obtener_lotes_con_productos(self) -> List[Tuple[Any]]:
+        """
+        Obtener los productos de los lotes
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas
+        """
+        query = """
+            SELECT
+                l.id_lote,
+                l.codigo_lote,
+                l.descripcion,
+                l.cantidad_unidades,
+                l.costo_lote,
+                l.precio_venta_lote,
+                GROUP_CONCAT(p.codigo || ' (' || lp.cantidad_asignada || ')', ', ') as productos
+            FROM Lotes l
+            LEFT JOIN Lote_Productos lp ON l.id_lote = lp.id_lote
+            LEFT JOIN Productos p ON lp.id_producto = p.id_producto
+            GROUP BY l.id_lote
+        """
+        productos_lote = self.select(query)
+        
+        campos = [
+            "id_lote",
+            "codigo_lote",
+            "descripcion",
+            "cantidad_unidades",
+            "costo_lote",
+            "precio_venta_lote",
+        ]
+        
+        productos_lote_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in productos_lote
+        ]
+        return productos_lote_tupla
+    
+    
+    def obtener_productos_del_lote_con_cantidades(self, id_lote: int) -> List[Tuple[Any]]:
+        """
+        Obtiene los productos de un lote con sus cantidades.
+
+        Args:
+            id_lote (int): el id del lote
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una Lista de tuplas.
+        """
+        query = """
+            SELECT lp.id_producto, p.codigo, lp.cantidad_asignada
+            FROM Lote_Productos lp
+            JOIN Productos p ON lp.id_producto = p.id_producto
+            WHERE lp.id_lote = ?
+        """
+        params = id_lote
+        lote_dict = self.select(query, (params,))
+        
+        campos = [
+            "id_producto",
+            "codigo",
+            "cantidad_asignada"
+        ]
+        lote_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in lote_dict
+        ]
+        return lote_tupla
+    
+    
+    # En db.py o DataBaseManager
+    def eliminar_lote(self, id_lote):
+        """
+        Elimina un lote de la base de datos.
+        Args:
+            id_lote (int): Usa el id del lote para la eliminación
+
+        Returns:
+            bool: - Retorna True si la eliminación es exitosa o False si no.
+        """
+        print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
+        eliminado = self.delete(
+            table= "Lotes",
+            where_condition= "id_lote = ?",
+            where_params= (id_lote,)
+        )
+        
+        if eliminado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido eliminar el Lote.")
+        
+
+    def eliminar_lote_productos(self, id_lote: int) -> bool:
+        """
+        Elimina un lote de la base de datos.
+        Args:
+            id_lote (int): Usa el id del lote para la eliminación
+
+        Returns:
+            bool: - Retorna True si la eliminación es exitosa o False si no.
+        """
+        print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
+        eliminado = self.delete(
+            table= "Lote_Productos",
+            where_condition= "id_lote = ?",
+            where_params= (id_lote,)
+        )
+        
+        if eliminado:
+            # messagebox.showinfo("✅ Éxito", "El Lote ha sido eliminado exitosamente." )
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido eliminar el Lote.")
+            
+
+    def obtener_productos_del_lote(self, id_lote: int) -> List[dict[Any]]:
+        """
+        Obtiene los productos asociados a un lote.
+        Args:
+            id_lote (_type_): _description_
+
+        Returns:
+            List[dict[Any]]: - Retorna una lista con diccionarios
+        """
+        print(f"CODIGO A BUSCAR en productos_del_lote: {id_lote}")  
+        query = """
+            SELECT p.id_producto, p.codigo
+            FROM Lote_Productos lp
+            JOIN Productos p ON lp.id_producto = p.id_producto
+            WHERE lp.id_lote = ?
+        """
+        productos_del_lote = self.select(query, (id_lote,))
+        
+        campos = [
+            "id_producto",
+            "codigo"
+        ]
+        
+        productos_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in productos_del_lote
+        ]
+        return productos_tupla
+    
+
+    def actualizar_lote(self, id_lote: int, codigo: str, descripcion: str, unidades: int, costo: float, precio_total: float) -> bool:
+        """
+        Actualiza la información de un lote.
+        Args:
+            codigo (str): Código asignado.
+            id_lote (int): Id del lote.
+            descripcion (str): descripción.
+            unidades (int): unidades a actualizar.
+            costo (float): Costo del lote actualizado.
+            precio_total (float): Precio total del lote.
+
+        Returns:
+            bool: - Retorna True si la actualización es exitosa o False si no.
+        """        
+        actualizado = self.update(
+            table="Lotes",
+            updates={"codigo_lote": codigo, "descripcion": descripcion, "cantidad_unidades": unidades, "costo_lote": costo, "precio_venta_lote": precio_total},
+            where_condition= "id_lote = ?",
+            where_params= (id_lote,)
+        )
+        
+        if actualizado:
+            return actualizado
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido Actualizar el Lote.")
         
     
 #######################################################################################################################
@@ -3121,9 +3435,9 @@ class DataBaseManager():
             "email": email,
             "telefono": telefono
         }
-        print(f"Datos del nuevo cliente: {query}") 
+        
         cliente_id = self.insert("Clientes", query)
-        print(f"El id del nuevo cliente es: {cliente_id}")
+        
         return cliente_id
     
     
@@ -3359,8 +3673,695 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", f"No se ha podido Actualizar la cantidad correctamente.")
             return False
+        
+    def obtener_estado_nota_entrega(self, id_nota_entrega: int) -> str:
+        """
+        Obtiene el estado pendiente de una nota de entrega.
 
+        Args:
+            id_nota_entrega (int): id de la nota de entrega.
 
+        Returns:
+            str: - Retorna el estado de la nota de entrega.
+        """
+        query = "SELECT estado FROM NotasEntrega WHERE id_nota_entrega = ?"
+        params = id_nota_entrega
+        
+        estado_nota = self.select(query, (params,))
+        
+        if estado_nota:
+            return estado_nota[0]["estado"]
+        else:
+            return None
+        
+    
+    def obtener_datos_nota_entrega(self, id_nota_entrega: int) -> tuple:
+        """
+        Se obtienen los datos de la nota de entrega con estatus pendiente.
+
+        Args:
+            id_nota_entrega (int): Id de la nota de entrega.
+
+        Returns:
+            tuple: - Retorna los datos de la nota de entrega.
+        """
+        query = """
+        SELECT id_cliente, fecha, subtotal, descuento, impuesto, total
+        FROM NotasEntrega
+        WHERE id_nota_entrega = ?"""
+        
+        params = id_nota_entrega
+        datos_dicc = self.select(query, (params,))
+        
+        campos = [
+            "id_cliente",
+            "fecha",
+            "subtotal",
+            "descuento",
+            "impuesto",
+            "total"
+        ]
+        
+        datos_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in datos_dicc
+        ]
+    
+        return datos_tupla
+    
+    
+    def obtener_ultimo_numero_factura(self) -> List[Tuple[Any]]:
+        """
+        Toma el Ultimo número de factura
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con la tupla del ultimo número de factura.
+        """            
+        query = "SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1"
+        
+        ultimo_numero = self.select(query)
+        
+        return ultimo_numero[0]["ultimo_numero_factura"]
+    
+    
+    def actualizar_ultimo_numero_factura(self, nuevo_numero: int) -> int:
+        """
+        Inserta en DB el nuevo ultimo número de factura para mantener correlación 
+
+        Args:
+            nuevo_numero (int): Ultimo número de factura actualizado.
+
+        Returns:
+            int: - Retorna el id del ultimo nñumero si todo sale bien si no retorna -1
+        """
+        query = {
+            "ultimo_numero_factura":nuevo_numero
+        }
+        actualizado = self.update(
+            table="Configuracion",
+            updates=query,
+            where_condition="id_configuracion = ?",
+            where_params=(1,)
+        )
+
+        if not actualizado:
+            messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el ultimo número de factura. La correlación ha fallado.")
+
+    def insertar_factura_venta(self, id_venta:int, id_cliente:int, fecha:str, subtotal:float, descuento:float, impuesto:float, total:float)-> int:
+        """
+        Se guarda los datos de la factura realizada por venta.
+
+        Args:
+            id_venta (int): Id de la venta.
+            id_cliente (int): Id del cliente.
+            fecha (str): Fecha de la venta.
+            subtotal (float): Subtotal de la venta.
+            descuento (float): Descuento si aplíca.
+            impuesto (float): Tasa delimpuesto actual.
+            total (float): Total de factura.
+
+        Returns:
+            int: - Retorna el id de la venta si se inserta correctamente si no retorna -1.
+        """
+        query = {
+            "id_venta":id_venta,
+            "id_cliente":id_cliente,
+            "fecha":fecha,
+            "tipo_documento":"Factura",
+            "subtotal":subtotal,
+            "descuento":descuento,
+            "impuesto":impuesto,
+            "total":total
+        }
+        id_de_venta = self.insert("Factura", query)
+
+        if not id_de_venta:
+            messagebox.showerror("⚠️ Error Crítico", f"Fallo el registro de la venta en el sistema.")
+            
+        
+    def obtener_detalles_nota_entrega(self, id_nota_entrega:int)-> List[Tuple[Any]]:
+        """
+        Obtener los datos de la nota de entrega.
+
+        Args:
+            id_nota_entrega (int): Id de la nota de entrega.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas de los datos.
+        """
+        query = "SELECT id_producto, cantidad, precio_unitario, subtotal, descuento FROM DetalleNotaEntrega WHERE id_nota_entrega = ?"
+        params = id_nota_entrega
+        
+        detalles_nota_dicc = self.select(query, (params,))
+        
+        campos = [
+            "id_producto",
+            "cantidad",
+            "precio_unitario",
+            "subtotal",
+            "descuento"
+        ]
+        detalles_nota_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in detalles_nota_dicc
+        ]
+    
+        return detalles_nota_tupla
+    
+    
+    def insertar_detalle_venta(self, id_venta:int, id_producto:int, cantidad:int, precio_unitario:float, subtotal_detalle:float, descuento:float)->int:
+        """
+        Recibe los datos de una nota de entrega ya facturada y se guardan el detalle de venta.
+
+        Args:
+            id_venta (int): id de venta.
+            id_producto (int): id del producto vendido.
+            cantidad (int): Cantidad vendida.
+            precio_unitario (float): Precio por unidad.
+            subtotal_detalle (float): Subtotal de factura.
+            descuento (float): Descuento en factura si aplíca.
+
+        Returns:
+            int: - Retorna el id de venta si el proceso es exitoso si no retorna -1.
+        """
+        query = {
+            "id_venta":id_venta,
+            "id_producto":id_producto,
+            "cantidad":cantidad,
+            "precio_unitario":precio_unitario,
+            "subtotal":subtotal_detalle,
+            "descuento":descuento
+        }
+        detalle_id = self.insert("Detalle_Venta", query)
+        
+        if not detalle_id:
+            messagebox.showerror("⚠️ Error", f"No se pudo guardar el detalle de la venta.")
+        else:
+            return detalle_id
+        
+    
+    def obtener_facturas_no_anuladas(self)-> List[Tuple[Any]]:
+        """
+        Recupera todas las facturas no anuladas.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas.
+        """
+        # Posible error con el comparativo !=.
+        query = """
+            SELECT id_venta, fecha, nombre
+            FROM ventas v
+            JOIN clientes c ON v.id_cliente = c.id_cliente
+            WHERE estado != 'Anulada'
+        """
+        facturas_anuladas_dicc = self.select(query)
+        
+        campos = [
+            "id_venta",
+            "fecha",
+            "nombre"
+        ]
+        facturas_anuladas_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in facturas_anuladas_dicc
+        ]
+        
+        if facturas_anuladas_tupla:
+            return facturas_anuladas_tupla
+        else: 
+            messagebox.showerror("⚠️ Error", f"No se pudo cargas las facturas con estado Factura.")
+            
+    
+    def guardar_gutschrift(self, id_factura_original:int, id_cliente:int, fecha:str, subtotal:float, descuento:float, impuesto:float, total:float, motivo:str)-> int:
+        """
+        Guardar la Gutschrift / Anulación en la base de datos
+
+        Args:
+            id_factura_original (int): Id de la Factura.
+            id_cliente (int): Id del Cliente.
+            fecha (str): Fecha de la Factura.
+            subtotal (float): SubTotal de la Factura.
+            descuento (float): Descuento de la factura si aplica.
+            impuesto (float): Taza del impuesto actual.
+            total (float): Total de la Factura.
+            motivo (str): Motivo de la Anulación.
+
+        Returns:
+            int: - Retorna el id de la Anulación si la inserción es exitosa si no -1.
+        """
+        query = {
+            "id_factura_original":id_factura_original,
+            "id_cliente":id_cliente,
+            "fecha":fecha,
+            "subtotal":subtotal,
+            "descuento":descuento,
+            "impuesto":impuesto,
+            "total":total,
+            "motivo":motivo
+        }
+        
+        id_de_anulacion = self.insert("Anulaciones", query)
+        
+        if id_de_anulacion:
+            return id_de_anulacion
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo Guardar la Anulación de Factura.")
+    
+    
+    def marcar_factura_como_anulada(self, id_factura:int)-> bool:
+        """
+        Marcar una factura como anulada
+
+        Args:
+            id_factura (int): id de la Factura anulada.
+
+        Returns:
+            bool: - Retorna True si el estado es actualizado correctamenre si no retorna False.
+        """
+        
+        actualizado = self.update(
+            table="Ventas",
+            updates={"estado":"Anulada"},
+            where_condition="id_venta = ?",
+            where_params=(id_factura,)
+        )
+        
+        if actualizado:
+            return actualizado
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo Actualizar el estado de la factura anulada, aún esta Activa.")
+    
+    
+    
+    def datos_gutschrift(self, id_gutschrift:int)-> List[Tuple[Any]]:
+        """
+        Obtener datos de una Gutschrift
+
+        Args:
+            id_gutschrift (int): id de la Anulación.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna lista de tuplas.
+        """
+        query = """
+            SELECT
+            g.id_gutschrift,
+            g.id_factura_original,
+            g.fecha,
+            c.nombre,
+            c.direccion,
+            c.casa_num,
+            c.zona_postal,
+            c.identificacion_fiscal,
+            c.email,
+            c.telefono,
+            g.total,
+            t.nombre AS nombre_tienda,
+            t.direccion AS direccion_tienda,
+            t.identificacion_fiscal AS id_fiscal_tienda,
+            t.telefono AS telefono_tienda,
+            g.descuento,
+            g.subtotal,
+            g.impuesto,
+            g.motivo
+        FROM Anulaciones g
+        JOIN Clientes c ON g.id_cliente = c.id_cliente
+        JOIN Tienda t ON t.id_tienda = 1 
+        WHERE g.id_gutschrift = ?
+        """
+        datos_anulacio_dicc = self.select(query, (id_gutschrift,))
+        
+        campos = [
+            "id_gutschrift",
+            "id_factura_original",
+            "fecha",
+            "nombre",
+            "direccion",
+            "casa_num",
+            "zona_postal",
+            "identificacion_fiscal",
+            "email",
+            "telefono",
+            "total",
+            "nombre_tienda",
+            "direccion_tienda",
+            "id_fiscal_tienda",
+            "telefono_tienda",
+            "descuento",
+            "subtotal",
+            "impuesto",
+            "motivo"
+        ]
+        
+        datos_anulacio_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in datos_anulacio_dicc
+        ]
+        
+        if datos_anulacio_tupla:
+            return datos_anulacio_tupla
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los datos da la Factura de anulación.")
+            
+    
+    def guardar_detalle_gutschrift(self, id_gutschrift:int, id_producto:int, cantidad:int, precio_unitario:float, subtotal:float)-> int:
+        """
+        Guarda los detalles de la anulación.
+
+        Args:
+            id_gutschrift (int): id de la anulación.
+            id_producto (int): id del producto.
+            cantidad (int): Cantida del producto.
+            precio_unitario (float): Precio por unidad.
+            subtotal (float): Sub total de factura anulada.
+
+        Returns:
+            int: - Retorna el id de la anulación si todo es exitoso si no -1.
+        """
+        query = {
+            "id_gutschrift":id_gutschrift,
+            "id_producto":id_gutschrift,
+            "cantidad":cantidad,
+            "precio_unitario":precio_unitario,
+            "subtotal":subtotal
+        }
+        id_anulacion = self.insert("Detalles_Anulaciones", query)
+        
+        if id_anulacion:
+            return id_anulacion
+        else: 
+            messagebox.showerror("⚠️ Error", f"No se pudieron guardar los detalles de  la anulación.")
+            
+    
+    def detalle_gutschrift(self, id_gutschrift:int)-> List[Tuple[Any]]:
+        """
+        Obtener detalles de una Gutschrift
+
+        Args:
+            id_gutschrift (int): id de la anulación.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista de tuplas.
+        """
+        query = """
+            SELECT
+            p.codigo,
+            dg.cantidad,
+            dg.precio_unitario,
+            dg.subtotal
+        FROM Detalles_Anulaciones dg
+        JOIN Productos p ON dg.id_producto = p.id_producto
+        WHERE dg.id_gutschrift = ?
+        """
+        detalles_anulacion_dicc = self.select(query, (id_gutschrift,))
+        
+        campos = [
+            "codigo",
+            "cantidad",
+            "precio_unitario",
+            "subtotal"
+        ]
+        
+        detalles_anulacion_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in detalles_anulacion_dicc
+        ]
+        
+        if detalles_anulacion_tupla:
+            return detalles_anulacion_tupla
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los detalles da la Factura de anulación.")
+    
+    
+    def actualizar_stock_producto_devolucion(self, id_producto:int, cantidad:int)-> bool:
+        """
+        Actualizar el stock al devolver productos
+
+        Args:
+            id_producto (int): Id del producto devuelto.
+            cantidad (int): Cantidad del producto.
+
+        Returns:
+            bool: - Retorna True si la actualizacion es exitosa si no False.
+        """
+        print(f"ID: {id_producto} -- Cantidad: {cantidad}")
+        query = "SELECT codigo, cantidad FROM Productos WHERE id_producto = ?"
+        params = id_producto
+        cantidad_bd = self.select(query, (params,))
+        print(f"Resultado de SELECT: {cantidad_bd}")
+        cantidad_actual = cantidad_bd[0]["cantidad"]
+        
+        actualizado = self.update(
+            table="Productos",
+            updates={"cantidad":cantidad_actual + cantidad},
+            where_condition="id_producto = ?",
+            where_params=(params,)
+        )
+        
+        if actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo actualizar la cantidad del producto {cantidad_bd[0]["codigo"]}.")
+            
+    
+    def obtener_estado_venta(self, id_venta:int)-> str:
+        """
+        Recuperar el estado actual de la Factura.
+
+        Args:
+            id_venta (int): Id de la Factura.
+
+        Returns:
+            str: - Retorna un str con el estado de la factura.
+        """
+        query = """
+            SELECT estado
+            FROM ventas
+            WHERE id_venta = ?
+        """
+        params = id_venta
+        estado_factura = self.select(query, (params,))
+        
+        if estado_factura:
+            return estado_factura[0]["estado"]
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo obtener el estado de la factura.")
+            
+    
+    def datos_de_la_venta(self, id_venta:int)-> List[Tuple[Any]]:
+        """
+        Datos de la venta.
+
+        Args:
+            id_venta (int): Id de la venta facturada.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con los datos de la venta.
+        """
+        query = """
+            SELECT
+                v.id_venta,
+                v.fecha,
+                c.id_cliente,
+                c.nombre,
+                c.direccion,
+                c.casa_num,
+                c.zona_postal,
+                c.identificacion_fiscal,
+                c.email,
+                c.telefono,
+                v.total,
+                v.tipo_documento,
+                t.nombre AS tienda_nombre,
+                t.direccion AS tienda_direccion,
+                t.identificacion_fiscal AS tienda_identificacion_fiscal,
+                t.telefono,
+                v.descuento,
+                v.subtotal,
+                v.impuesto
+            FROM
+                Ventas v
+            JOIN
+                Clientes c ON v.id_cliente = c.id_cliente
+            CROSS JOIN
+                Tienda t
+            WHERE
+                v.id_venta = ?
+        """
+        params = id_venta
+        datos_venta_dicc = self.select(query, (params,))
+        
+        campos = [
+            "id_venta", # 0
+            "fecha", # 1
+            "id_cliente",  # 2
+            "nombre",  # 3
+            "direccion",  # 4
+            "casa_num",  # 5
+            "zona_postal",  # 6
+            "identificacion_fiscal", #  7
+            "email",  # 8
+            "telefono",  # 9
+            "total",  # 10
+            "tipo_documento", # 11
+            "tienda_nombre",  # 12
+            "tienda_direccion",  # 13
+            "tienda_identificacion_fiscal", # 14
+            "telefono",  # 15
+            "descuento", # 16
+            "subtotal",  # 17
+            "impuesto"  # 18
+        ]
+        
+        datos_venta_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in datos_venta_dicc
+        ]
+        return datos_venta_tupla
+    
+    
+    def detalle_de_la_venta(self, id_venta:int) -> list[Tuple[Any]]:
+        """
+        Detalles de la venta
+
+        Args:
+            id_venta (int): Id de la venta.
+
+        Returns:
+            list[Tuple[Any]]: - Retorna una lista con tupla.
+        """
+        query = """
+            SELECT p.id_producto, p.codigo, dv.cantidad, dv.precio_unitario, dv.subtotal
+            FROM Detalle_Venta dv
+            JOIN Productos p ON dv.id_producto = p.id_producto
+            WHERE dv.id_venta = ?
+        """
+        print(f"Detalle de venta id: {id_venta}")
+        params = id_venta
+        
+        detalle_venta_dicc = self.select(query, (params,))
+        
+        campos = [
+            "id_producto"
+            "codigo",
+            "cantidad",
+            "precio_unitario",
+            "subtotal"
+        ] 
+        
+        detalle_venta_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in detalle_venta_dicc
+            ]        
+    
+        return detalle_venta_dicc
+    
+    
+    def obtener_nombre_cliente(self, id_cliente:int)-> List[Tuple[Any]]:
+        """
+        Obtener los datos del cliente para la anulación de la factura.
+
+        Args:
+            id_cliente (int): Id del cliente.
+
+        Returns:
+            List[Tuple[Any]: - Retorna Una lista de tupla.
+        """
+        query = "SELECT nombre, direccion, casa_num, zona_postal, email, telefono FROM Clientes WHERE id_cliente = ?"
+        params = id_cliente
+        
+        cliente_dicc = self.select(query, (params,))
+        print(f"El cliente: {cliente_dicc}")
+        print(f"El cliente: {cliente_dicc[0]["nombre"]}")
+        if cliente_dicc:
+            return cliente_dicc
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo obtener datos del cliente.")
+            
+            
+#######################################################################################################################
+########################################## SECCIÓN DE DATOS DE LA TIENDA ##############################################
+#######################################################################################################################
+
+    def guardar_info_tienda(self, tienda: str, direccion: str, id_fiscal: str, telefono: str, correo: str) -> bool:
+        """
+        Se Registra la información de la tienda por primera vez.
+
+        Args:
+            tienda (str): Nombre de la tienda.
+            direccion (str): Dirección legal.
+            id_fiscal (str): Id Fiscal si aplíca.
+            telefono (str): Número telefoníco de la tienda.
+            correo (str): Correo electroníco de la tienda.
+
+        Returns:
+            bool: - Si el registro es exitoso retorno True si no retorna False.
+        """        
+        query = {
+            "nombre":tienda,
+            "direccion":direccion,
+            "identificacion_fiscal":id_fiscal,
+            "telefono": telefono,
+            "email":correo
+        }
+        id_tienda_ = self.insert("Tienda", query)
+        
+        if id_tienda_:
+            return id_tienda_
+        else:
+            return id_tienda_
+        
+    
+    def datos_registrados_tienda(self) -> List[Tuple[Any]]:
+        """
+        Recuperar la información de la tienda registrada.
+
+        Returns:
+            List[Tuple[Any]]: _description_
+        """
+        query =  "SELECT id_tienda, direccion, identificacion_fiscal, telefono, email FROM Tienda WHERE id_tienda = 1"
+        
+        datos_dicc = self.select(query)
+        
+        campos = [
+            "id_tienda",
+            "direccion",
+            "identificacion_fiscal",
+            "telefono",
+            "email"
+        ]
+        
+        datos_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in datos_dicc
+        ]
+        return datos_tupla
+    
+    
+    def actualizar_datos_tienda(self, direccion: str, telefono: str, correo: str, id_tienda: str) -> bool:
+        """
+        Actualiza datos que pueden cambiar con el tiempo.
+
+        Args:
+            direccion (str): Nueva dirección.
+            telefono (str): Nuevo Telefono.
+            correo (str): Nuevo Correo electroníco.
+            id_tienda (str): Id de la única tienda registrada.
+
+        Returns:
+            bool: - Retorna True si la actualización es exitosa False si algo sale mal.
+        """        
+        actualizado = self.update(
+            table="Tienda",
+            updates={"direccion":direccion, "telefono":telefono, "email":correo},
+            where_condition="id_tienda = ?",
+            where_params=(id_tienda,)
+            )
+
+        if actualizado:
+            return  True
+        else:
+            return False
 
 
 if __name__ == "__main__":
@@ -3394,5 +4395,10 @@ if __name__ == "__main__":
     #probar.actualizar_stock_producto_venta(2, 40)
     #probar.obtener_lotes()
     #probar.eliminar_material_bd("NUEVO-2")
-    probar.obtener_materiales_pro()
-    
+    #probar.obtener_materiales_pro()
+    #probar.obtener_productos_del_lote_con_cantidades(3)
+    #probar.obtener_productos_del_lote(3)
+    #probar.obtener_ultimo_numero_factura()
+    #probar.datos_de_la_venta(21)
+    #probar.actualizar_stock_producto_devolucion(35, 1)
+    probar.obtener_nombre_cliente(5)

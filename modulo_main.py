@@ -11,7 +11,8 @@ from menus import menu_gestion_inventario
 from busqueda import busqueda_articulos
 from db import verificar_stock_bajo # obtener_nombres_usuarios, 
 from gestion_usuarios import gestion_usuarios, actualizar_clave
-from costos_ganancias import abrir_modulo_costos_ganancias
+#from costos_ganancias import abrir_modulo_costos_ganancias
+from costos_ganancias import CostosGananciasApp
 from crea_factura_nota_entrega import VentanaVentas
 from eliminar_datos import eliminar_datos
 from info_tienda import info_tienda
@@ -22,6 +23,7 @@ from databasemanager import DataBaseManager
 
 
 db_connect = DataBaseManager()
+
 class PantallaPrincipal:
     def __init__(self, root):
         self.root = root
@@ -81,8 +83,8 @@ class PantallaPrincipal:
         login_frame.place(relx=0.5, rely=0.55, anchor=tk.CENTER)
 
         tk.Label(login_frame, text="Nombre de Usuario:", bg="#a0b9f0").grid(row=0, column=0, sticky="w", pady=5)
-        usuarios = db_connect.obtener_nombres_usuarios()
-        usuario_combobox = ttk.Combobox(login_frame, values=usuarios, width=20)
+        self.usuarios = db_connect.obtener_nombres_usuarios()
+        usuario_combobox = ttk.Combobox(login_frame, values=self.usuarios, width=20)
         usuario_combobox.grid(row=0, column=1, pady=5)
 
         tk.Label(login_frame, text="Contraseña:", bg="#a0b9f0").grid(row=1, column=0, sticky="w", pady=5)
@@ -140,16 +142,20 @@ class PantallaPrincipal:
             
             
         def validar_login():
+            es_valido = None
             try:
                 self.usuario = usuario_combobox.get()
                 self.contraseña = contrasena_entry.get()
-                es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
-                print(f"El ROL es: {self.rol}")
-                # Enviar el usuario actual a producto para guardar borrador de creación de producto
+                
+                if self.usuario in self.usuarios:
+                    es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
+                    print(f"El ROL es: {self.rol}")
+                    # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 
             except tk.TclError:
                 print("⚠️ El combobox ya no existe. No se puede leer el usuario.")
                 return
+            
             if es_valido:
                 print(f"{mensaje}")
                 self.mostrar_menu_principal()
@@ -395,7 +401,7 @@ class PantallaPrincipal:
                 #relief=tk.FLAT,
                 hover_color="#2ECC71",
                 #activeforeground="white",
-                comando=lambda: abrir_modulo_costos_ganancias(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk),
+                comando=lambda: CostosGananciasApp(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk),
             ).pack(pady=10)
             crear_boton(
                 frame_botones,
