@@ -179,7 +179,7 @@ class CostosGananciasApp:
         # Botón para volver al menú principal
         crear_boton(
             self.frame_menu,
-            texto="Volver al Menú",
+            texto="Menú Principal",
             ancho=18,
             alto=2,
             relieve="raised",
@@ -214,6 +214,7 @@ class CostosGananciasApp:
 
     def mostrar_vista_inicial(self):
         """Muestra una vista inicial con información general."""
+        pass
         # info_frame = tk.Frame(self.frame_contenido, bg=self.colores["fondo_principal"])
         # info_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -1281,19 +1282,19 @@ class ProductoManager:
         form_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # Botón para crear un nuevo lote
-        crear_boton(
-            form_frame,
-            texto="Crear Nuevo Lote",
-            ancho=20,
-            alto=2,
-            relieve="raised",
-            border_width=1,
-            color_fondo="#1C4A8F",
-            color_texto=self.colores["texto_claro"],
-            font=("Arial", 11, "bold"),
-            hover_color="#2ECC71",
-            comando=lambda: LoteManager(self.root, self.db_connect, self.colores)._abrir_formulario_crear_lote(content_frame)
-        ).grid(row=0, column=0, pady=10, sticky="ew")
+        # crear_boton(
+        #     form_frame,
+        #     texto="Crear Nuevo Lote",
+        #     ancho=20,
+        #     alto=2,
+        #     relieve="raised",
+        #     border_width=1,
+        #     color_fondo="#1C4A8F",
+        #     color_texto=self.colores["texto_claro"],
+        #     font=("Arial", 11, "bold"),
+        #     hover_color="#2ECC71",
+        #     comando=lambda: LoteManager(self.root, self.db_connect, self.colores)._abrir_formulario_crear_lote(content_frame)
+        # ).grid(row=0, column=0, pady=10, sticky="ew")
 
         # Dropdown para seleccionar lote
         tk.Label(

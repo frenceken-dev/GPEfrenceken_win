@@ -1503,7 +1503,7 @@ class DataBaseManager():
             tuple: - Retorna una Tupla con los materiales.
         """
         
-        query = "SELECT id_material, codigo, nombre, tipo, tamaño, color FROM Materiales"
+        query = "SELECT id_material, codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor FROM Materiales"
         
         datos = self.select(query)
     
@@ -1513,7 +1513,12 @@ class DataBaseManager():
             "nombre",
             "tipo",
             "tamaño",
-            "color"
+            "color",
+            "stock",
+            "precio",
+            "costo_unitario",
+            "id_proveedor"
+            
         ]
         
         materiales_tupla = [

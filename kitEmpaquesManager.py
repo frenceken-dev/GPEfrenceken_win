@@ -38,20 +38,21 @@ class kitEmpaques:
         """Creación de la interfaz gráfica con frame de kits disponibles"""
         self.limpiar_pantalla()
 
-        # Frame principal
-        self.emp_frame = tk.Frame(self.root, bg=self.colores["fondo_principal"])
-        self.emp_frame.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.95, relheight=0.95)
-
         # Frame del menú lateral (izquierda)
         self.frame_menu = tk.Frame(
-            self.emp_frame,
+            self.root,
             bg=self.colores["fondo_menu"],
-            width=180,
+            width=200,
+            height=800,
             bd=0,
             relief="solid"
         )
         self.frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         self.frame_menu.pack_propagate(False)
+        
+        # Frame principal
+        self.emp_frame = tk.Frame(self.root, bg=self.colores["fondo_principal"], width=600, height=800)
+        self.emp_frame.pack(expand=True, fill=tk.BOTH, side=tk.RIGHT)
 
         # Frame de contenido central (formulario)
         self.frame_contenido = tk.Frame(

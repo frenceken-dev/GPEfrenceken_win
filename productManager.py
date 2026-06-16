@@ -37,7 +37,7 @@ class ProductoManager:
             print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
             #return self.id_usuario_creador[0][0], self.nombre_usuario_creador
 
-    def crear_producto(self):
+    def crear_producto(self, volver_menu):
         """Crea la interfaz para registrar un nuevo producto."""
         for widget in self.root.winfo_children():
             widget.destroy()

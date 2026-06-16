@@ -2,8 +2,6 @@
 
 import tkinter as tk
 from tkinter import messagebox
-#from inventario import ingresar_inventario
-#from productos import crear_producto
 from busqueda import busqueda_articulos #menu_buscar_articulo, formulario_buscar_por_proveedor, formulario_buscar_por_factura, formulario_buscar_por_codigo, formulario_buscar_por_articulo
 from registrar_nuevo_proveedor import nuevo_proveedor
 from incrementar_productos_inventario import VentanaIncrementarStock
@@ -15,10 +13,10 @@ from kitEmpaquesManager import kitEmpaques
 
 # menus.py
 def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario):
-    crear_producto = ProductoManager(root, imagen_panel_tk, mostrar_menu_principal)
-    inventario_manager = InventarioManager(root, imagen_panel_tk, mostrar_menu_principal)
-    gestion_empaque = CrearEmpaques(root, imagen_panel_tk, mostrar_menu_principal)
-    kit_de_empaques = kitEmpaques(root, imagen_panel_tk, mostrar_menu_principal, usuario)
+    crear_producto = ProductoManager(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario))
+    inventario_manager = InventarioManager(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario))
+    gestion_empaque = CrearEmpaques(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario))
+    kit_de_empaques = kitEmpaques(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario), usuario)
     
     def usuario_actual_main(usuario):
         """Obtiene el usuario actual y su ID."""
@@ -65,7 +63,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             bg="#a0b9f0",
             fg="#2C3E50"
             )
-        title_label.pack(pady=15)
+        title_label.pack(pady=10)
         
         # Agregar metodos de eliminación y creacion de usuarios
         #tk.Label(frame_contenido, text="GESTIÓN DE INVENTARIO", bg="#a0b9f0", font=("Arial", 14)).pack(pady=10)
@@ -83,7 +81,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: inventario_manager.iniciar_interfaz(),
         
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Crear Producto",
@@ -96,9 +94,9 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #relief=tk.FLAT,
             hover_color="#2ECC71",
             #activeforeground="black",
-            comando=lambda: crear_producto.crear_producto()#(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk)),
+            comando=lambda: crear_producto.crear_producto(lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
         
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Registrar Proveedor",
@@ -113,7 +111,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Aumentar stock",
@@ -128,7 +126,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: VentanaIncrementarStock(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Gestión Empaques",
@@ -143,7 +141,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: gestion_empaque.iniciar_interfaz(),
             
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Kit de Empaques",
@@ -158,7 +156,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: kit_de_empaques.iniciar_interfaz(),
             
-        ).pack(pady=15)
+        ).pack(pady=10)
         crear_boton(
             frame_botones,
             texto="Menú Principal",
@@ -187,7 +185,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             bg="#a0b9f0",
             fg="#2C3E50"
             )
-        title_label.pack(pady=15)
+        title_label.pack(pady=10)
         
         #tk.Label(frame_contenido, text="GESTIÓN DE INVENTARIO", bg="#a0b9f0", font=("Arial", 14)).pack(pady=10)
         crear_boton(
@@ -203,7 +201,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             hover_color="#2ECC71",
             #activeforeground="black",
             comando=lambda: inventario_manager.iniciar_interfaz(),            
-        ).pack(pady=15)
+        ).pack(pady=10)
         
         crear_boton(
             frame_botones,
@@ -218,7 +216,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             hover_color="#2ECC71",
             #activeforeground="black",
             comando=lambda: crear_producto.crear_producto()        
-        ).pack(pady=15)
+        ).pack(pady=10)
         
         crear_boton(
             frame_botones,
@@ -234,7 +232,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
             #activeforeground="black",
             comando=lambda: nuevo_proveedor(root, imagen_panel_tk, lambda: menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk, usuario)),
             
-        ).pack(pady=15)
+        ).pack(pady=10)
         
         crear_boton(
             frame_botones,

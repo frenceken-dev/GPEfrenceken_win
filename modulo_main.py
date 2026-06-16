@@ -375,6 +375,7 @@ class PantallaPrincipal:
                 #activeforeground="white",
                 comando=lambda: menu_gestion_inventario(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk, self.usuario),
             ).pack(pady=10)
+            
             crear_boton(
                 frame_botones,
                 texto="Ventas",
@@ -389,6 +390,7 @@ class PantallaPrincipal:
                 #activeforeground="black",
                 comando=lambda: VentanaVentas(self.root, self.usuario, self.mostrar_menu_principal),
             ).pack(pady=10)
+            
             crear_boton(
                 frame_botones,
                 texto="Costos y Ganancias",
@@ -403,6 +405,7 @@ class PantallaPrincipal:
                 #activeforeground="white",
                 comando=lambda: CostosGananciasApp(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.rol, self.imagen_tk),
             ).pack(pady=10)
+            
             crear_boton(
                 frame_botones,
                 texto="Buscar Artículo", 
