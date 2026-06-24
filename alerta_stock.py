@@ -1,15 +1,17 @@
 # alerta_stock.py
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db import cargar_items, configurar_umbral_alerta
+#from db import configurar_umbral_alerta #cargar_items, 
 from recursos import crear_boton, configurar_toplevel, centrar_ventana_toplevel
+from databasemanager import DataBaseManager
 
 
 class VentanaConfigurarUmbrales:
     def __init__(self, root, volver_menu):
+        self.db_connect = DataBaseManager()
         # Crear ventana secundaria centrada y ajustada
         self.root = tk.Toplevel(root)
-        configurar_toplevel(self.root, titulo="Configurar Umbrales de Alerta", ancho_min=410, alto_min=250)
+        configurar_toplevel(self.root, titulo="Configurar Umbrales de Alerta", ancho_min=410, alto_min=290)
         
         # 🎨 Frame principal para el contenido
         frame_contenido = tk.Frame(self.root, bg="#101113", padx=20, pady=20)
@@ -23,8 +25,33 @@ class VentanaConfigurarUmbrales:
 
         # 🔹 Item
         tk.Label(frame_contenido, text="Item:", background="#101113", fg="#ffffff").grid(row=1, column=0, padx=10, pady=10, sticky="e")
-        self.combobox_item = ttk.Combobox(frame_contenido, state="readonly", width=35)
-        self.combobox_item.grid(row=1, column=1, padx=5, pady=10)
+        # Frame para Listbox + Scrollbars
+        self.frame_lista = tk.Frame(frame_contenido, bg="#101113")
+        self.frame_lista.grid(row=1, column=1, padx=5, pady=10, sticky="nsew")
+
+        # Scroll Vertical
+        self.scroll_y = tk.Scrollbar(self.frame_lista, orient="vertical")
+        self.scroll_y.pack(side="right", fill="y")
+
+        # Scroll Horizontal
+        self.scroll_x = tk.Scrollbar(self.frame_lista, orient="horizontal")
+        self.scroll_x.pack(side="bottom", fill="x")
+
+        # Listbox
+        self.listbox_item = tk.Listbox(
+            self.frame_lista,
+            width=30,
+            height=3,
+            xscrollcommand=self.scroll_x.set,
+            yscrollcommand=self.scroll_y.set,
+            exportselection=False
+        )
+
+        self.listbox_item.pack(side="left", fill="both", expand=True)
+
+        # Asociar scrollbars
+        self.scroll_y.config(command=self.listbox_item.yview)
+        self.scroll_x.config(command=self.listbox_item.xview)
 
         # 🔹 Umbral
         tk.Label(frame_contenido, text="Umbral:", background="#101113", fg="#ffffff").grid(row=2, column=0, padx=10, pady=10, sticky="e")
@@ -56,14 +83,45 @@ class VentanaConfigurarUmbrales:
 
     def cargar_los_items(self, event):
         tipo = self.tipo_var.get()
-        self.combobox_item['values'] = []
+        
+        # Limpiar Listbox
+        self.listbox_item.delete(0, tk.END)
 
-        items_carados = cargar_items(tipo)
-        self.combobox_item['values'] = [f"{item[0]} - {item[1]}-{item[2]}-{item[3]}-{item[4]}" for item in items_carados]
+        items_carados = self.db_connect.cargar_items(tipo)
+        if tipo == "material":
+
+            for item in items_carados:
+                texto = (
+                    f"{item[0]} | {item[1]} | "
+                    f"{item[2]} | {item[3]} | "
+                    f"{item[4]} | Cant:{item[5]}"
+                )
+
+                self.listbox_item.insert(tk.END, texto)
+
+        elif tipo == "producto":
+
+            for item in items_carados:
+                texto = (
+                    f"{item[0]} | {item[1]} | "
+                    f"{item[2]} | Cant:{item[3]}"
+                )
+
+                self.listbox_item.insert(tk.END, texto)
         
     def guardar_umbral(self, volver_menu):
         tipo = self.tipo_var.get()
-        item_str = self.combobox_item.get()
+        seleccion = self.listbox_item.curselection()
+
+        if not seleccion:
+            messagebox.showerror(
+                "⚠️ Error",
+                "Debe seleccionar un item."
+            )
+            return
+        print(f"LA SELECCION ES:{seleccion}")
+        item_str = self.listbox_item.get(seleccion[0])
+        print(f"LA DATA EN 0 ES:{item_str}")
         umbral = self.entry_umbral.get()
 
         if not tipo or not item_str or not umbral:
@@ -71,12 +129,12 @@ class VentanaConfigurarUmbrales:
             return
 
         try:
-            id_item = int(item_str.split(" - ")[0])
+            id_item = int(item_str.split(" | ")[0])
             umbral = int(umbral)
         except ValueError:
             messagebox.showerror("⚠️ Error", "ID de item o umbral no válido.")
             return
 
-        configurar_umbral_alerta(tipo, id_item, umbral)
+        self.db_connect.configurar_umbral_alerta(tipo, id_item, umbral)
         messagebox.showinfo("Éxito", "Umbral de alerta configurado correctamente.")
         volver_menu()

@@ -3,6 +3,7 @@ import sqlite3
 import hashlib
 from datetime import datetime
 from tkinter import messagebox
+from decimal import Decimal, getcontext
 import ast
 from typing import List, Dict, Optional, Any, Union, Tuple
 from recursos import DB_PATH
@@ -1704,23 +1705,36 @@ class DataBaseManager():
             - Retorna True para una operación exitosa
             - Retorna False si la operación no tuvo éxito.
         """
-        query = "SELECT stock FROM Materiales WHERE codigo = ?"
+        getcontext().prec = 6
+        query = "SELECT stock, precio FROM Materiales WHERE codigo = ?"
         db_stock = self.select(query, (codigo,))
-        en_stock = db_stock[0]["stock"]
         
-        nuevo_stock = en_stock + stock
+        stock_actual = Decimal(db_stock[0]["stock"])
+        precio_anterior = Decimal(db_stock[0]["precio"])
+        stock_incrementa = Decimal(stock)
+        precio_material = Decimal(precio)
+        
+        # Calcular el nuevo stock y el nuevo costo total acumulado
+        nuevo_stock = stock_actual + stock_incrementa
+        nuevo_costo_total = precio_anterior + precio_material
+        nuevo_costo_unitario = nuevo_costo_total / nuevo_stock
+        
+        print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
+        print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
         
         actualizar = self.update(
             table= "Materiales",
-            updates= {"stock": nuevo_stock, "precio": precio, "costo_unitario": costo_unit},
+            updates= {"stock": round(float(nuevo_stock), 2),
+                    "precio": round(float(nuevo_costo_total), 2), 
+                    "costo_unitario": round(float(nuevo_costo_unitario), 4)},
             where_condition= "codigo = ?",
             where_params= (codigo,)
         )
         
         if actualizar:
-            return True, "Factura agregada exitosamente, stock actualizado."
+            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.2f}€.", nuevo_costo_unitario
         else:
-            return False, "No se pudo completar la operación."
+            return False, "No se pudo actualizar el material."
         
     
     def obtener_id_material_por_codigo(self, codigo) -> int:
@@ -2351,24 +2365,42 @@ class DataBaseManager():
         Returns:
             bool: - Retorna True si es exitoso, False si no.
         """
+        getcontext().prec = 6
+        
         print("EN ACTUALIZAR EMPAQUE LLEGA: ", codigo, stock, precio, costo_unit)
-        query = "SELECT stock_emp FROM Empaques WHERE codigo_emp = ?"
+        query = "SELECT stock_emp, precio_emp FROM Empaques WHERE codigo_emp = ?"
         db_stock = self.select(query, (codigo,))
-        en_stock = db_stock[0]["stock_emp"]
+        
+        en_stock = Decimal(db_stock[0]["stock_emp"])
+        precio_anterior = Decimal(db_stock[0]["precio_emp"])
+        stock_incrementa = Decimal(stock)
+        precio_empaque = Decimal(precio)
         
         nuevo_stock = en_stock + stock
         
+        # Calcular el nuevo stock y el nuevo costo total acumulado
+        nuevo_stock = en_stock + stock_incrementa
+        nuevo_costo_total = precio_anterior + precio_empaque
+        nuevo_costo_unitario = nuevo_costo_total / nuevo_stock
+        
+        print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
+        print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
+        
         actualizar = self.update(
             table= "Empaques",
-            updates= {"stock_emp": nuevo_stock, "precio_emp": precio, "costo_unitario_emp": costo_unit},
+            updates= {"stock_emp": round(float(nuevo_stock), 2),
+                    "precio_emp": round(float(nuevo_costo_total), 2), 
+                    "costo_unitario_emp": round(float(nuevo_costo_unitario), 4)},
             where_condition= "codigo_emp = ?",
             where_params= (codigo,)
         )
+        
 
         if actualizar:
-            return True, "Empaque agregada exitosamente, stock actualizado."
+            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.2f}€."
         else:
-            return False, "No se pudo completar la operación."
+            return False, f"No se pudo actualizar el empaque {codigo}."
+        
         
 #######################################################################################################################
 ############################################## SECCIÓN DE KIT EMBALAJE  ###############################################
@@ -2632,7 +2664,33 @@ class DataBaseManager():
             return id_detalle
         else:
             messagebox.showerror("⚠️ Error", f"No se Ha podido Guardar el detalle de la Factura.")
+    
+    
+    def actualizar_estado_nota_entrega(self, id_nota_entrega:int, estado:str)-> bool:
+        """
+        Actualiza el estado de la nota de entrega a Facturado.
 
+        Args:
+            id_nota_entrega (int): Id de la nota de entrega.
+            estado (str): Nuevo estado.
+
+        Returns:
+            bool: - Retorna True si la actialización es correcta o False si algo sale mal.
+        """        
+        query = estado
+        
+        actualizado = self.update(
+            table="NotasEntrega",
+            updates={"estado":query},
+            where_condition="id_nota_entrega = ?",
+            where_params=(id_nota_entrega,)
+        )
+
+        if actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se Ha podido cambiar el estado de la nota a una factura.")
+            
     
 #######################################################################################################################
 ############################################## SECCIÓN DE COSTO Y GANANCIAS ###########################################
@@ -4283,6 +4341,141 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", f"No se pudo obtener datos del cliente.")
             
+    
+    def datos_nota_entrega(self, id_nota_entrega:int)-> List[Tuple[Any]]:
+        """
+        Recupera los datos para crear un PDF con la nota de entrega.
+
+        Args:
+            id_nota_entrega (int): Id de la nota que se desea crear el PDF.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con tupla.
+        """
+        query = """
+            SELECT
+                ne.id_nota_entrega,
+                ne.fecha,
+                c.nombre,
+                c.direccion,
+                c.casa_num,
+                c.zona_postal,
+                c.identificacion_fiscal,
+                c.email,
+                c.telefono,
+                ne.total,
+                ne.subtotal,
+                ne.descuento,
+                ne.impuesto,
+                t.nombre AS tienda_nombre,
+                t.direccion AS tienda_direccion,
+                t.identificacion_fiscal AS tienda_identificacion_fiscal,
+                t.telefono AS tienda_tlf
+            FROM
+                NotasEntrega ne
+            JOIN
+                Clientes c ON ne.id_cliente = c.id_cliente
+            CROSS JOIN
+                Tienda t
+            WHERE
+                ne.id_nota_entrega = ?
+        """
+        params = id_nota_entrega
+        nota_data_dicc = self.select(query, (params,))
+        
+        campos = [
+            "id_nota_entrega",
+            "fecha",
+            "nombre",
+            "direccion",
+            "casa_num",
+            "zona_postal",
+            "identificacion_fiscal",
+            "email",
+            "telefono",
+            "total",
+            "subtotal",
+            "descuento",
+            "impuesto",
+            "tienda_nombre",
+            "tienda_direccion",
+            "tienda_identificacion_fiscal",
+            "tienda_tlf"
+        ]
+        
+        nota_data_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in nota_data_dicc
+        ]
+        
+        if nota_data_tupla:
+            return nota_data_tupla
+        else:
+            return False
+    
+    
+    def detalle_nota_entrega(self, id_nota_entrega:int)-> List[Tuple[Any]]:
+        """
+        Obtiene la información necesaria para cargar al PDF que se generará.
+
+        Args:
+            id_nota_entrega (int): Id de la Nota de entrega para cargar los datos.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con tupla.
+        """
+        query = """
+            SELECT p.codigo, dne.cantidad, dne.precio_unitario, dne.subtotal
+            FROM DetalleNotaEntrega dne
+            JOIN Productos p ON dne.id_producto = p.id_producto
+            WHERE dne.id_nota_entrega = ?
+        """
+        params = id_nota_entrega
+        
+        detalles_nota_dicc = self.select(query, (params,))
+        
+        campos = [
+            "codigo",
+            "cantidad",
+            "precio_unitario",
+            "subtotal"
+        ]
+
+        detalles_nota_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in detalles_nota_dicc
+        ]
+        
+        if detalles_nota_tupla:
+            return detalles_nota_tupla
+        else:
+            return False
+    
+    
+    # Obtener el ultimo número de factura y crear el siguiente úmero de factura.
+    def siguiente_numero_factura(self)-> bool:
+        """
+        Obterner el ultimo número de factura y actualizar el incremento.
+
+        Returns:
+            bool: - Retorna True si todo va bien, False si algo sale mal.
+        """        
+        query = "SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1"
+        ultimo_en_db = self.select(query)
+        ultimo_numero = ultimo_en_db[0]["ultimo_numero_factura"]
+        nuevo_numero = ultimo_numero + 1
+        id_venta_actualizado = self.update(
+            table="Configuracion",
+            updates={"ultimo_numero_factura": nuevo_numero},
+            where_condition="id_configuracion = ?",
+            where_params=(1,)
+        )
+        
+        print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta_actualizado}")
+        if id_venta_actualizado:
+            return id_venta_actualizado
+        else:
+            return False
             
 #######################################################################################################################
 ########################################## SECCIÓN DE DATOS DE LA TIENDA ##############################################
@@ -4367,6 +4560,231 @@ class DataBaseManager():
             return  True
         else:
             return False
+        
+
+#######################################################################################################################
+############################# SECCIÓN DE UMBRAL Y ALERTAS DE MATERIALES Y PRODUCTOS ###################################
+#######################################################################################################################
+
+    def obtener_umbrales_alertas(self)-> List[Tuple[Any]]:
+        """
+        Obtener Umbrales de Alertas.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con tupla.
+        """
+        query = "SELECT tipo, id_item, umbral FROM UmbralesAlerta"
+        
+        umbrales_dicc = self.select(query)
+        
+        campos = [
+            "tipo",
+            "id_item",
+            "umbral"
+        ]
+        umbrales_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in umbrales_dicc
+        ]
+        if umbrales_tupla:
+            return umbrales_tupla
+        else:
+            return False
+    
+    
+    def verificar_stock_bajo(self):
+        umbrales = self.obtener_umbrales_alertas()
+        
+        alertas = []
+        item = None
+        
+        for tipo, id_item, umbral in umbrales:
+            print(f"El Umbral es: {umbral}")
+            if tipo == 'material':
+                query = "SELECT nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?"
+                umbral_materiales = self.select(query, (id_item,))
+                campos = [
+                    "nombre", "tipo", "tamaño", "color", "stock"
+                ]
+                item = [
+                    tuple(diccionario.get(campo) for campo in campos)
+                    for diccionario in umbral_materiales
+                ]
+                
+            elif tipo == 'producto':
+                query = "SELECT codigo, tipo, cantidad FROM Productos WHERE id_producto = ?"
+                umbral_productos = self.select(query, (id_item,))
+                campos = [
+                    "codigo", "tipo", "cantidad"
+                ]
+                item = [
+                    tuple(diccionario.get(campo) for campo in campos)
+                    for diccionario in umbral_productos
+                ]
+
+            # item = cursor.fetchone()
+            if item:
+                cantidad_actual = item[0][-1]  # La cantidad es el último elemento de la tupla
+                if cantidad_actual <= umbral:
+                    if tipo == 'material':
+                        print(f"El material es: {item[0]}")
+                        nombre, tipo_material, tamaño, color, cantidad = item[0]
+                        alertas.append({
+                            'tipo': tipo,
+                            'nombre': nombre,
+                            'tipo_material': tipo_material,
+                            'tamaño': tamaño,
+                            'color': color,
+                            'cantidad': cantidad
+                        })
+                    elif tipo == 'producto':
+                        print(f"El producto es: {item[0]}")
+                        codigo, tipo_producto, cantidad = item[0]
+                        alertas.append({
+                            'tipo': tipo,
+                            'codigo': codigo,
+                            'tipo_producto': tipo_producto,
+                            'cantidad': cantidad
+                        })
+        print(alertas)
+        return alertas
+    
+    
+    
+    def cargar_items(self, tipo:str)-> List[Tuple[Any]]:
+        """
+        Crear advetencias de stock para materiles y productos
+
+        Args:
+            tipo (str): Tipo de advertencia si es para materiales o productos.
+
+        Returns:
+            List[Tuple[Any]]: - Retorna una lista con tuplas.
+        """
+        tipo_dicc = None
+        campos = []
+        if tipo == 'material':
+            query = "SELECT id_material, nombre, tipo, tamaño, color, stock FROM Materiales"
+            tipo_dicc = self.select(query)
+            campos = [
+                "id_material", "nombre", "tipo", "tamaño", "color", "stock"
+                ]
+        elif tipo == 'producto':
+            query = "SELECT id_producto, codigo, tipo, cantidad FROM Productos"
+            tipo_dicc = self.select(query)
+            campos = [
+                "id_producto", "codigo", "tipo", "cantidad"
+                ]
+        print(f"Los Campos son: {campos}")
+        print(f"El tipo_dicc es: {tipo_dicc}")  
+        items = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in tipo_dicc
+            ]
+        print(f"Los Items son: {items}")
+        if items:
+            return items
+        else:
+            return False
+            
+    
+    def configurar_umbral_alerta(self, tipo:str, id_item:int, umbral:int)-> bool:
+        """
+        Configurar el umbral para las alertas.
+
+        Args:
+            tipo (str): Si es material o producto.
+            id_item (int): id del item seleccionado.
+            umbral (int): Umbral deseado para la alerta.
+
+        Returns:
+            bool: - Retorna True si todo va bien o False si no.
+        """
+        query_select = "SELECT id_umbral FROM UmbralesAlerta WHERE tipo = ? AND id_item = ?"
+        
+        # Verificar si ya existe un umbral para este item
+        
+        umbral_dicc = self.select(query_select, (tipo, id_item))
+        print(f"EL UMBRAL DICC ES: {umbral_dicc}")
+        campos = ["id_umbral"]
+        umbral_tupla = [tuple(diccionario.get(campo) for campo in campos)
+                        for diccionario in umbral_dicc]  # -> int 15
+
+        if umbral_tupla:
+            # Actualizar el umbral existente
+            actualiza_umbral = self.update(
+                table="UmbralesAlerta",
+                updates={"umbral":umbral},
+                where_condition="WHERE id_umbral = ?",
+                where_params=(umbral_tupla)
+                )
+            if actualiza_umbral:
+                return True
+            else:
+                return False
+        else:   
+            # Insertar un nuevo umbral
+            query = {
+                "tipo":tipo,
+                "id_item":id_item,
+                "umbral":umbral
+            }
+            id_umbral_item = self.insert("UmbralesAlerta", query)
+            
+            if id_umbral_item:
+                return id_umbral_item
+            else:
+                return False
+
+
+#######################################################################################################################
+########################################## BORRADO COMPLETO DE BASE DE DATOS ##########################################
+#######################################################################################################################
+
+    # Borrado total de la base de datos
+    def borrar_base_datos(self):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        # Desactivar las restricciones de claves foráneas
+        cursor.execute("PRAGMA foreign_keys = OFF;")
+
+        # Eliminar datos de las tablas en el orden correcto
+        # Primero, elimina datos de tablas que tienen claves foráneas
+        cursor.execute("DELETE FROM Detalle_Venta;")
+        cursor.execute("DELETE FROM Ventas;")
+        cursor.execute("DELETE FROM DetalleNotaEntrega;")
+        cursor.execute("DELETE FROM NotasEntrega;")
+        cursor.execute("DELETE FROM Clientes;")
+        cursor.execute("DELETE FROM Productos;")
+        cursor.execute("DELETE FROM Detalle_Producto;")
+        cursor.execute("DELETE FROM Historial_Costos;")
+        cursor.execute("DELETE FROM Historial_Ganancias;")
+        cursor.execute("DELETE FROM Materiales;")
+        cursor.execute("DELETE FROM Proveedores;")
+        cursor.execute("DELETE FROM Detalles_Anulaciones;")
+        cursor.execute("DELETE FROM Anulaciones;")
+        cursor.execute("DELETE FROM Detalle_Factura;")
+        cursor.execute("DELETE FROM Facturas;")
+        cursor.execute("DELETE FROM Configuracion;")
+        cursor.execute("DELETE FROM Empaques;")
+        cursor.execute("DELETE FROM KitEmpaque;")
+        cursor.execute("DELETE FROM Lote_Productos;")
+        cursor.execute("DELETE FROM Lotes;")
+        cursor.execute("DELETE FROM Tienda;")
+        cursor.execute("DELETE FROM UmbralesAlerta;")
+        cursor.execute("DELETE FROM Usuarios;")
+        cursor.execute("DELETE FROM Ventas;")
+        cursor.execute("DELETE FROM productos_borrador;")
+        # Añade aquí más tablas según sea necesario
+
+        # Volver a activar las restricciones de claves foráneas
+        cursor.execute("PRAGMA foreign_keys = ON;")
+
+        conn.commit()
+        conn.close()
+        print("borrado")
+
 
 
 if __name__ == "__main__":
@@ -4406,4 +4824,9 @@ if __name__ == "__main__":
     #probar.obtener_ultimo_numero_factura()
     #probar.datos_de_la_venta(21)
     #probar.actualizar_stock_producto_devolucion(35, 1)
-    probar.obtener_nombre_cliente(5)
+    #probar.obtener_nombre_cliente(5)
+    #probar.siguiente_numero_factura()
+    #probar.verificar_stock_bajo()
+    #probar.cargar_items("material")
+    #probar.actualizar_material("ESP-P-V", 20, 1.10, 0.05)
+    probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)

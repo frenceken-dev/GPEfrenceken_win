@@ -3,11 +3,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox, Toplevel
 from tkcalendar import Calendar 
 # from inventario import convertir_a_float
-from db import (
-    #registrar_producto_en_lote, 
-    #obtener_lotes_con_productos, 
-    insertar_lote,
-    )
 from recursos import crear_boton, configurar_toplevel
 from databasemanager import DataBaseManager
 

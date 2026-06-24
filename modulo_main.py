@@ -9,7 +9,7 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
 from menus import menu_gestion_inventario
 from busqueda import busqueda_articulos
-from db import verificar_stock_bajo # obtener_nombres_usuarios, 
+#from db import verificar_stock_bajo # obtener_nombres_usuarios, 
 from gestion_usuarios import gestion_usuarios, actualizar_clave
 #from costos_ganancias import abrir_modulo_costos_ganancias
 from costos_ganancias import CostosGananciasApp
@@ -199,7 +199,7 @@ class PantallaPrincipal:
         
     # Alertas de Stock
     def mostrar_alertas_stock_bajo(self):
-        alertas = verificar_stock_bajo()
+        alertas = db_connect.verificar_stock_bajo()
         if not alertas:
             messagebox.showinfo("Información", "No hay advertencias de stock bajo.")
             return
@@ -221,10 +221,10 @@ class PantallaPrincipal:
         # Título
         title_label = tk.Label(
             frame_contenido,
-            text="Advertencias de Stock Bajo",
+            text="Stock Bajo",
             font=("Arial", 14, "bold"),
-            bg="#f0f0f0",
-            fg="#FF5733"
+            bg="#FF5733",
+            fg="#ff0000"
         )
         title_label.pack(pady=10)
 
@@ -233,9 +233,9 @@ class PantallaPrincipal:
         frame_alertas.pack(fill=tk.BOTH, expand=True)
 
         # Scrollbar para las alertas
-        canvas = tk.Canvas(frame_alertas, bg="#f0f0f0")
+        canvas = tk.Canvas(frame_alertas, bg="#101113")
         scrollbar = tk.Scrollbar(frame_alertas, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg="#f0f0f0")
+        scrollable_frame = tk.Frame(canvas, bg="#101113")
 
         scrollable_frame.bind(
             "<Configure>",
@@ -258,17 +258,18 @@ class PantallaPrincipal:
                     text=(
                         f"Material: {alerta['nombre']}\n"
                         f"Tipo: {alerta['tipo_material']}\n"
-                        f"Tamaño: {alerta['tamano']}\n"
+                        f"Tamaño: {alerta['tamaño']}\n"
                         f"Color: {alerta['color']}\n"
                         f"Cantidad: {alerta['cantidad']}\n"
+                        f"- - - - - - - - - - - - - - - - - - - - - - "
                     ),
                     font=("Arial", 10),
-                    bg="#f0f0f0",
-                    fg="#101113",
+                    bg="#101113",
+                    fg="#f0f0f0",
                     justify=tk.LEFT,
                     pady=5
                 )
-                alerta_label.pack(fill=tk.X, padx=10, pady=5)
+                alerta_label.pack(fill=tk.X, padx=5, pady=5)
 
             elif alerta['tipo'] == 'producto':
                 alerta_label = tk.Label(
@@ -277,10 +278,11 @@ class PantallaPrincipal:
                         f"Producto: Código {alerta['codigo']}\n"
                         f"Tipo: {alerta['tipo_producto']}\n"
                         f"Cantidad: {alerta['cantidad']}\n"
+                        f"- - - - - - - - - - - - - - - - - - - - - - "
                     ),
                     font=("Arial", 10),
-                    bg="#f0f0f0",
-                    fg="#101113",
+                    bg="#101113",
+                    fg="#f0f0f0",
                     justify=tk.LEFT,
                     pady=5
                 )
@@ -290,8 +292,10 @@ class PantallaPrincipal:
         crear_boton(
             frame_contenido,
             texto="Cerrar",
+            ancho=30,
+            alto=30,
             color_fondo="#FF5733",
-            fg="white",
+            #fg="white",
             font=("Arial", 10, "bold"),
             #bd=0,
             #relief=tk.FLAT,
@@ -317,7 +321,7 @@ class PantallaPrincipal:
         for widget in self.root.winfo_children():
             widget.destroy()
         # Verificar bajo stock de Materiales y Productos  
-        alertas = verificar_stock_bajo()
+        alertas = db_connect.verificar_stock_bajo()
         
         # Se modifica el título con el usuario y su rol
         self.root.title(f"Sistema de Inventario - usuario: {self.usuario}-{self.rol}")
@@ -337,10 +341,10 @@ class PantallaPrincipal:
                 self.root,
                 texto="⚠️ Advertencia de Stock",
                 color_texto="#0D0C0C",
-                ancho=190,
+                ancho=30,
                 alto=30,
                 color_fondo="#FF5733",  # Color llamativo para advertencia
-                fg="white",
+                #fg="white",
                 font=("Arial", 11, "bold"),
                 #bd=0,
                 #relief=tk.FLAT,

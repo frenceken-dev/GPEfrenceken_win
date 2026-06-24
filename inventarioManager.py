@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
 from recursos import crear_boton, configurar_toplevel
+from decimal import Decimal, getcontext
 from databasemanager import DataBaseManager
 from empaqueManager import CrearEmpaques
 
@@ -98,7 +99,7 @@ class InventarioManager:
         self.factura_entry = tk.Entry(self.form_frame, width=30)
         self.factura_entry.grid(row=1, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Fecha (DD/MM/AAAA):", bg="#a0b9f0").grid(row=2, column=0, sticky="e")
+        tk.Label(self.form_frame, text="Fecha (DD.MM.AAAA):", bg="#a0b9f0").grid(row=2, column=0, sticky="e")
         self.fecha_entry = tk.Entry(self.form_frame, width=30)
         self.fecha_entry.grid(row=2, column=1, pady=5)
 
@@ -213,7 +214,7 @@ class InventarioManager:
     
     def validar_fecha(self, fecha_str):
         try:
-            dia, mes, anio = map(int, fecha_str.split('/'))
+            dia, mes, anio = map(int, fecha_str.split('.'))
             datetime(year=anio, month=mes, day=dia)  # Lanza ValueError si la fecha no existe
             return True
         except ValueError:
@@ -361,7 +362,7 @@ class InventarioManager:
         cod_empaques = self.db_connect.codigo_empaques()  # Llega una tupla
 
         empaque_window = tk.Toplevel(frame_contenido)
-        configurar_toplevel(empaque_window, titulo="Agregar Material", ancho_min=335, alto_min=310, color_fondo="#101113")
+        configurar_toplevel(empaque_window, titulo="Agregar Material", ancho_min=335, alto_min=340, color_fondo="#101113")
 
         # Campos de entrada (centrados)
         tk.Label(empaque_window, text="Código Empaque:", bg="#101113", fg="#ffffff").grid(row=1, column=0, sticky="ns")
@@ -515,7 +516,8 @@ class InventarioManager:
             
             for material in self.materia_prima: #self.materiales_temporales:
                 try:
-                    material["costo_unitario"] = round(material["costo_unitario"], 2)
+                    material["costo_unitario"] = round(material["costo_unitario"], 4)
+                    print(f"EL COSTO UNITARIO CALCULADO EN inventarioManager ES: {material["costo_unitario"]}")
                 except:
                     print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
                     material["costo_unitario"] = 0.0
@@ -531,6 +533,8 @@ class InventarioManager:
                         material["precio"],
                         material["costo_unitario"]
                     )
+                    messagebox.showinfo("✅ Exito", mensaje)
+                    
                     if not exito:
                         messagebox.showwarning("Advertencia", mensaje)
                 else:
@@ -575,12 +579,14 @@ class InventarioManager:
                 # Verificar si el material existe en la base de datos
                 if codigo_true:
                     # Si existe, actualizar el stock y el costo
-                    exito, mensaje = db_connect.actualizar_empaque(
+                    exito, mensaje, = db_connect.actualizar_empaque(
                         material["codigo"],
                         int(material["stock"]),
                         material["precio"],
                         material["costo_unitario"]
                     )
+                    messagebox.showinfo("✅ Exito", mensaje)
+                    
                     if not exito:
                         messagebox.showwarning("Advertencia", mensaje)
                 else:
@@ -605,6 +611,7 @@ class InventarioManager:
             messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
 
     def mostrar_datos_ingresados(self):
+        getcontext().prec = 6  # Maneja la cantidad de números de hasta 6 digitos.
         if not self.materiales_temporales:
             messagebox.showwarning("Advertencia", "No hay materiales ingresados.")
             return
@@ -640,6 +647,7 @@ class InventarioManager:
             for material in self.materiales_temporales:
                 precio = self.convertir_a_float(material["precio"])
                 cantidad = self.convertir_a_float(material["stock"])
+                
                 precio_uni = precio / cantidad if precio is not None and cantidad is not None and cantidad != 0 else 0
                 self.total_actual.append(precio)
 
@@ -651,7 +659,7 @@ class InventarioManager:
                     material.get("color", "-"),
                     material.get("stock", "-"),
                     material.get("precio", "-"),
-                    f"{precio_uni:.2f}"
+                    f"{round(precio_uni, 4)}"
                 ))
 
             frame_total.config(text=f"{sum(self.total_actual):.2f}", font=("Arial", 12, "bold"))

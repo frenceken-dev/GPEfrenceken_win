@@ -3,31 +3,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3  
-from db import (
-    #guardar_nota_entrega, 
-    #agregar_detalle_nota_entrega,
-    #cargador_clientes, 
-    #cargador_productos, 
-    #validar_stock_del_producto, 
-    #detalle_producto_venta, guarda_venta_bd, 
-    #agregar_detalle_venta, 
-    #actualizar_stock_producto_venta, 
-    #nuevo_cliente,
-    #obtener_estado_nota_entrega,
-    #obtener_datos_nota_entrega,
-    #obtener_ultimo_numero_factura,
-    #actualizar_ultimo_numero_factura,
-    #insertar_factura_venta,
-    #obtener_detalles_nota_entrega,
-    #insertar_detalle_venta,
-    actualizar_estado_nota_entrega,
-    detalle_de_la_venta,
-    datos_de_la_venta,
-    datos_nota_entrega,
-    detalle_nota_entrega,
-    siguiente_numero_factura,
-    #verificar_stock_suficiente
-)
+
 from datetime import datetime
 from PIL import Image, ImageTk
 from recursos import LOGO_PATH, crear_boton, configurar_toplevel
@@ -556,13 +532,13 @@ class VentanaVentas:
             total = subtotal - descuento + impuesto
 
             # Conectar a la base de datos para obtener el siguiente número de factura
-            id_venta = siguiente_numero_factura()
+            id_venta = db_connect.siguiente_numero_factura()
 
             # Guardar la factura en la base de datos
             factura = db_connect.guarda_venta_bd(
                 id_venta,
                 id_cliente,
-                datetime.now().strftime("%d/%m/%Y"),
+                datetime.now().strftime("%d.%m.%Y"),
                 "factura",
                 round(subtotal, 2),
                 descuento,
@@ -650,7 +626,7 @@ class VentanaVentas:
             # Guardar la nota de entrega en la base de datos
             id_nota_entrega = db_connect.guardar_nota_entrega(
                 id_cliente,
-                datetime.now().strftime("%d/%m/%Y"),
+                datetime.now().strftime("%d.%m.%Y"),
                 round(subtotal, 2),
                 descuento,
                 round(impuesto, 2),
@@ -933,7 +909,7 @@ def convertir_nota_a_factura(id_nota_entrega):
             id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
         
         # Actualizar el estado de la nota de entrega a 'Facturado'
-        actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
+        actualizado = db_connect.actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
 
         messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
 
@@ -958,7 +934,7 @@ def imprimir_factura(id_venta, es_copia=False):
     import subprocess, platform, pathlib
 
     # Datos de la venta
-    venta_data = datos_de_la_venta(id_venta)
+    venta_data = db_connect.datos_de_la_venta(id_venta)
     
     if not venta_data:
         messagebox.showerror("⚠️ Error", "No se encontró la venta.")
@@ -981,7 +957,7 @@ def imprimir_factura(id_venta, es_copia=False):
         
 
     # Detalles de la venta
-    detalles = detalle_de_la_venta(id_venta)
+    detalles = db_connect.detalle_de_la_venta(id_venta)
 
     # Preguntar al usuario si desea una copia de la factura
     if not es_copia:
@@ -1169,26 +1145,26 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     import subprocess, platform, pathlib
 
     # Consulta los datos de la nota de entrega
-    nota_data = datos_nota_entrega(id_nota_entrega,)
+    nota_data = db_connect.datos_nota_entrega(id_nota_entrega,)
 
     if not nota_data:
         messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
         return
 
     (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
-    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel_nota) = nota_data
+    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel_nota) = nota_data[0]
 
     # Detalles de la nota de entrega
-    detalles = detalle_nota_entrega(id_nota_entrega,)
+    detalles = db_connect.detalle_nota_entrega(id_nota_entrega,)
 
     # Ruta del archivo PDF
     try:
         if es_copia:
             os.makedirs("notas_entrega_copia", exist_ok=True)
-            ruta_pdf = f"notas_entrega_copia/factura_{id_nota_entrega}_COPIA.pdf"
+            ruta_pdf = f"notas_entrega_copia/nota_entrega_{id_nota_entrega}_COPIA.pdf"
         else:
             os.makedirs("notas_entrega", exist_ok=True)
-            ruta_pdf = f"notas_entrega/factura_{id_nota_entrega}.pdf"
+            ruta_pdf = f"notas_entrega/nota_entrega_{id_nota_entrega}.pdf"
     except Exception as e:
         messagebox.showerror("⚠️ Error", "Error al guardar la factura en carpeta.")
     
@@ -1290,7 +1266,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
 
     columnas = ["Produkt", "Menge", "Einzelpreis", "Zwischensumme"]
     detalles_data = [columnas]
-    for producto, cantidad, precio, subtotal_detalle in detalles:
+    for producto, cantidad, precio, subtotal_detalle in detalles[0]:
         detalles_data.append([producto, str(cantidad), f"€ {precio:.2f}", f"€ {subtotal_detalle:.2f}"])
 
     tabla_detalles = Table(detalles_data, colWidths=[180, 80, 100, 100])

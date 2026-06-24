@@ -1,16 +1,16 @@
-# modulo_db.py
-"""Modulo Base de Datos de las Películas"""
-import sqlite3
-from datetime import datetime
-from tkinter import messagebox
-from recursos import DB_PATH
-import hashlib
+# # modulo_db.py
+# """Modulo Base de Datos de las Películas"""
+# import sqlite3
+# from datetime import datetime
+# from tkinter import messagebox
+# from recursos import DB_PATH
+# import hashlib
 
-db_path = DB_PATH
+# db_path = DB_PATH
 
-# database
-def init_db():
-    pass
+# # database
+# def init_db():
+#     pass
     
 
 # Registrar un nuevo Proveedor. INCORPORADO AL NUMEVO MODULO.
@@ -1039,70 +1039,70 @@ def init_db():
 #     print(facturas)
 #     return facturas
 
-"""  
-def verificar_datos():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# """  
+# def verificar_datos():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Facturas  
-    cursor.execute('SELECT * FROM Facturas')
-    facturas = cursor.fetchall()
-    for factura in facturas:
-        print(factura)
+#     # Facturas  
+#     cursor.execute('SELECT * FROM Facturas')
+#     facturas = cursor.fetchall()
+#     for factura in facturas:
+#         print(factura)
 
-    # Materiales
-    cursor.execute('SELECT * FROM Materiales')
-    materiales = cursor.fetchall()
-    for material in materiales:
-        print(material)
+#     # Materiales
+#     cursor.execute('SELECT * FROM Materiales')
+#     materiales = cursor.fetchall()
+#     for material in materiales:
+#         print(material)
 
-    # Detalle_Factura
-    cursor.execute('SELECT * FROM Detalle_Factura')
-    detalle_factura = cursor.fetchall()
-    for detalle in detalle_factura:
-        print(detalle)
+#     # Detalle_Factura
+#     cursor.execute('SELECT * FROM Detalle_Factura')
+#     detalle_factura = cursor.fetchall()
+#     for detalle in detalle_factura:
+#         print(detalle)
 
-    # Productos
-    cursor.execute('SELECT * FROM Productos')
-    productos = cursor.fetchall()
-    for producto in productos:
-        print(producto)
+#     # Productos
+#     cursor.execute('SELECT * FROM Productos')
+#     productos = cursor.fetchall()
+#     for producto in productos:
+#         print(producto)
 
-    # Detalle_Producto
-    cursor.execute('SELECT * FROM Detalle_Producto')
-    detalle_producto = cursor.fetchall()
-    for detalle in detalle_producto:
-        print(detalle)
+#     # Detalle_Producto
+#     cursor.execute('SELECT * FROM Detalle_Producto')
+#     detalle_producto = cursor.fetchall()
+#     for detalle in detalle_producto:
+#         print(detalle)
 
-    conn.close()
+#     conn.close()
     
     
-def agregar_campo_():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def agregar_campo_():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Agregar el campo 'descripcion' a la tabla Productos
-    cursor.execute('''
-        ALTER TABLE Detalle_Factura
-        ADD COLUMN Precio TEXT
-    ''')
+#     # Agregar el campo 'descripcion' a la tabla Productos
+#     cursor.execute('''
+#         ALTER TABLE Detalle_Factura
+#         ADD COLUMN Precio TEXT
+#     ''')
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
     
     
-def verificar_campo_en_bd():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def verificar_campo_en_bd():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Verificar la estructura de la tabla Productos
-    cursor.execute("PRAGMA table_info(Proveedores)")
-    columnas = cursor.fetchall()
-    for columna in columnas:
-        print(columna)
+#     # Verificar la estructura de la tabla Productos
+#     cursor.execute("PRAGMA table_info(Proveedores)")
+#     columnas = cursor.fetchall()
+#     for columna in columnas:
+#         print(columna)
 
-    conn.close()
-"""  
+#     conn.close()
+# """  
 # Crear nuevo usuario.
 # def insertar_usuario(usuario, clave, rol):
 #     conn = sqlite3.connect(db_path)
@@ -1379,31 +1379,31 @@ def verificar_campo_en_bd():
         
 
 # Modulo de simulacion de precios.
-def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_margen=None):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_margen=None):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Obtener datos actuales
-    cursor.execute('SELECT costo_produccion, precio_venta FROM Producto WHERE id_producto = ?', (id_producto,))
-    costo_actual, precio_actual = cursor.fetchone()
+#     # Obtener datos actuales
+#     cursor.execute('SELECT costo_produccion, precio_venta FROM Producto WHERE id_producto = ?', (id_producto,))
+#     costo_actual, precio_actual = cursor.fetchone()
 
-    # Aplicar cambios simulados
-    costo_simulado = nuevo_costo if nuevo_costo is not None else costo_actual
-    precio_simulado = nuevo_precio if nuevo_precio is not None else precio_actual
-    if nuevo_margen is not None:
-        precio_simulado = costo_simulado * (1 + nuevo_margen/100)
+#     # Aplicar cambios simulados
+#     costo_simulado = nuevo_costo if nuevo_costo is not None else costo_actual
+#     precio_simulado = nuevo_precio if nuevo_precio is not None else precio_actual
+#     if nuevo_margen is not None:
+#         precio_simulado = costo_simulado * (1 + nuevo_margen/100)
 
-    # Calcular ganancia simulada
-    ganancia_simulada = (precio_simulado - costo_simulado)
-    margen_simulado = (ganancia_simulada / costo_simulado) * 100
+#     # Calcular ganancia simulada
+#     ganancia_simulada = (precio_simulado - costo_simulado)
+#     margen_simulado = (ganancia_simulada / costo_simulado) * 100
 
-    conn.close()
-    return {
-        "costo_simulado": costo_simulado,
-        "precio_simulado": precio_simulado,
-        "ganancia_simulada": ganancia_simulada,
-        "margen_simulado": margen_simulado
-    }
+#     conn.close()
+#     return {
+#         "costo_simulado": costo_simulado,
+#         "precio_simulado": precio_simulado,
+#         "ganancia_simulada": ganancia_simulada,
+#         "margen_simulado": margen_simulado
+#     }
 
 
 # def incrementar_stock_producto(id_producto, cantidad):
@@ -1701,7 +1701,7 @@ def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_ma
 #     """)
 #     lotes = cursor.fetchall()
 #     conn.close()
-    return lotes
+#    return lotes
 
 
 # def obtener_costo_actual_lote(id_lote):
@@ -1807,137 +1807,137 @@ def simular_escenario(id_producto, nuevo_precio=None, nuevo_costo=None, nuevo_ma
 #     conn.commit()
 #     conn.close()
 
-def actualizar_estado_nota_entrega(id_nota_entrega, estado):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE NotasEntrega
-        SET estado = ?
-        WHERE id_nota_entrega = ?
-    """, (estado, id_nota_entrega))
-    conn.commit()
-    conn.close()
+# def actualizar_estado_nota_entrega(id_nota_entrega, estado):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         UPDATE NotasEntrega
+#         SET estado = ?
+#         WHERE id_nota_entrega = ?
+#     """, (estado, id_nota_entrega))
+#     conn.commit()
+#     conn.close()
     
 
 # Datos de la Venta.
-def datos_de_la_venta(id_venta):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-            SELECT
-                v.id_venta,
-                v.fecha,
-                c.nombre,
-                c.direccion,
-                c.casa_num,
-                c.zona_postal,
-                c.identificacion_fiscal,
-                c.email,
-                c.telefono,
-                v.total,
-                v.tipo_documento,
-                t.nombre AS tienda_nombre,
-                t.direccion AS tienda_direccion,
-                t.identificacion_fiscal AS tienda_identificacion_fiscal,
-                t.telefono,
-                v.descuento,
-                v.subtotal,
-                v.impuesto
-            FROM
-                Ventas v
-            JOIN
-                Clientes c ON v.id_cliente = c.id_cliente
-            CROSS JOIN
-                Tienda t
-            WHERE
-                v.id_venta = ?
-        """, (id_venta,))
+# def datos_de_la_venta(id_venta):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#             SELECT
+#                 v.id_venta,
+#                 v.fecha,
+#                 c.nombre,
+#                 c.direccion,
+#                 c.casa_num,
+#                 c.zona_postal,
+#                 c.identificacion_fiscal,
+#                 c.email,
+#                 c.telefono,
+#                 v.total,
+#                 v.tipo_documento,
+#                 t.nombre AS tienda_nombre,
+#                 t.direccion AS tienda_direccion,
+#                 t.identificacion_fiscal AS tienda_identificacion_fiscal,
+#                 t.telefono,
+#                 v.descuento,
+#                 v.subtotal,
+#                 v.impuesto
+#             FROM
+#                 Ventas v
+#             JOIN
+#                 Clientes c ON v.id_cliente = c.id_cliente
+#             CROSS JOIN
+#                 Tienda t
+#             WHERE
+#                 v.id_venta = ?
+#         """, (id_venta,))
 
-    venta_data = cursor.fetchone()
-    conn.close()
-    print(venta_data)
-    return venta_data
+#     venta_data = cursor.fetchone()
+#     conn.close()
+#     print(venta_data)
+#     return venta_data
 
 
 # Detalles de la venta
-def detalle_de_la_venta(id_venta):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT p.codigo, dv.cantidad, dv.precio_unitario, dv.subtotal
-        FROM Detalle_Venta dv
-        JOIN Productos p ON dv.id_producto = p.id_producto
-        WHERE dv.id_venta = ?
-    """, (id_venta,))
-    detalles = cursor.fetchall()
-    conn.close()
-    return detalles
+# def detalle_de_la_venta(id_venta):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT p.codigo, dv.cantidad, dv.precio_unitario, dv.subtotal
+#         FROM Detalle_Venta dv
+#         JOIN Productos p ON dv.id_producto = p.id_producto
+#         WHERE dv.id_venta = ?
+#     """, (id_venta,))
+#     detalles = cursor.fetchall()
+#     conn.close()
+#     return detalles
 
 
 # Datos de la nota de entrega.
-def datos_nota_entrega(id_nota_entrega):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT
-            ne.id_nota_entrega,
-            ne.fecha,
-            c.nombre,
-            c.direccion,
-            c.casa_num,
-            c.zona_postal,
-            c.identificacion_fiscal,
-            c.email,
-            c.telefono,
-            ne.total,
-            ne.subtotal,
-            ne.descuento,
-            ne.impuesto,
-            t.nombre AS tienda_nombre,
-            t.direccion AS tienda_direccion,
-            t.identificacion_fiscal AS tienda_identificacion_fiscal,
-            t.telefono
-        FROM
-            NotasEntrega ne
-        JOIN
-            Clientes c ON ne.id_cliente = c.id_cliente
-        CROSS JOIN
-            Tienda t
-        WHERE
-            ne.id_nota_entrega = ?
-    """, (id_nota_entrega,))
-    nota_data = cursor.fetchone()
-    conn.close()
-    return nota_data
+# def datos_nota_entrega(id_nota_entrega):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT
+#             ne.id_nota_entrega,
+#             ne.fecha,
+#             c.nombre,
+#             c.direccion,
+#             c.casa_num,
+#             c.zona_postal,
+#             c.identificacion_fiscal,
+#             c.email,
+#             c.telefono,
+#             ne.total,
+#             ne.subtotal,
+#             ne.descuento,
+#             ne.impuesto,
+#             t.nombre AS tienda_nombre,
+#             t.direccion AS tienda_direccion,
+#             t.identificacion_fiscal AS tienda_identificacion_fiscal,
+#             t.telefono
+#         FROM
+#             NotasEntrega ne
+#         JOIN
+#             Clientes c ON ne.id_cliente = c.id_cliente
+#         CROSS JOIN
+#             Tienda t
+#         WHERE
+#             ne.id_nota_entrega = ?
+#     """, (id_nota_entrega,))
+#     nota_data = cursor.fetchone()
+#     conn.close()
+#     return nota_data
 
 
 # Detalles de la nota de entrega.
-def detalle_nota_entrega(id_nota_entrega):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT p.codigo, dne.cantidad, dne.precio_unitario, dne.subtotal
-        FROM DetalleNotaEntrega dne
-        JOIN Productos p ON dne.id_producto = p.id_producto
-        WHERE dne.id_nota_entrega = ?
-    """, (id_nota_entrega,))
+# def detalle_nota_entrega(id_nota_entrega):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("""
+#         SELECT p.codigo, dne.cantidad, dne.precio_unitario, dne.subtotal
+#         FROM DetalleNotaEntrega dne
+#         JOIN Productos p ON dne.id_producto = p.id_producto
+#         WHERE dne.id_nota_entrega = ?
+#     """, (id_nota_entrega,))
 
-    detalles = cursor.fetchall()
-    conn.close()
-    return detalles
+#     detalles = cursor.fetchall()
+#     conn.close()
+#     return detalles
 
 # insertar lote en la base de datos
-def insertar_lote(descripcion, unidades, costo_lote):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO Lotes (fecha_creacion, descripcion, cantidad_unidades, costo_lote) VALUES (?, ?, ?, ?)",
-        (datetime.now().strftime("%Y-%m-%d"), descripcion, unidades, costo_lote)
-    )
-    id_lote = cursor.lastrowid  # Obtener el ID del lote recién creado
-    conn.commit()
-    conn.close()
-    return id_lote
+# def insertar_lote(descripcion, unidades, costo_lote):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         "INSERT INTO Lotes (fecha_creacion, descripcion, cantidad_unidades, costo_lote) VALUES (?, ?, ?, ?)",
+#         (datetime.now().strftime("%Y-%m-%d"), descripcion, unidades, costo_lote)
+#     )
+#     id_lote = cursor.lastrowid  # Obtener el ID del lote recién creado
+#     conn.commit()
+#     conn.close()
+#     return id_lote
 
 
 # # Insertar en la tabla lote_productos
@@ -1981,181 +1981,194 @@ def insertar_lote(descripcion, unidades, costo_lote):
 #     conn.close()
 
 
-# Obtener el ultimo número de factura y crear el siguiente úmero de factura.
-def siguiente_numero_factura():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1")
-    ultimo_numero = cursor.fetchone()[0]
-    nuevo_numero = ultimo_numero + 1
-    cursor.execute("UPDATE Configuracion SET ultimo_numero_factura = ? WHERE id_configuracion = 1", (nuevo_numero,))
-    id_venta = nuevo_numero
-    conn.commit()
-    conn.close()
-    print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta}")
-    return id_venta
+# # Obtener el ultimo número de factura y crear el siguiente úmero de factura.
+# def siguiente_numero_factura():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT ultimo_numero_factura FROM Configuracion WHERE id_configuracion = 1")
+#     ultimo_numero = cursor.fetchone()[0]
+#     nuevo_numero = ultimo_numero + 1
+#     cursor.execute("UPDATE Configuracion SET ultimo_numero_factura = ? WHERE id_configuracion = 1", (nuevo_numero,))
+#     id_venta = nuevo_numero
+#     conn.commit()
+#     conn.close()
+#     print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta}")
+#     return id_venta
 
 
 # Obtener los umbrales configurados.
-def obtener_umbrales_alertas():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT tipo, id_item, umbral FROM UmbralesAlerta")
-    umbrales = cursor.fetchall()
-    conn.close()
-    return umbrales
+# def obtener_umbrales_alertas():
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT tipo, id_item, umbral FROM UmbralesAlerta")
+#     umbrales = cursor.fetchall()
+#     conn.close()
+#     return umbrales
 
 
 #  Crear advetencias de stock para materiles y productos
-def cargar_items(tipo):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    if tipo == 'material':
-        cursor.execute("SELECT id_material, nombre, tipo, tamaño, color FROM Materiales")
-    elif tipo == 'producto':
-        cursor.execute("SELECT id_producto, codigo, tipo, costo_producto, precio_venta FROM Productos")
-    items = cursor.fetchall()
-    conn.close()
-    return items
+# def cargar_items(tipo):
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
+#     if tipo == 'material':
+#         cursor.execute("SELECT id_material, nombre, tipo, tamaño, color FROM Materiales")
+#     elif tipo == 'producto':
+#         cursor.execute("SELECT id_producto, codigo, tipo, costo_producto, precio_venta FROM Productos")
+#     items = cursor.fetchall()
+#     conn.close()
+#     return items
 
 
 # Configurar el umbral para las alertas.
-def configurar_umbral_alerta(tipo, id_item, umbral):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+# def configurar_umbral_alerta(tipo, id_item, umbral):
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
 
-    # Verificar si ya existe un umbral para este item
-    cursor.execute("SELECT id_umbral FROM UmbralesAlerta WHERE tipo = ? AND id_item = ?", (tipo, id_item))
-    umbral_existente = cursor.fetchone()
+#     # Verificar si ya existe un umbral para este item
+#     cursor.execute("SELECT id_umbral FROM UmbralesAlerta WHERE tipo = ? AND id_item = ?", (tipo, id_item))
+#     umbral_existente = cursor.fetchone()
 
-    if umbral_existente:
-        # Actualizar el umbral existente
-        cursor.execute("UPDATE UmbralesAlerta SET umbral = ? WHERE id_umbral = ?", (umbral, umbral_existente[0]))
-    else:
-        # Insertar un nuevo umbral
-        cursor.execute("INSERT INTO UmbralesAlerta (tipo, id_item, umbral) VALUES (?, ?, ?)", (tipo, id_item, umbral))
+#     if umbral_existente:
+#         # Actualizar el umbral existente
+#         cursor.execute("UPDATE UmbralesAlerta SET umbral = ? WHERE id_umbral = ?", (umbral, umbral_existente[0]))
+#     else:
+#         # Insertar un nuevo umbral
+#         cursor.execute("INSERT INTO UmbralesAlerta (tipo, id_item, umbral) VALUES (?, ?, ?)", (tipo, id_item, umbral))
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
 
 
-def verificar_stock_bajo():
-    umbrales = obtener_umbrales_alertas()
-    alertas = []
+# def verificar_stock_bajo():
+#     umbrales = obtener_umbrales_alertas()
+#     alertas = []
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
 
-    for tipo, id_item, umbral in umbrales:
-        if tipo == 'material':
-            cursor.execute("SELECT nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?", (id_item,))
-        elif tipo == 'producto':
-            cursor.execute("SELECT codigo, tipo, cantidad FROM Productos WHERE id_producto = ?", (id_item,))
+#     for tipo, id_item, umbral in umbrales:
+#         if tipo == 'material':
+#             cursor.execute("SELECT nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?", (id_item,))
+#         elif tipo == 'producto':
+#             cursor.execute("SELECT codigo, tipo, cantidad FROM Productos WHERE id_producto = ?", (id_item,))
 
-        item = cursor.fetchone()
-        if item:
-            cantidad_actual = item[-1]  # La cantidad es el último elemento de la tupla
-            if cantidad_actual <= umbral:
-                if tipo == 'material':
-                    nombre, tipo_material, tamaño, color, cantidad = item
-                    alertas.append({
-                        'tipo': tipo,
-                        'nombre': nombre,
-                        'tipo_material': tipo_material,
-                        'tamaño': tamaño,
-                        'color': color,
-                        'cantidad': cantidad
-                    })
-                elif tipo == 'producto':
-                    codigo, tipo_producto, cantidad = item
-                    alertas.append({
-                        'tipo': tipo,
-                        'codigo': codigo,
-                        'tipo_producto': tipo_producto,
-                        'cantidad': cantidad
-                    })
+#         item = cursor.fetchone()
+#         if item:
+#             cantidad_actual = item[-1]  # La cantidad es el último elemento de la tupla
+#             if cantidad_actual <= umbral:
+#                 if tipo == 'material':
+#                     nombre, tipo_material, tamaño, color, cantidad = item
+#                     alertas.append({
+#                         'tipo': tipo,
+#                         'nombre': nombre,
+#                         'tipo_material': tipo_material,
+#                         'tamaño': tamaño,
+#                         'color': color,
+#                         'cantidad': cantidad
+#                     })
+#                 elif tipo == 'producto':
+#                     codigo, tipo_producto, cantidad = item
+#                     alertas.append({
+#                         'tipo': tipo,
+#                         'codigo': codigo,
+#                         'tipo_producto': tipo_producto,
+#                         'cantidad': cantidad
+#                     })
 
-    conn.close()
-    return alertas
-
-    
-# Borrado total de la base de datos
-def limpiar_base_datos():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    # Desactivar las restricciones de claves foráneas
-    cursor.execute("PRAGMA foreign_keys = OFF;")
-
-    # Eliminar datos de las tablas en el orden correcto
-    # Primero, elimina datos de tablas que tienen claves foráneas
-    cursor.execute("DELETE FROM Detalle_Venta;")
-    cursor.execute("DELETE FROM Ventas;")
-    cursor.execute("DELETE FROM DetalleNotaEntrega;")
-    cursor.execute("DELETE FROM NotasEntrega;")
-    cursor.execute("DELETE FROM Clientes;")
-    cursor.execute("DELETE FROM Productos;")
-    cursor.execute("DELETE FROM Detalle_Producto;")
-    cursor.execute("DELETE FROM Historial_Costos;")
-    cursor.execute("DELETE FROM Historial_Ganancias;")
-    cursor.execute("DELETE FROM Materiales;")
-    cursor.execute("DELETE FROM Proveedores;")
-    # Añade aquí más tablas según sea necesario
-
-    # Volver a activar las restricciones de claves foráneas
-    cursor.execute("PRAGMA foreign_keys = ON;")
-
-    conn.commit()
-    conn.close()
-    print("borrado")
-
+#     conn.close()
+#     return alertas
 
     
+# # Borrado total de la base de datos
+# def limpiar_base_datos():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     # Desactivar las restricciones de claves foráneas
+#     cursor.execute("PRAGMA foreign_keys = OFF;")
+
+#     # Eliminar datos de las tablas en el orden correcto
+#     # Primero, elimina datos de tablas que tienen claves foráneas
+#     cursor.execute("DELETE FROM Detalle_Venta;")
+#     cursor.execute("DELETE FROM Ventas;")
+#     cursor.execute("DELETE FROM DetalleNotaEntrega;")
+#     cursor.execute("DELETE FROM NotasEntrega;")
+#     cursor.execute("DELETE FROM Clientes;")
+#     cursor.execute("DELETE FROM Productos;")
+#     cursor.execute("DELETE FROM Detalle_Producto;")
+#     cursor.execute("DELETE FROM Historial_Costos;")
+#     cursor.execute("DELETE FROM Historial_Ganancias;")
+#     cursor.execute("DELETE FROM Materiales;")
+#     cursor.execute("DELETE FROM Proveedores;")
+#     cursor.execute("DELETE FROM Detalles_Anulaciones;")
+#     cursor.execute("DELETE FROM Anulaciones;")
+#     cursor.execute("DELETE FROM Detalle_Factura;")
+#     cursor.execute("DELETE FROM Facturas;")
+#     cursor.execute("DELETE FROM Configuracion;")
+#     cursor.execute("DELETE FROM Empaques;")
+#     cursor.execute("DELETE FROM KitEmpaque;")
+#     cursor.execute("DELETE FROM Lote_Productos;")
+#     cursor.execute("DELETE FROM Lotes;")
+#     cursor.execute("DELETE FROM Tienda;")
+#     cursor.execute("DELETE FROM UmbralesAlerta;")
+#     cursor.execute("DELETE FROM Usuarios;")
+#     cursor.execute("DELETE FROM Ventas;")
+#     cursor.execute("DELETE FROM productos_borrador;")
+#     # Añade aquí más tablas según sea necesario
+
+#     # Volver a activar las restricciones de claves foráneas
+#     cursor.execute("PRAGMA foreign_keys = ON;")
+
+#     conn.commit()
+#     conn.close()
+#     print("borrado")
+
+
     
-def columnas_usuario():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    
+# def columnas_usuario():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Consulta para ver la estructura de la tabla
-    #cursor.execute("PRAGMA table_info(Usuarios)")
-    cursor.execute("""UPDATE Usuarios SET clave = 'de62e4a739e6dfdbd24326d729f7229c2c6b5060b2f0792d084f24ee002ddf74' WHERE nombre_usuario = 'admin'""")
-    #columnas = cursor.fetchall()
+#     # Consulta para ver la estructura de la tabla
+#     #cursor.execute("PRAGMA table_info(Usuarios)")
+#     cursor.execute("""UPDATE Usuarios SET clave = 'de62e4a739e6dfdbd24326d729f7229c2c6b5060b2f0792d084f24ee002ddf74' WHERE nombre_usuario = 'admin'""")
+#     #columnas = cursor.fetchall()
 
-    print("Estructura actual de la tabla Usuarios:")
-    # for columna in columnas:
-    #     print(columna)
-    conn.commit()
-    conn.close()
+#     print("Estructura actual de la tabla Usuarios:")
+#     # for columna in columnas:
+#     #     print(columna)
+#     conn.commit()
+#     conn.close()
 
-def agregar_en_usuarios():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+# def agregar_en_usuarios():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
 
-    # Agregar la columna pregunta_seguridad si no existe
-    try:
-        cursor.execute('''
-            ALTER TABLE Usuarios
-            ADD COLUMN pregunta_seguridad TEXT
-        ''')
-        print("Columna 'pregunta_seguridad' agregada correctamente.")
-    except sqlite3.OperationalError as e:
-        print(f"⚠️ Error al agregar 'pregunta_seguridad': {e}")
+#     # Agregar la columna pregunta_seguridad si no existe
+#     try:
+#         cursor.execute('''
+#             ALTER TABLE Usuarios
+#             ADD COLUMN pregunta_seguridad TEXT
+#         ''')
+#         print("Columna 'pregunta_seguridad' agregada correctamente.")
+#     except sqlite3.OperationalError as e:
+#         print(f"⚠️ Error al agregar 'pregunta_seguridad': {e}")
 
-    # Agregar la columna respuesta_seguridad si no existe
-    try:
-        cursor.execute('''
-            ALTER TABLE Usuarios
-            ADD COLUMN respuesta_seguridad TEXT
-        ''')
-        print("Columna 'respuesta_seguridad' agregada correctamente.")
-    except sqlite3.OperationalError as e:
-        print(f"⚠️ Error al agregar 'respuesta_seguridad': {e}")
+#     # Agregar la columna respuesta_seguridad si no existe
+#     try:
+#         cursor.execute('''
+#             ALTER TABLE Usuarios
+#             ADD COLUMN respuesta_seguridad TEXT
+#         ''')
+#         print("Columna 'respuesta_seguridad' agregada correctamente.")
+#     except sqlite3.OperationalError as e:
+#         print(f"⚠️ Error al agregar 'respuesta_seguridad': {e}")
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
 
-if __name__ == "__main__":
-    init_db()
+#init_db()
     #verificar_campo_en_bd()
     #agregar_campo_()
     #verificar_datos()
