@@ -4,6 +4,7 @@ import hashlib
 from datetime import datetime
 from tkinter import messagebox
 from decimal import Decimal, getcontext
+import json
 import ast
 from typing import List, Dict, Optional, Any, Union, Tuple
 from recursos import DB_PATH
@@ -124,7 +125,7 @@ class DataBaseManager():
         Returns:
             Union[List[Dict[str, Any]], Dict[str, Any], None]: Resultados de la consulta.
         """
-        print(f"Los datos de la consulta son: {params}")  # imprime el usuario
+        #print(f"Los datos de la consulta son: {params}")  # imprime el usuario
         if not self.connection:
             self.connect()
 
@@ -190,7 +191,7 @@ class DataBaseManager():
         """
         if not self.connection:
             self.connect()
-        print(f"los datos de la actualización son: {table, updates, where_condition, where_params}")
+        #print(f"los datos de la actualización son: {table, updates, where_condition, where_params}")
         try:
             set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
             query = f"UPDATE {table} SET {set_clause} WHERE {where_condition}"
@@ -683,7 +684,7 @@ class DataBaseManager():
         Returns:
             Union[int, None]: ID del producto o None si no se encuentra.
         """
-        print("EL Código para obtener el idi es: ",codigo_producto)
+        print("EL Código para obtener el id es: ",codigo_producto)
         query = "SELECT id_producto FROM Productos WHERE codigo LIKE ?"
         resultado = self.select(query, (f"%{codigo_producto}%",), fetch_one=True)
         
@@ -1107,7 +1108,7 @@ class DataBaseManager():
             - Devuelve una lista de diccionarios con los materiales del producto.
         """
         query = """
-            SELECT m.id_material, m.codigo, m.nombre, d.cantidad, m.stock
+            SELECT m.id_material, m.codigo, m.nombre, m.stock, d.cantidad, d.es_por_metro, d.cantidad_cm
             FROM Materiales m
             JOIN Detalle_Producto d ON m.id_material = d.id_material
             WHERE d.id_producto = ?
@@ -1134,8 +1135,16 @@ class DataBaseManager():
         try:
             for material in materiales_requeridos:
                 id_material = material["id_material"]
-                cantidad_requerida_por_producto = material["cantidad"]
-                cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
+                es_por_metro = material["es_por_metro"]
+                
+                if es_por_metro == "Si":
+                    cantidad_requerida_por_producto = material["cantidad_cm"]
+                    calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
+                    cantidad_total_a_descontar = calcula_cantidad_cm * cantidad_a_fabricar
+                else:
+                    cantidad_requerida_por_producto = material["cantidad"]
+                    cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
+                    
                 stock_actual = material["stock"]  # Usar el stock obtenido en la consulta inicial
 
                 # Verificar que no se vaya a valores negativos
@@ -1144,7 +1153,7 @@ class DataBaseManager():
                     return False
 
                 nuevo_stock = stock_actual - cantidad_total_a_descontar
-
+                print(f"EL Nuevo Stock es: {nuevo_stock:.4f}")
                 # Actualizar el stock del material
                 exito = self.update(
                     table="Materiales",
@@ -1160,7 +1169,7 @@ class DataBaseManager():
             return True  # Retornar True solo después de procesar todos los materiales
 
         except Exception as e:
-            print(f"Error al descontar materiales: {e}")
+            print(f"⚠️ Error al descontar materiales: {e}")
             return False
 
         
@@ -1196,7 +1205,6 @@ class DataBaseManager():
             where_condition="id_producto = ?",
             where_params=(id_producto,)
         )
-
         return exito
     
     
@@ -1221,7 +1229,8 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", "No se ha podido comprobar si el código existe.")
             
-    def insertar_producto(self,codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion, empaque) -> int:
+            
+    def insertar_producto(self,codigo, nombre, tipo, costo_producto, precio_venta, materiales_usados, tiempo_fabricacion, cantidad, descripcion, empaque, cantidad_cm=None) -> int:
         """
         Guardar en la base de datos un producto nuevo con todos los datos usados para crearlo.
 
@@ -1240,22 +1249,60 @@ class DataBaseManager():
         Returns:
             int: - Retorna el id del nuevo producto.
         """
-        fecha_registro = datetime.now().strftime("%Y-%m-%d %H:%M")
+        #print(f"La Cantidad que llega a insertar_producto es: {cantidad}")
+        fecha_registro = datetime.now().strftime("%d.%m.%Y %H:%M")
+        #print(f"Lista de materiales usados: {materiales_usados}-----DB") # [{'codigo': 'P-CRIS2', 'color': 'Regenbogen', 'tipo': 'Cristal', 'tamaño': '6mm', 'cantidad': 5.0, 'es_por_metro': False}, {'codigo': 'CORDON', 'color': 'negro', 'tipo': 'cordor', 'tamaño': '3mm', 'cantidad': 25.0, 'es_por_metro': True}]
+        #print(f"La cantidad necesaria es: {cantidad_cm}")
+        
+        
+        cantidad_cm_dict = {}
+        campos = ["codigo"]
+        codigo_tupla = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in materiales_usados
+        ]
+        #print(f"LOS CODIGO TUPLA SON: {codigo_tupla}")
+        for material_codigo in codigo_tupla:
+            # Consultar si el material es por metros
+            #print(f"material codigo es: {type(material_codigo)}, {material_codigo}")
+            query_es_por_metro = "SELECT es_por_metro FROM Materiales WHERE codigo = ?"
+            material_data = self.select(query_es_por_metro, material_codigo)
+            
+            if material_data and material_data[0]["es_por_metro"] == "Si":
+                # Si el material es por metros, agregar al diccionario
+                cantidad_cm_dict[material_codigo[0]] = cantidad_cm
+                #print(f"CANTIDAD_CM_DICC: {cantidad_cm_dict}")  # hasta aqui bien
+                
+        # Convertir el diccionario a JSON string
+        cantidad_cm_json = json.dumps(cantidad_cm_dict) if cantidad_cm_dict else "{}"
+        #print(f"Formato JSON: {cantidad_cm_json}")
+        
+        
+        # Convertir materiales y empaques a strings
+        materiales_reales = []
+        for material in materiales_usados:
+            nombre_db = self.obtener_nombre_material_por_codigo(material["codigo"])
+            materiales_reales.append(nombre_db)
+        materiales_str = ",".join(materiales_reales) if materiales_reales else ""
+    
         producto_nuevo = {
             "codigo": codigo,
             "nombre": nombre,
             "tipo": tipo,
             "costo_producto": costo_producto,
             "precio_venta": precio_venta,
-            "materiales_usados": materiales_usados,
+            "materiales_usados": materiales_str, # materiales_usados,
             "tiempo_fabricacion": tiempo_fabricacion,
             "cantidad": cantidad,
             "fecha_registro": fecha_registro,
             "descripcion": descripcion,
-            "empaques": empaque
+            "empaques": empaque,
+            "cantidad_cm": cantidad_cm_json
         }
         
         id_nuevo_producto = self.insert("Productos", producto_nuevo)
+        
+        #print(f"Los DATOS del NUEVO Producto son: {producto_nuevo}")
         
         if id_nuevo_producto:
             return True
@@ -1465,7 +1512,7 @@ class DataBaseManager():
             return False
         
     
-    def insertar_detalle_producto(self, id_producto, id_material, cantidad, tipo, tamaño) -> int:
+    def insertar_detalle_producto(self, id_producto, id_material, cantidad, tipo, tamaño, es_por_metro=False) -> int:
         """
         Inserta en tabla relacional Detalle_Producto.
 
@@ -1480,15 +1527,17 @@ class DataBaseManager():
             int: - Retorna id de la nueva relación creada.
         """
         
-        query = {
+        detalle = {
             "id_producto": id_producto,
             "id_material": id_material,
             "cantidad": cantidad,
             "tipo_material": tipo,
-            "tamaño_material": tamaño
+            "tamaño_material": tamaño,
+            "es_por_metro": "Si" if es_por_metro else "No",
+            "cantidad_cm": cantidad if es_por_metro else 0  # Guardar la cantidad en cm si es por metros
         }
-            
-        id_detalle = self.insert("Detalle_Producto", query)
+
+        id_detalle = self.insert("Detalle_Producto", detalle)
         
         if id_detalle:
             print(f"El id de la relación es: {id_detalle}")
@@ -1622,6 +1671,22 @@ class DataBaseManager():
         return tamaño_str
     
     
+    def comprobar_si_es_por_metro(self, codigo_material):
+        """Comprobar si un material es por metros"""
+
+        query = "SELECT es_por_metro FROM Materiales WHERE codigo = ?"
+        resultado = self.select(query, (codigo_material,))
+
+        articulo_por_metro = resultado[0]["es_por_metro"] == "Si"
+
+        if articulo_por_metro:
+            print(f"ARTICULO ES POR METROS: {codigo_material} - {articulo_por_metro}")
+            return articulo_por_metro
+        else:
+            print(f"ARTICULO NO ES POR METROS: {codigo_material} - {articulo_por_metro}")
+            return articulo_por_metro
+        
+    
     def eliminar_producto_bd(self, codigo_producto: str) -> bool:
         """_summary_
 
@@ -1696,7 +1761,7 @@ class DataBaseManager():
         return nombre, tipo, tamaño, color
     
     
-    def actualizar_material(self, codigo, stock, precio, costo_unit) -> bool:
+    def actualizar_material(self, codigo, stock, precio, costo_unit, es_por_metro) -> bool:
         """
         Actualiza el stock del material y el costo.
 
@@ -1726,13 +1791,14 @@ class DataBaseManager():
             table= "Materiales",
             updates= {"stock": round(float(nuevo_stock), 2),
                     "precio": round(float(nuevo_costo_total), 2), 
-                    "costo_unitario": round(float(nuevo_costo_unitario), 4)},
+                    "costo_unitario": round(float(nuevo_costo_unitario), 4),
+                    "es_por_metro": es_por_metro},
             where_condition= "codigo = ?",
             where_params= (codigo,)
         )
         
         if actualizar:
-            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.2f}€.", nuevo_costo_unitario
+            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.4f}€.", nuevo_costo_unitario
         else:
             return False, "No se pudo actualizar el material."
         
@@ -1802,7 +1868,7 @@ class DataBaseManager():
         else:
             return False
         
-    def insertar_material(self, codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, id_proveedor) -> int:
+    def insertar_material(self, codigo, nombre, tipo, tamaño, color, stock, precio, costo_unitario, es_por_metro, id_proveedor) -> int:
         """
         Inserta en la base de datos un nuevo material
 
@@ -1815,6 +1881,7 @@ class DataBaseManager():
             stock (float): Cantidad a insertar del material.
             precio (float): Precio total del material
             costo_unitario (float): Costo por unidad de material
+            es_por_metro (str): El usuario selecciona si es por metro o no.
             id_proveedor (int): Id del Proveedor.
 
         Returns:
@@ -1830,6 +1897,7 @@ class DataBaseManager():
             "stock": stock,
             "precio": precio,
             "costo_unitario": costo_unitario,
+            "es_por_metro": es_por_metro,
             "id_proveedor": id_proveedor
         }
         
@@ -1857,39 +1925,64 @@ class DataBaseManager():
         resultado = self.select(query, (codigo_material,))
         
         stock = resultado[0]["stock"]
-        print(f"El stock del material es: {stock}")
+        print(f"El stock del material es: {stock} de tipo {type(stock)}")
         return stock if stock else 0
     
     
-    def actualizar_stock_material(self, codigo, cantidad) -> bool:
+    def actualizar_stock_material(self, codigo, cantidad, es_por_metro=False) -> bool:
         """
-        Actualizar el stock del Material.
+        Actualiza el stock del material.
+        - Si el material es por metros, descuenta la cantidad en metros (cantidad / 100).
+        - Si no es por metros, descuenta la cantidad en unidades.
 
         Args:
             codigo (str): Código del material.
-            cantidad (float): Cantidad del reajuste.
+            cantidad (float): Cantidad a descontar (en cm si es por metros, en unidades si no).
+            es_por_metro (bool): Si el material es por metros.
 
         Returns:
-            bool: - True si es exitoso o False si no lo es.
+            bool: True si es exitoso, False si no lo es.
         """
-        
+        #print(f"LO QUE LLEGA EN actualizar_stock_material es : {es_por_metro}")
+        # Consultar el stock actual
         query = "SELECT stock FROM Materiales WHERE codigo = ?"
-        stock_material = self.select(query, (codigo,))
-        
-        en_stock = stock_material[0]["stock"]
-        nuevo_stock = en_stock - cantidad
-        
-        material_actualizado = self.update(
-            table= "Materiales",
-            updates= {"stock": nuevo_stock},  # Esto guarda stock - 5
-            where_condition= "codigo = ?",
-            where_params= (codigo,)
-        )
-        
-        if material_actualizado:
-            messagebox.showinfo("Actualizado", "✅ Inventario de materiales actualizado.")
+        material_data = self.select(query, (codigo,))
+        if not material_data:
+            messagebox.showerror("⚠️ Error", f"Material {codigo} no encontrado.")
+            return False
+
+        stock_actual = material_data[0]["stock"]
+
+        if es_por_metro:
+            # Convertir cm a metros
+            cantidad_m = cantidad #/ 100
+            nuevo_stock = stock_actual - cantidad_m
+            #print(f"NUEVO STOCK = {stock_actual} - {cantidad_m} RESULTADO -> {nuevo_stock}")
         else:
-            messagebox.showerror("⚠️ Error", f"No se pudo actualizar el material")
+            # Descontar en unidades
+            nuevo_stock = stock_actual - cantidad
+            #print(f"NUEVO STOCK = {stock_actual} - {cantidad} RESULTADO -> {nuevo_stock}")
+        # Validar que no quede stock negativo
+        if nuevo_stock < 0:
+            messagebox.showerror(
+                "⚠️ Error",
+                f"No hay suficiente stock del material {codigo}. Stock actual: {stock_actual}"
+            )
+            return False
+
+        # Actualizar el stock
+        material_actualizado = self.update(
+            table="Materiales",
+            updates={"stock": nuevo_stock},
+            where_condition="codigo = ?",
+            where_params=(codigo,)
+        )
+
+        if material_actualizado:
+            return True
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo actualizar el material {codigo}.")
+            return False
             
     
     def obtener_nombre_material_por_codigo(self, codigo_material) -> list:
@@ -1952,7 +2045,7 @@ class DataBaseManager():
         if costo_uni:
             return costo_uni[0]["costo_unitario"] if costo_uni else 0.0
         else:
-            messagebox.showerror("⚠️ Error", "El precio unitario no  se encontrado")
+            messagebox.showerror("⚠️ Error", "El precio unitario no se encontrado")
             
     
     def obtener_nombres_proveedores(self, texto) -> List[str]:
@@ -2005,7 +2098,7 @@ class DataBaseManager():
 ################################################## SECCIÓN DE EMBALAJES ###############################################
 #######################################################################################################################
 
-    def insertar_empaque(self, codigo, nombre, tamaño, cantidad, precio, costo_unitario) -> int:
+    def insertar_empaque(self, codigo, nombre, tamaño, cantidad, precio, costo_unitario, es_por_metro) -> int:
         """Recibe la información de un material de empaque para insertarlo en la base de datos.
 
         Args:
@@ -2015,18 +2108,20 @@ class DataBaseManager():
             cantidad (int): Cantidad disponible para insertar.
             precio (float): El precio del embalaje.
             costo_unitario (float): Precio por unidad.
+            es_por_metro (str): El Usuario selecciona si o no es por metro.
 
         Returns:
             int: _description_
         """
-        print(" DESDE INSERTAR EMPAQUES: ", codigo, nombre, tamaño, cantidad, precio, costo_unitario)
+        print(" DESDE INSERTAR EMPAQUES: ", codigo, nombre, tamaño, cantidad, precio, costo_unitario, es_por_metro)
         query = {
             "codigo_emp": codigo,
             "nombre_emp": nombre,
             "tamaño_emp": tamaño,
             "stock_emp": cantidad,
             "precio_emp": precio,
-            "costo_unitario_emp": costo_unitario
+            "costo_unitario_emp": costo_unitario,
+            "es_por_metro": es_por_metro
         }
         
         empaque_cod = self.insert("Empaques", query)
@@ -2035,6 +2130,7 @@ class DataBaseManager():
             return True, "El Material de empaque se ha guradado exitosamente."
         else:
             return False, "No se pudo guardar el material de empaque."
+        
         
     def selecion_empaques(self) -> List[Dict[str, Any]]:
         """
@@ -2109,6 +2205,7 @@ class DataBaseManager():
         for empaque in empaques_de_kit:
             query = "SELECT stock_emp FROM Empaques WHERE nombre_emp = ?"
             resultado = self.select(query, (empaque,))
+            #print(f"Cantidades DB: {resultado}-------------------------------------")
             if not resultado or resultado[0]["stock_emp"] < 1:
                 return False, f"No hay suficiente stock del empaque {empaque}."
     
@@ -2137,37 +2234,74 @@ class DataBaseManager():
         
         emp_kit_str = empaques[0]
         #print(emp_kit_str)
-        query_emp = "SELECT items_del_kit FROM KitEmpaque WHERE codigo_kit = ?"
+        query_emp = "SELECT items_del_kit, cantidad_cm FROM KitEmpaque WHERE codigo_kit = ?"
         nombre_empaques = self.select(query_emp, (emp_kit_str,))
-        empaques_de_kit = ast.literal_eval(nombre_empaques[0]["items_del_kit"])  # Ahora es una lista.
         
-        # Crear la consulta con IN
-        placeholders = ", ".join(["?"] * len(empaques_de_kit))  # Ej: "?, ?, ?"
-        #print(f"Cantidad de placeholders: {placeholders}")
-        query = f"""
-            SELECT stock_emp
-            FROM Empaques
-            WHERE nombre_emp IN ({placeholders})
-        """
-        stock_actual = self.select(query, tuple(empaques_de_kit))
-        cantidad = 1
-        stock_db = [cant["stock_emp"] for cant in stock_actual]
+        if not nombre_empaques:
+            return False, f"No se encontró el kit {emp_kit_str}."
+        
+        empaques_de_kit = ast.literal_eval(nombre_empaques[0]["items_del_kit"])  # Ahora es una lista.
+        cantidades_cm = json.loads(nombre_empaques[0]["cantidad_cm"]) # Centimetros usados para el empaque.
+        
         empaques_sin_stock = []
-        for i, empaque in zip(stock_db, empaques_de_kit):
-            if i < 1:
+        
+        for empaque in empaques_de_kit:
+            # Consultar si el empaque es por metros y su stock actual
+            query_item = """
+            SELECT es_por_metro, stock_emp
+            FROM Empaques
+            WHERE nombre_emp = ?
+            """
+            item_data = self.select(query_item, (empaque,))
+            if not item_data:
                 empaques_sin_stock.append(empaque)
                 continue
-            
-            nuevo_stock = i - cantidad
-            #print(f"La resta es: {nuevo_stock}")
-                
-            self.update(
-                table="Empaques",
-                updates={"stock_emp": nuevo_stock},
-                where_condition="nombre_emp = ?",
-                where_params=(empaque,)  # Tupla con un solo elemento
-            )
-            print(f"Actualizado: {empaque}")
+
+            item = item_data[0]
+            es_por_metro = item["es_por_metro"] == "Si"
+            #print(f"ES POR METROS: {item}--- O NO: {es_por_metro}")
+            stock_actual = item["stock_emp"]
+
+            if es_por_metro:
+                #print(f"ENTRO EN EL CONDICIONAL if es_por_metro:")
+                # Obtener la cantidad en cm usada en el kit
+                cm = cantidades_cm.get(empaque, 0)
+                if cm <= 0:
+                    empaques_sin_stock.append(empaque)
+                    continue
+
+                cantidad_m = cm / 100  # Convertir cm a metros
+
+                # Validar stock
+                if stock_actual < cantidad_m:
+                    empaques_sin_stock.append(empaque)
+                    continue
+
+                # Descontar del stock
+                nuevo_stock = stock_actual - cantidad_m
+                print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
+                self.update(
+                    table="Empaques",
+                    updates={"stock_emp": round(float(nuevo_stock), 4)},
+                    where_condition="nombre_emp = ?",
+                    where_params=(empaque,)
+                )
+
+            else:
+                #print(f"ENTRO EN EL ELSE:")
+                # Item normal: descontar 1 unidad
+                if stock_actual < 1:
+                    empaques_sin_stock.append(empaque)
+                    continue
+
+                nuevo_stock = stock_actual - 1
+                #print(f"NO ES POR METRO: {nuevo_stock}")
+                self.update(
+                    table="Empaques",
+                    updates={"stock_emp": nuevo_stock},
+                    where_condition="nombre_emp = ?",
+                    where_params=(empaque,)
+                )
         
         # Notificar al usuario sobre los empaques faltantes
         if empaques_sin_stock:
@@ -2352,7 +2486,7 @@ class DataBaseManager():
             return False
     
     
-    def actualizar_empaque(self, codigo, stock, precio, costo_unit) -> bool:
+    def actualizar_empaque(self, codigo, stock, precio, costo_unit, es_por_metro) -> bool:
         """
         Si el código existe entoces actualiza sus datos.
 
@@ -2361,13 +2495,12 @@ class DataBaseManager():
             stock (float): Cantidad a incrementar.
             precio (float): Precio.
             costo_unitario (float): Costo por unidad.
-
+            es_por_metro (str): El usuario selecciona si o no
         Returns:
             bool: - Retorna True si es exitoso, False si no.
         """
         getcontext().prec = 6
         
-        print("EN ACTUALIZAR EMPAQUE LLEGA: ", codigo, stock, precio, costo_unit)
         query = "SELECT stock_emp, precio_emp FROM Empaques WHERE codigo_emp = ?"
         db_stock = self.select(query, (codigo,))
         
@@ -2375,8 +2508,6 @@ class DataBaseManager():
         precio_anterior = Decimal(db_stock[0]["precio_emp"])
         stock_incrementa = Decimal(stock)
         precio_empaque = Decimal(precio)
-        
-        nuevo_stock = en_stock + stock
         
         # Calcular el nuevo stock y el nuevo costo total acumulado
         nuevo_stock = en_stock + stock_incrementa
@@ -2390,7 +2521,8 @@ class DataBaseManager():
             table= "Empaques",
             updates= {"stock_emp": round(float(nuevo_stock), 2),
                     "precio_emp": round(float(nuevo_costo_total), 2), 
-                    "costo_unitario_emp": round(float(nuevo_costo_unitario), 4)},
+                    "costo_unitario_emp": round(float(nuevo_costo_unitario), 4),
+                    "es_por_metro": es_por_metro},                    
             where_condition= "codigo_emp = ?",
             where_params= (codigo,)
         )
@@ -2401,49 +2533,99 @@ class DataBaseManager():
         else:
             return False, f"No se pudo actualizar el empaque {codigo}."
         
+
+    def eliminacion_de_kit(self, codigo: str)-> bool:
+        """
+        Recibe el código del kit para eliminar los datos.
+
+        Args:
+            codigo (str): Código del kit que se quiere eliminar.
+
+        Returns:
+            bool: Retorna True si el proceso es exitoso False si se genera un error.
+        """
+        
+        params = codigo
+        
+        eliminado = self.delete(
+            table="KitEmpaque",
+            where_condition="codigo_kit = ?",
+            where_params=(params,)
+        )
+        
+        if eliminado:
+            return True
+        else:
+            return False
+        
         
 #######################################################################################################################
 ############################################## SECCIÓN DE KIT EMBALAJE  ###############################################
 #######################################################################################################################
 
-    def guardar_kit(self, codigo_kit, items_kit, usuario) -> int:
+    def guardar_kit(self, codigo_kit, items_kit, usuario, cantidad_cm=None) -> tuple:
         """
-        Guarda en la bse de datos el kit de empaque creado por un usuario.
+        Guarda en la base de datos el kit de empaque creado por un usuario.
+        Si hay items por metros, usa las cantidades en cm para calcular su costo.
 
         Args:
-            codigo_kit (str): Código del kit 
-            items_kit (str): Lista con los items que conforman el kit de empaque.
-            costo_kit (float): Costo del kit, se suman los costos de cada item.
+            codigo_kit (str): Código del kit.
+            items_kit (list): Lista con los items que conforman el kit.
+            usuario (str): Usuario que crea el kit.
+            cantidad_cm (dict): Diccionario {item: cantidad_en_cm} para items por metros.
+
         Returns:
-            int: - Si se guarda correctamente retorna el id del kit sino -1.
+            tuple: (costo_kit_total, mensaje)
         """
+        if cantidad_cm is None:
+            cantidad_cm = {}  # Si no se pasa, inicializar como vacío
+
         costo_kit = []
-        fecha_registro_kit =  datetime.now().strftime("%Y-%m-%d %H:%M")
-        
-        costo_emp = "SELECT costo_unitario_emp FROM Empaques WHERE nombre_emp = ?"
-        nombre_empaques = items_kit
-        
-        for nombre in nombre_empaques:
+        fecha_registro_kit = datetime.now().strftime("%d.%m.%Y %H:%M")  # Corregí el formato de fecha
+
+        costo_emp = "SELECT costo_unitario_emp, es_por_metro FROM Empaques WHERE nombre_emp = ?"
+
+        for nombre in items_kit:
             costos_dict = self.select(costo_emp, (nombre,))
-            costo_kit.append(costos_dict[0]["costo_unitario_emp"])
-        
-        
+            if not costos_dict:
+                return -1, f"El item '{nombre}' no existe en la base de datos."
+
+            item = costos_dict[0]
+            es_por_metro = item["es_por_metro"] == "Si"  # Asumo que el valor es "Si" o "No"
+            costo_unitario = item["costo_unitario_emp"]
+
+            if es_por_metro:
+                # Si el item es por metros, usar la cantidad en cm
+                cm = cantidad_cm.get(nombre, 0)
+                #print(f"Los Centimetros son: {cm}")
+                if cm <= 0:
+                    return -1, f"No se especificó una cantidad válida en cm para '{nombre}'."
+
+                # Convertir cm a metros y calcular el costo
+                metros = cm / 100
+                costo_item = metros * costo_unitario
+                costo_kit.append(costo_item)
+            else:
+                # Item normal: usar el costo_unitario_emp directamente
+                costo_kit.append(costo_unitario)
+
         costo_kit_total = sum(costo_kit)
-    
+
         nuevo_kit = {
             "codigo_kit": codigo_kit,
             "items_del_kit": str(items_kit),
             "costo_kit": costo_kit_total,
+            "cantidad_cm": json.dumps(cantidad_cm),  # Convertir el diccionario a JSON
             "fecha_creacion": fecha_registro_kit,
             "usuario_creador": usuario
         }
-        
+
         id_kit_guardado = self.insert("KitEmpaque", nuevo_kit)
-        
+
         if id_kit_guardado:
-            return costo_kit_total, "El Kit de Empaque se ha guardar correctamente."
+            return costo_kit_total, "El Kit de Empaque se ha guardado correctamente."
         else:
-            return "No se pudo guardar el kit de empaque."
+            return -1, "No se pudo guardar el kit de empaque."
         
     
     def selecion_kit_empaques(self) -> list:
@@ -2543,7 +2725,7 @@ class DataBaseManager():
         costos = [costos["costo_unitario_emp"] for costos in costos_empaques]
         
         costo_actualizado = sum(costos)
-        actualizado_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        actualizado_time = datetime.now().strftime("%d.%m.%Y %H:%M")
         
         actualizar_data = {
             "items_del_kit": str(empaques),
@@ -2580,11 +2762,11 @@ class DataBaseManager():
             List[Dict[str,any]]: Retorna una lista de diccionarios con el resultado.
         """
         query = "SELECT id_factura FROM Facturas WHERE numero_factura = ?"
-        print(f"El número de factura a buscar es: {numero_factura}")
+        #print(f"El número de factura a buscar es: {numero_factura}")
         datos = self.select(query, (numero_factura,))
-        print(f"DICCIONARIO NUMERO FACTURA: {datos}")
+        #print(f"DICCIONARIO NUMERO FACTURA: {datos}")
         retorna_datos = datos[0]["id_factura"]
-        print(f"El valor del diccionario es: {retorna_datos}")
+        #print(f"El valor del diccionario es: {retorna_datos}")
         if retorna_datos:
             return retorna_datos
         else:
@@ -4238,7 +4420,8 @@ class DataBaseManager():
                 t.nombre AS tienda_nombre,
                 t.direccion AS tienda_direccion,
                 t.identificacion_fiscal AS tienda_identificacion_fiscal,
-                t.telefono,
+                t.telefono AS telf_tienda,
+                t.email,
                 v.descuento,
                 v.subtotal,
                 v.impuesto
@@ -4257,7 +4440,7 @@ class DataBaseManager():
         campos = [
             "id_venta", # 0
             "fecha", # 1
-            "id_cliente",  # 2
+            #"id_cliente",  # 2
             "nombre",  # 3
             "direccion",  # 4
             "casa_num",  # 5
@@ -4270,7 +4453,8 @@ class DataBaseManager():
             "tienda_nombre",  # 12
             "tienda_direccion",  # 13
             "tienda_identificacion_fiscal", # 14
-            "telefono",  # 15
+            "telf_tienda",# 15
+            "email", 
             "descuento", # 16
             "subtotal",  # 17
             "impuesto"  # 18
@@ -4280,7 +4464,8 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in datos_venta_dicc
         ]
-        return datos_venta_tupla
+        print(f"Datos para imprimir: {datos_venta_tupla[0]}")
+        return datos_venta_tupla[0]
     
     
     def detalle_de_la_venta(self, id_venta:int) -> list[Tuple[Any]]:
@@ -4294,7 +4479,7 @@ class DataBaseManager():
             list[Tuple[Any]]: - Retorna una lista con tupla.
         """
         query = """
-            SELECT p.id_producto, p.codigo, dv.cantidad, dv.precio_unitario, dv.subtotal
+            SELECT p.codigo, dv.cantidad, dv.precio_unitario, dv.subtotal
             FROM Detalle_Venta dv
             JOIN Productos p ON dv.id_producto = p.id_producto
             WHERE dv.id_venta = ?
@@ -4305,7 +4490,7 @@ class DataBaseManager():
         detalle_venta_dicc = self.select(query, (params,))
         
         campos = [
-            "id_producto"
+            #"id_producto"
             "codigo",
             "cantidad",
             "precio_unitario",
@@ -4316,8 +4501,8 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in detalle_venta_dicc
             ]        
-    
-        return detalle_venta_dicc
+        print(f"LOS DETALLES DE LA VENTA SON: {detalle_venta_tupla[0]}")
+        return detalle_venta_tupla
     
     
     def obtener_nombre_cliente(self, id_cliente:int)-> List[Tuple[Any]]:
@@ -4370,7 +4555,8 @@ class DataBaseManager():
                 t.nombre AS tienda_nombre,
                 t.direccion AS tienda_direccion,
                 t.identificacion_fiscal AS tienda_identificacion_fiscal,
-                t.telefono AS tienda_tlf
+                t.telefono AS tienda_tlf,
+                t.email AS email_t
             FROM
                 NotasEntrega ne
             JOIN
@@ -4400,7 +4586,8 @@ class DataBaseManager():
             "tienda_nombre",
             "tienda_direccion",
             "tienda_identificacion_fiscal",
-            "tienda_tlf"
+            "tienda_tlf",
+            "email_t"
         ]
         
         nota_data_tupla = [
@@ -4433,7 +4620,7 @@ class DataBaseManager():
         params = id_nota_entrega
         
         detalles_nota_dicc = self.select(query, (params,))
-        
+        print(f"DETALLES TUPLA NOTA ENTREGA DICC: {detalles_nota_dicc}")
         campos = [
             "codigo",
             "cantidad",
@@ -4445,7 +4632,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in detalles_nota_dicc
         ]
-        
+        print(f"DETALLES TUPLA NOTA ENTREGA: {detalles_nota_tupla[0]}")
         if detalles_nota_tupla:
             return detalles_nota_tupla
         else:

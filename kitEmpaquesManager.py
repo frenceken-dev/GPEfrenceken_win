@@ -3,7 +3,7 @@ from tkinter import messagebox
 from databasemanager import DataBaseManager
 from recursos import crear_boton
 import ast
-
+from tkinter import simpledialog
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -159,9 +159,10 @@ class kitEmpaques:
         # Cargar ítems desde la base de datos
         items = self.db_connect.selecion_empaques()
         for item_nombre in items:
+            print(f"CARGA LOS ITEMS DISPONIBLES QUE SON: {item_nombre}")
             self.listbox_items.insert(tk.END, item_nombre)
 
-        # Botón para guardar/actualizar el kit
+        # Botón para adardar/actualizar el kit
         self.boton_guardar_kit = crear_boton(
             self.frame_campos,
             texto="Guardar Kit",
@@ -203,7 +204,7 @@ class kitEmpaques:
         )
         self.listbox_kits.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.scrollbar_kits.config(command=self.listbox_kits.yview)
-
+        
         # Cargar kits desde la base de datos
         self.cargar_kits_disponibles()
 
@@ -211,7 +212,7 @@ class kitEmpaques:
         self.boton_editar_kit = crear_boton(
             self.frame_kits,
             texto="Editar kit Seleccionado",
-            ancho=30,
+            ancho=35,
             alto=30,
             relieve="raised",
             border_width=1,
@@ -221,23 +222,26 @@ class kitEmpaques:
             hover_color="#2ECC71",
             comando=lambda: self.cargar_datos_kit()
             )
-        # tk.Button(
-        #     self.frame_kits,
-        #     text="Editar Kit Seleccionado",
-        #     width=20,
-        #     height=1,
-        #     bg="#FFC107",  # Amarillo para destacar
-        #     fg=self.colores["texto_oscuro"],
-        #     font=("Arial", 11, "bold"),
-        #     relief="raised", 
-        #     bd=3,
-        #     state=tk.DISABLED,
-        #     command=lambda: self.cargar_datos_kit()
-        # )
         self.boton_editar_kit.pack(pady=10)
+        
+        # Botón para editar el kit seleccionado
+        self.boton_eliminar_kit = crear_boton(
+            self.frame_kits,
+            texto="Eliminar kit Seleccionado",
+            ancho=35,
+            alto=30,
+            relieve="raised",
+            border_width=1,
+            color_fondo="#913131",
+            color_texto=self.colores["texto_oscuro"],
+            font=("Arial", 11, "bold"),
+            hover_color="#2ECC71",
+            comando=lambda: self.eliminar_kit()
+            )
+        self.boton_eliminar_kit.pack(pady=10)
 
         # Asociar evento de selección del kit
-        self.listbox_kits.bind('<<ListboxSelect>>', self.habilitar_boton_editar)
+        self.listbox_kits.bind('<<ListboxSelect>>', self.habilitar_boton_editar_eliminar)
 
         # Botón para volver al menú
         self.boton_cerrar = crear_boton(self.frame_menu,
@@ -251,27 +255,18 @@ class kitEmpaques:
             border_width=1,
             hover_color="#222423",
             comando=self.cerrar_ventana
-        )# tk.Button(
-        #     self.frame_menu,
-        #     text="Volver",
-        #     width=15,
-        #     height=2,
-        #     bg=self.colores["boton_volver"],
-        #     fg=self.colores["texto_claro"],
-        #     font=("Arial", 11, "bold"),
-        #     relief="raised",
-        #     bd=3,
-        #     command=self.cerrar_ventana
-        # )
+        )
         self.boton_cerrar.pack(side="bottom", pady=40)
 
-    def habilitar_boton_editar(self, event):
+    def habilitar_boton_editar_eliminar(self, event):
         """Habilita el botón de editar si hay un kit seleccionado"""
         seleccion = self.listbox_kits.curselection()
         if seleccion:
-            self.boton_editar_kit.config(state=tk.NORMAL)
+            self.boton_editar_kit.set_state("normal")
+            self.boton_eliminar_kit.set_state("normal")
         else:
-            self.boton_editar_kit.config(state=tk.DISABLED)
+            self.boton_editar_kit.set_state("disabled")
+            self.boton_eliminar_kit.set_state("disabled")
 
     def cargar_datos_kit(self):
         """Abre un Toplevel para mostrar y editar los ítems del kit seleccionado"""
@@ -475,6 +470,7 @@ class kitEmpaques:
             font=("Arial", 11, "bold"),
             command=self.toplevel_kit.destroy
         ).pack(side=tk.RIGHT)
+        
 
     def mover_item(self, listbox_origen, listbox_destino):
         """Mueve los ítems seleccionados de un Listbox a otro"""
@@ -486,6 +482,7 @@ class kitEmpaques:
             item = listbox_origen.get(index)
             listbox_destino.insert(tk.END, item)
             listbox_origen.delete(index)
+            
 
     def guardar_cambios_kit(self, codigo_kit, listbox_seleccionados):
         """Guarda los cambios realizados en el kit"""
@@ -499,6 +496,7 @@ class kitEmpaques:
         messagebox.showinfo("Éxito", f"{mensaje}\nValor: {kit_costo} Euros")
         self.toplevel_kit.destroy()
         self.cargar_kits_disponibles()  # Actualizar la lista de kits
+        
 
     def cargar_kits_disponibles(self):
         """Carga los kits disponibles en el Listbox"""
@@ -506,6 +504,7 @@ class kitEmpaques:
         kits = self.db_connect.obtener_kits()  # Asegúrate de implementar este método en DataBaseManager
         for kit in kits:
             self.listbox_kits.insert(tk.END, kit)  # kit[1] es el nombre del kit
+            
         
     def crear_logo_panel(self):
         frame_imagen_panel = tk.Frame(
@@ -531,6 +530,7 @@ class kitEmpaques:
                 fg=self.colores["texto_claro"]
             )
             label_texto.pack(side=tk.TOP, pady=10)
+            
 
     def crear_kit(self, usuario, codigo_kit):
         seleccion = self.listbox_items.curselection()
@@ -539,13 +539,57 @@ class kitEmpaques:
             return
 
         empaques = [self.listbox_items.get(i) for i in seleccion]
+        
+        # Primero, verificar cuáles items son por metros
+        items_por_metros = []
+        for item in empaques:
+            # Consultar si el item es por metros
+            query = "SELECT es_por_metro FROM Empaques WHERE nombre_emp = ?"
+            resultado = self.db_connect.select(query, (item,))
+            if resultado and resultado[0]["es_por_metro"] == "Si":
+                items_por_metros.append(item)
+
+        # Si hay items por metros, pedir la cantidad en cm
+        cantidades_cm = {}
+        if items_por_metros:
+            for item in items_por_metros:
+                cantidad_cm = simpledialog.askinteger(
+                    "Cantidad en cm",
+                    f"¿Cuántos cm de '{item}' usarás en el kit?",
+                    parent=self.root,  # Asegúrate de que self.root es tu ventana principal
+                    minvalue=1,
+                    maxvalue=10000
+                )
+                if cantidad_cm is None:  # Usuario canceló
+                    return
+                cantidades_cm[item] = cantidad_cm
+                print(f"cantidades_cm: {cantidades_cm}")
+            
         if codigo_kit:
-            kit_costo, mensaje = self.db_connect.guardar_kit(codigo_kit, empaques, usuario)
-            self.costo_kit = kit_costo
+            kit_costo, mensaje = self.db_connect.guardar_kit(codigo_kit, empaques, usuario, cantidades_cm)
+            self.costo_kit = round(kit_costo, 4)
             messagebox.showinfo("Éxito", f"{mensaje}\nValor: {self.costo_kit} Euros")
             self.cargar_kits_disponibles()
         else:
             messagebox.showwarning("Advertencia", "Ingresa un código para el kit.")
+    
+    
+    def eliminar_kit(self):
+        """Tomar el código para eliminar el KIT."""
+        seleccion = self.listbox_kits.curselection()
+        if not seleccion:
+            return
+
+        # Obtener el código del kit seleccionado
+        codigo_kit = self.listbox_kits.get(seleccion[0])
+        
+        eliminado = self.db_connect.eliminacion_de_kit(codigo_kit)
+        
+        if eliminado:
+            messagebox.showinfo("✅ Éxito", f"Kit de empaque {codigo_kit} eliminado.")
+            self.cargar_kits_disponibles()
+        else:
+            messagebox.showerror("⚠️ Error", f"No se pudo eliminar el kit {codigo_kit}.")
 
     def cerrar_ventana(self):
         self.emp_frame.destroy()

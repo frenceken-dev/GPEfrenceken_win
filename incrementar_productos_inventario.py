@@ -64,7 +64,7 @@ class VentanaIncrementarStock:
 
         self.boton_incrementar = crear_boton(self.frame_contenido, 
                 texto="Incrementar Stock", 
-                ancho=30,
+                ancho=130,
                 alto=30,
                 color_fondo="#4373C7",                
                 color_texto="white",
@@ -126,10 +126,17 @@ class VentanaIncrementarStock:
         # Verificar stock suficiente
         for material in materiales_requeridos:
             stock_disponible = material["stock"]  # Stock actual del material
-            cantidad_requerida_por_producto = material["cantidad"]  # Cantidad necesaria por producto
-            cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad  # Cantidad total a descontar
+            es_por_metro = material["es_por_metro"]
+            print(f"Es por metros? = {es_por_metro}")
+            if es_por_metro == "Si":
+                cantidad_requerida_por_producto = material["cantidad_cm"]
+                calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
+                cantidad_total_a_descontar = calcula_cantidad_cm * cantidad
+            else:
+                cantidad_requerida_por_producto = material["cantidad"]  # Cantidad necesaria por producto
+                cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad  # Cantidad total a descontar
 
-            print(f"DEBUG: Material {material['nombre']} - Stock disponible: {stock_disponible}, Cantidad a descontar: {cantidad_total_a_descontar}")
+            print(f"DEBUG: Material {material['nombre']} - Stock disponible: {stock_disponible:.4f}, Cantidad a descontar: {cantidad_total_a_descontar}")
 
             if stock_disponible < cantidad_total_a_descontar:
                 messagebox.showerror("⚠️ Error", f"No hay suficiente stock del material {material['nombre']} Código -> {material["codigo"]}.")

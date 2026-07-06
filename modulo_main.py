@@ -149,7 +149,7 @@ class PantallaPrincipal:
                 
                 if self.usuario in self.usuarios:
                     es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
-                    print(f"El ROL es: {self.rol}")
+                    #print(f"El ROL es: {self.rol}")
                     # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 
             except tk.TclError:
@@ -157,7 +157,7 @@ class PantallaPrincipal:
                 return
             
             if es_valido:
-                print(f"{mensaje}")
+                #print(f"{mensaje}")
                 self.mostrar_menu_principal()
             else:
                 messagebox.showerror("⚠️ Error", "Nombre de usuario o contraseña incorrectos.")

@@ -26,6 +26,8 @@ class InventarioManager:
         self.exite_codigo = False
         self.db_connect = DataBaseManager()  # Asegúrate de que DataBaseManager esté importado
         self.agregar_empaque = CrearEmpaques(root, imagen_panel_tk, volver_menu)
+        self.son_metros = None
+        self.emb_metros = None
 
     def limpiar_frame(self):
         for widget in self.root.winfo_children():
@@ -215,7 +217,7 @@ class InventarioManager:
     def validar_fecha(self, fecha_str):
         try:
             dia, mes, anio = map(int, fecha_str.split('.'))
-            datetime(year=anio, month=mes, day=dia)  # Lanza ValueError si la fecha no existe
+            datetime(day=dia, month=mes, year=anio)  # Lanza ValueError si la fecha no existe
             return True
         except ValueError:
             return False
@@ -231,14 +233,14 @@ class InventarioManager:
         })
         
         else:
-            messagebox.showerror("Error", "Fecha inválida. Usa DD/MM/AAAA y asegúrate de que exista.")
+            messagebox.showerror("Error", "Fecha inválida. Usa DD.MM.AAAA y asegúrate de que exista.")
             return  #  NUEVO AGREGADO PARA PROBAR
 
     def agregar_material_temporal(self, frame_contenido):
         cod_materiales = self.db_connect.obtener_codigo_materiales()
 
         material_window = tk.Toplevel(frame_contenido)
-        configurar_toplevel(material_window, titulo="Agregar Material", ancho_min=300, alto_min=330, color_fondo="#101113")
+        configurar_toplevel(material_window, titulo="Agregar Material", ancho_min=300, alto_min=390, color_fondo="#101113")
 
         # Campos para el material
         tk.Label(material_window, text="Código:", bg="#101113", fg="#ffffff").grid(row=0, column=0, padx=10, pady=5)
@@ -268,6 +270,10 @@ class InventarioManager:
         tk.Label(material_window, text="Precio:", bg="#101113", fg="#ffffff").grid(row=6, column=0, padx=10, pady=5)
         precio_entry = tk.Entry(material_window)
         precio_entry.grid(row=6, column=1, padx=10, pady=5)
+        
+        tk.Label(material_window, text="Es por metro?:", bg="#101113", fg="#ffffff").grid(row=7, column=0, sticky="ns")
+        es_por_metro = ttk.Combobox(material_window, values=["Si", "No"], state="readonly")
+        es_por_metro.grid(row=7, column=1, sticky="ns", pady=5)
 
         def filtrar_codigos_key(event):
             texto_actual = codigo_entry.get().upper()
@@ -293,11 +299,18 @@ class InventarioManager:
                 tipo_entry.insert(0, tipo)
                 tamaño_entry.insert(0, tamaño)
                 color_entry.insert(0, color)
+        
+        def es_por_metros(event):
+            # Capturamos la selección del usuario.
+            self.son_metros = es_por_metro.get()
+            print(f"Es <> {self.son_metros}")
 
         codigo_entry["postcommand"] = filtrar_codigos_postcommand
         codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
         codigo_entry.bind("<KeyRelease>", lambda event: filtrar_codigos_key(event))
-
+        es_por_metro.bind("<<ComboboxSelected>>", lambda event: es_por_metros(event))
+        
+        
         def guardar_material():
             codigo = codigo_entry.get()
             precio = self.convertir_a_float(precio_entry.get())
@@ -319,7 +332,8 @@ class InventarioManager:
                 "color": color_entry.get(),
                 "stock": stock_entry.get(),
                 "precio": precio_entry.get(),
-                "costo_unitario": costo_unitario
+                "costo_unitario": costo_unitario,
+                "es_por_metro": self.son_metros  #es_por_metro.get()
             }
             # Agregar en temporales para ver datos y insertar DB. 
             self.materiales_temporales.append(material)
@@ -333,6 +347,7 @@ class InventarioManager:
             tipo_entry.delete(0, tk.END)
             tamaño_entry.delete(0, tk.END)
             color_entry.delete(0, tk.END)
+            es_por_metro.delete(0, tk.END)
 
         boton_guardar_material = crear_boton(
             material_window,
@@ -344,7 +359,7 @@ class InventarioManager:
             font=("Arial", 11, "bold"),
             comando=guardar_material
         )
-        boton_guardar_material.grid(row=7, column=0, columnspan=2, padx=15, pady=10)
+        boton_guardar_material.grid(row=8, column=0, columnspan=2, padx=15, pady=10)
 
         boton_borrar_campos = crear_boton(
             material_window,
@@ -356,13 +371,13 @@ class InventarioManager:
             font=("Arial", 11, "bold"),
             comando=borrar_campos
         )
-        boton_borrar_campos.grid(row=8, column=0, columnspan=2, padx=15, pady=10)
+        boton_borrar_campos.grid(row=9, column=0, columnspan=2, padx=15, pady=10)
         
     def agregar_empaque_temporal(self, frame_contenido):
         cod_empaques = self.db_connect.codigo_empaques()  # Llega una tupla
 
         empaque_window = tk.Toplevel(frame_contenido)
-        configurar_toplevel(empaque_window, titulo="Agregar Material", ancho_min=335, alto_min=340, color_fondo="#101113")
+        configurar_toplevel(empaque_window, titulo="Agregar Empaque", ancho_min=370, alto_min=340, color_fondo="#101113")
 
         # Campos de entrada (centrados)
         tk.Label(empaque_window, text="Código Empaque:", bg="#101113", fg="#ffffff").grid(row=1, column=0, sticky="ns")
@@ -384,6 +399,10 @@ class InventarioManager:
         tk.Label(empaque_window, text="Precio total:", bg="#101113", fg="#ffffff").grid(row=5, column=0, sticky="ns")
         precio_entry = tk.Entry(empaque_window, width=25)
         precio_entry.grid(row=5, column=1, sticky="ns", pady=5)
+        
+        tk.Label(empaque_window, text="Es por metro?:", bg="#101113", fg="#ffffff").grid(row=6, column=0, sticky="ns")
+        es_por_metro = ttk.Combobox(empaque_window, values=["Si No"], state="readonly")
+        es_por_metro.grid(row=6, column=1, sticky="ns", pady=5)
 
         def filtrar_codigos_key(event):
             texto_actual = codigo_entry.get().upper()
@@ -409,10 +428,16 @@ class InventarioManager:
                 tamaño_entry.insert(0, tamaño)
                 #cantidad_entry.insert(0, cantidad)
                 #precio_entry.insert(0, precio)
+        
+        def emb_por_metro(event):
+            # Capturamos la selección de usuario.
+            self.emb_metros = es_por_metro.get()
+            print(f"Es <> {self.emb_metros}")
 
         codigo_entry["postcommand"] = filtrar_codigos_postcommand
         codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
         codigo_entry.bind("<KeyRelease>", lambda event: filtrar_codigos_key(event))
+        es_por_metro.bind("<<ComboboxSelected>>", lambda event: emb_por_metro(event))
 
         def guardar_material():
             codigo = codigo_entry.get()
@@ -433,7 +458,8 @@ class InventarioManager:
                 "tamaño": tamaño_entry.get(),
                 "stock": cantidad_entry.get(),
                 "precio": precio_entry.get(),
-                "costo_unitario": costo_unitario
+                "costo_unitario": costo_unitario,
+                "es_por_metro": self.emb_metros
             }
             # Agregar en temporales para ver datos y insertar DB.
             self.materiales_temporales.append(empaque)
@@ -447,6 +473,7 @@ class InventarioManager:
             tamaño_entry.delete(0, tk.END)
             cantidad_entry.delete(0, tk.END)
             precio_entry.delete(0, tk.END)
+            es_por_metro.delete(0, tk.END)
 
         boton_guardar_material = crear_boton(
             empaque_window,
@@ -462,7 +489,7 @@ class InventarioManager:
 
         boton_borrar_campos = crear_boton(
             empaque_window,
-            texto="Borrar Materiales",
+            texto="Borrar Empaques",
             ancho=30,
             alto=30,
             color_fondo="#fa4242",
@@ -517,7 +544,7 @@ class InventarioManager:
             for material in self.materia_prima: #self.materiales_temporales:
                 try:
                     material["costo_unitario"] = round(material["costo_unitario"], 4)
-                    print(f"EL COSTO UNITARIO CALCULADO EN inventarioManager ES: {material["costo_unitario"]}")
+                    
                 except:
                     print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
                     material["costo_unitario"] = 0.0
@@ -531,7 +558,8 @@ class InventarioManager:
                         material["codigo"],
                         int(material["stock"]),
                         material["precio"],
-                        material["costo_unitario"]
+                        material["costo_unitario"],
+                        material["es_por_metro"]
                     )
                     messagebox.showinfo("✅ Exito", mensaje)
                     
@@ -548,6 +576,7 @@ class InventarioManager:
                         material["stock"],
                         material["precio"],
                         material["costo_unitario"],
+                        material["es_por_metro"],
                         id_proveedor
                     )
 
@@ -583,7 +612,9 @@ class InventarioManager:
                         material["codigo"],
                         int(material["stock"]),
                         material["precio"],
-                        material["costo_unitario"]
+                        material["costo_unitario"],
+                        material["es_por_metro"]
+                        
                     )
                     messagebox.showinfo("✅ Exito", mensaje)
                     
@@ -598,6 +629,7 @@ class InventarioManager:
                         material["stock"],
                         material["precio"],
                         material["costo_unitario"],
+                        material["es_por_metro"]
                     )
 
             # 6. Mostrar mensaje de éxito
@@ -617,7 +649,7 @@ class InventarioManager:
             return
 
         ventana_datos = tk.Toplevel()
-        configurar_toplevel(ventana_datos, titulo="Datos Ingresados", ancho_min=800, alto_min=500)
+        configurar_toplevel(ventana_datos, titulo="Datos Ingresados", ancho_min=850, alto_min=500)
 
         frame_principal = ttk.Frame(ventana_datos, padding="10")
         frame_principal.pack(fill=tk.BOTH, expand=True)
@@ -632,7 +664,8 @@ class InventarioManager:
                                                     "Color", 
                                                     "Cantidad", 
                                                     "Precio", 
-                                                    "Precio Unitario"), show="headings", style="mystyle.Treeview")
+                                                    "Precio Unitario",
+                                                    "Es por Metro"), show="headings", style="mystyle.Treeview")
 
         for col in tree["columns"]:
             tree.heading(col, text=col)
@@ -659,7 +692,8 @@ class InventarioManager:
                     material.get("color", "-"),
                     material.get("stock", "-"),
                     material.get("precio", "-"),
-                    f"{round(precio_uni, 4)}"
+                    f"{round(precio_uni, 4)}",
+                    material.get("es_por_metro")
                 ))
 
             frame_total.config(text=f"{sum(self.total_actual):.2f}", font=("Arial", 12, "bold"))

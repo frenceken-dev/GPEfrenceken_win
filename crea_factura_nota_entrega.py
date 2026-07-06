@@ -941,7 +941,7 @@ def imprimir_factura(id_venta, es_copia=False):
         return
 
     (id_venta, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
-    total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel,
+    total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel, email_t,
     descuento, subtotal, impuesto) = venta_data
 
     # Ruta del archivo PDF
@@ -1019,7 +1019,8 @@ def imprimir_factura(id_venta, es_copia=False):
         [Paragraph(f"{tienda_nombre}", right_aligned_style)],
         [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
         [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
-        [Paragraph(f"Tel.: {tel}", right_aligned_style)]
+        [Paragraph(f"Tel.: {tel}", right_aligned_style)],
+        [Paragraph(f"Email.: {email_t}", right_aligned_style)]
     ]
     tabla_tienda = Table(datos_tienda, colWidths=[450])
     tabla_tienda.setStyle(TableStyle([
@@ -1032,7 +1033,7 @@ def imprimir_factura(id_venta, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde: {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse: {direccion_cliente}", left_aligned_style)],
-        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
+        #[Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
         [Paragraph(f"Postleitzahl: {zona_postal}", left_aligned_style)],
         #[Paragraph(f"Steuer-ID:  {identificacion_fiscal_cliente}", left_aligned_style)],
         [Paragraph(f"Email: {email}", left_aligned_style)],
@@ -1077,7 +1078,7 @@ def imprimir_factura(id_venta, es_copia=False):
         [Paragraph(f"Zwischensumme: € {subtotal:.2f}", right_aligned_style)],
         [Paragraph(f"Rabatt: € {descuento:.2f}", right_aligned_style)],
         [Paragraph(f"Steuer (MwSt. 19%): € {impuesto:.2f}", right_aligned_style)],
-        [Paragraph(f"Gesamt: € {total:.2f}", right_aligned_style)]
+        [Paragraph(f"Gesamtsumme: € {total:.2f}", right_aligned_style)]
     ]
     tabla_resumen = Table(resumen_data, colWidths=[450])
     tabla_resumen.setStyle(TableStyle([
@@ -1101,7 +1102,7 @@ def imprimir_factura(id_venta, es_copia=False):
             canvas.setFont("Helvetica", 100)
             canvas.setFillColorRGB(0.8, 0.8, 0.8)  # Color gris claro
             canvas.rotate(45)  # Rotar el texto 45 grados
-            canvas.drawString(150, -100, "KOPIE")  # Posición del texto
+            canvas.drawString(250, -100, "KOPIE")  # Posición del texto era 150 -100
             canvas.restoreState()
 
         # Footer con número de página
@@ -1152,7 +1153,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
         return
 
     (id_nota_entrega, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
-    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel_nota) = nota_data[0]
+    total, subtotal, descuento, impuesto, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel_nota, email_t) = nota_data[0]
 
     # Detalles de la nota de entrega
     detalles = db_connect.detalle_nota_entrega(id_nota_entrega,)
@@ -1225,8 +1226,8 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
         [Paragraph(f"{tienda_nombre}", right_aligned_style)],
         [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
         [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
-        [Paragraph(f"Tel.: {tel_nota}", right_aligned_style)]
-        
+        [Paragraph(f"Tel.: {tel_nota}", right_aligned_style)],
+        [Paragraph(f"Email.: {email_t}", right_aligned_style)]
         
     ]
     tabla_tienda = Table(datos_tienda, colWidths=[450])
@@ -1240,7 +1241,7 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde:  {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse:  {direccion_cliente}", left_aligned_style)],
-        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
+        #[Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
         [Paragraph(f"Postleitzahl:  {zona_postal}", left_aligned_style)],
         #[Paragraph(f"Steuer-ID:  {identificacion_fiscal_cliente}", left_aligned_style)],
         [Paragraph(f"Email:  {email}", left_aligned_style)],
@@ -1266,7 +1267,8 @@ def imprimir_nota_entrega(id_nota_entrega, es_copia=False):
 
     columnas = ["Produkt", "Menge", "Einzelpreis", "Zwischensumme"]
     detalles_data = [columnas]
-    for producto, cantidad, precio, subtotal_detalle in detalles[0]:
+    print(f"Estructura de detalles: {detalles}")
+    for producto, cantidad, precio, subtotal_detalle in detalles:
         detalles_data.append([producto, str(cantidad), f"€ {precio:.2f}", f"€ {subtotal_detalle:.2f}"])
 
     tabla_detalles = Table(detalles_data, colWidths=[180, 80, 100, 100])

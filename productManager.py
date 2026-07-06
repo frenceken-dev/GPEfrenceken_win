@@ -34,7 +34,7 @@ class ProductoManager:
         #print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
         if self.nombre_usuario_creador:
             self.id_usuario_creador = db_connect.id_usuario_nombre_actual(self.nombre_usuario_creador)
-            print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
+            #print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
             #return self.id_usuario_creador[0][0], self.nombre_usuario_creador
 
     def crear_producto(self, volver_menu):
@@ -242,8 +242,8 @@ class ProductoManager:
         # Aquí debes tener un diccionario o estructura que relacione el nombre del empaque con su descripción.
         # Ejemplo: self.descripciones_empaques = {"Bolsa Plástica": "Descripción...", ...}
         contenido_kit = db_connect.descripcion_kit_empaque(self.empaques_seleccionados)
-        print(contenido_kit)
-        print(self.empaques_seleccionados)
+        #print(contenido_kit)
+        #print(self.empaques_seleccionados)
         self.descripciones_empaques = dict(zip(self.empaques_seleccionados, contenido_kit.values()))
 
         descripcion = self.descripciones_empaques.get(seleccion, "Sin descripción disponible")
@@ -278,7 +278,9 @@ class ProductoManager:
         tipo_entry = ttk.Combobox(material_window, state="disabled")
         tipo_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        tk.Label(material_window, text="Cantidad:", bg="#101113", fg="#ffffff").grid(row=3, column=0, padx=10, pady=5)
+        # Label y Entry para cantidad (se actualizará dinámicamente)
+        cantidad_label = tk.Label(material_window, text="Cantidad:", bg="#101113", fg="#ffffff")
+        cantidad_label.grid(row=3, column=0, padx=10, pady=5)
         cantidad_entry = tk.Entry(material_window)
         cantidad_entry.grid(row=3, column=1, padx=10, pady=5)
 
@@ -286,12 +288,34 @@ class ProductoManager:
         tamaño_entry = ttk.Combobox(material_window, state="disabled")
         tamaño_entry.grid(row=4, column=1, padx=10, pady=5)
         
-        # Vincular eventos para actualizar los Combobox
+        # Variable para almacenar si el material es por metros
+        es_por_metro = False
+
+        # Función para actualizar el label de cantidad según si el material es por metros
+        def actualizar_label_cantidad(event=None):
+            nonlocal es_por_metro
+            codigo_material = material_entry.get()
+            if not codigo_material:
+                return
+
+            # Consultar si el material es por metros
+            query = "SELECT es_por_metro FROM Materiales WHERE codigo = ?"
+            resultado = db_connect.select(query, (codigo_material,))
+            if resultado:
+                es_por_metro = resultado[0]["es_por_metro"] == "Si"
+                if es_por_metro:
+                    cantidad_label.config(text="Cantidad en cm:")
+                else:
+                    cantidad_label.config(text="Cantidad:")
+        
+        # Vincular eventos para actualizar los Combobox y el label de cantidad
         material_entry.bind("<KeyRelease>", self.filtrar_codigos)
-        material_entry.bind("<<ComboboxSelected>>", lambda event: self.actualizar_color(event, color_entry))
+        material_entry.bind("<<ComboboxSelected>>", lambda event: [
+            self.actualizar_color(event, color_entry),
+            actualizar_label_cantidad(event)]) # Actualizar el label de cantidad
         color_entry.bind("<<ComboboxSelected>>", lambda event: self.actualizar_tipos(event, tipo_entry, material_entry, color_entry))
         tipo_entry.bind("<<ComboboxSelected>>", lambda event: self.actualizar_tamaños(event, tamaño_entry, material_entry, color_entry, tipo_entry))
-
+        
         # Botones
         crear_boton(
             material_window,
@@ -302,7 +326,7 @@ class ProductoManager:
             color_texto="white",
             font=("Arial", 11, "bold"),
             hover_color="#2ECC71",
-            comando=lambda: self.agregar_material(material_entry, color_entry, tipo_entry, tamaño_entry, cantidad_entry, material_window)
+            comando=lambda: self.agregar_material(material_entry, color_entry, tipo_entry, tamaño_entry, cantidad_entry, material_window, es_por_metro)
         ).grid(row=5, column=0, columnspan=2, pady=10)
 
         crear_boton(
@@ -381,7 +405,7 @@ class ProductoManager:
             tamaño_entry.set('')
             tamaño_entry.configure(state="disabled")
     
-    def agregar_material(self, material_entry, color_entry, tipo_entry, tamaño_entry, cantidad_entry, material_window):
+    def agregar_material(self, material_entry, color_entry, tipo_entry, tamaño_entry, cantidad_entry, material_window, es_por_metro):
         """Agrega un material a la lista de materiales usados."""
         material_actual = material_entry.get()
         color_material_actual = color_entry.get()
@@ -397,21 +421,29 @@ class ProductoManager:
         codigo_material = db_connect.obtener_codigo_material_por_nombre_color_tipo_tamaño(
             material_actual, color_material_actual, tipo_material_actual, tamaño_material_actual
         )
-
+        if es_por_metro:
+            cantidad_necesaria_metros = cantidad_necesaria / 100  # Convertir cm a metros
+            
+        else:
+            cantidad_necesaria_metros = cantidad_necesaria
+            
         if codigo_material is not None:
             try:
                 indice = self.articulos.index(material_actual)
             except ValueError:
                 messagebox.showerror("⚠️ Error", f"Material {material_actual} no encontrado.")
                 return
-
-            if self.cantidades[indice] >= cantidad_necesaria:
+            
+            if self.cantidades[indice] >= cantidad_necesaria_metros:
+                cantidad_a_guardar = cantidad_necesaria if es_por_metro else cantidad_necesaria_metros
+                #print(f"La cantidad en cm es: {cantidad_a_guardar}")
                 self.materiales_usados.append({
                     "codigo": codigo_material,
                     "color": color_material_actual,
                     "tipo": tipo_material_actual,
                     "tamaño": tamaño_material_actual,
-                    "cantidad": cantidad_necesaria
+                    "cantidad": cantidad_a_guardar,
+                    "es_por_metro": es_por_metro
                 })
                 material_window.destroy()
                 messagebox.showinfo("Éxito", f"Material {material_actual} registrado correctamente.")
@@ -422,8 +454,8 @@ class ProductoManager:
 
     def guardar_borrador(self, material_window):
         """Guarda el producto actual como borrador."""
-        print(f"ID usuario en guardar_borrador: {self.id_usuario_creador}")
-        print(f"Nombre usuario en guardar_borrador: {self.nombre_usuario_creador}")
+        #print(f"ID usuario en guardar_borrador: {self.id_usuario_creador}")
+        #print(f"Nombre usuario en guardar_borrador: {self.nombre_usuario_creador}")
         id_creador = self.id_usuario_creador
         nombre_creador = str(self.nombre_usuario_creador)
         codigo_producto = self.codigo_entry.get()
@@ -736,7 +768,7 @@ class ProductoManager:
             for empaque in self.empaques_seleccionados:
                 self.listbox_empaques.insert(tk.END, empaque)  # Se inserta cada empaque.
                 
-            print(F"Los Materiales  mostrar luego de cargar el borrador son: {self.empaques_seleccionados}")
+            #print(F"Los Materiales  mostrar luego de cargar el borrador son: {self.empaques_seleccionados}")
             # if self.materiales_usados:
             #     print(f"Los materiales cargados del borrador son: {self.materiales_usados}")
             #     crear_boton(self.form_frame,
@@ -758,26 +790,37 @@ class ProductoManager:
 
     def calcular_costo_producto(self):
         """Calcula el costo total de producción del producto."""
+        es_por_metro = False
         costo_materiales = 0.0
-        costo_hora = 12
-        
-        tiempo_float = self.convertir_a_float(self.tiempo_entry.get())        
-        costo_tiempo = (tiempo_float / 60) * costo_hora
-        
-        # Calculo de costo del producto.
+        costo_hora = 12  # €/hora
+
+        tiempo_float = self.convertir_a_float(self.tiempo_entry.get())
+        costo_tiempo = (tiempo_float / 60) * costo_hora  # Convertir minutos a horas
+
+        # Cálculo de costo de los materiales
         for material in self.materiales_usados:
             costo_unitario = db_connect.obtener_costo_unitario_material(material["codigo"])
-            costo_materiales += material["cantidad"] * costo_unitario
-        
-        # Retorna el costo de Material de empaque,
-        costos = db_connect.costo_embalaje(self.empaques_seleccionados) # Los  kit de Empaques
-        costo_total = sum(costos) + costo_materiales + costo_tiempo
-        print(f"Costo del Material: {costo_materiales}, Costo de empaques: {costos}, Costo de tiempo: {costo_tiempo}")
+            es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
+            if es_por_metro:
+                # Si es por metros, convertir la cantidad de cm a metros
+                cantidad_en_metros = material["cantidad"] / 100
+                costo_materiales = cantidad_en_metros * costo_unitario # despues del = era +=
+                print(f"EL COSTO de material por CM ES: {costo_materiales}")
+            else:
+                # Si no es por metros, usar la cantidad directamente
+                costo_materiales += material["cantidad"] * costo_unitario
+
+        # Costo de los kits de empaque
+        costos_embalaje = db_connect.costo_embalaje(self.empaques_seleccionados)
+        costo_total = sum(costos_embalaje) + costo_materiales + costo_tiempo
+
+        print(f"Costo de materiales: {costo_materiales}, Costo de empaques: {costos_embalaje}, Costo de tiempo: {costo_tiempo}")
         return round(costo_total, 2)
     
 
     def registrar_producto(self):
         """Registra el producto en la base de datos."""
+        
         self.obtener_valores()
 
         if not self.codigo_producto or not self.tipo_producto or not self.tiempo_fabricacion or not self.descripcion_producto or not self.empaques_seleccionados:
@@ -789,7 +832,7 @@ class ProductoManager:
             return
 
         self.costo_produccion = self.calcular_costo_producto()
-        precio_sugerido = self.costo_produccion * 5
+        precio_sugerido = self.costo_produccion * 2
 
         resumen_window = tk.Toplevel(self.root)
         configurar_toplevel(resumen_window, titulo="Resumen del Producto", ancho_min=500, alto_min=450)
@@ -807,7 +850,7 @@ class ProductoManager:
                     Kit de Empaque: {len(self.empaques_seleccionados)}\n
                     Materiales usados: {len(self.materiales_usados)}\n
                     Costo de producción: {self.costo_produccion}\n
-                    Precio de venta sugerido: {round(precio_sugerido,2)}""", justify=tk.LEFT).pack(padx=10, pady=10)
+                    Precio de venta sugerido: {precio_sugerido:.2f}""", justify=tk.LEFT).pack(padx=10, pady=10)
         
         tk.Label(resumen_window, text="Precio de venta:").pack()
         precio_entry = tk.Entry(resumen_window)
@@ -817,6 +860,7 @@ class ProductoManager:
 
         def guardar_producto():
             """Guarda el nuevo producto y descuenta empaques/materiales solo si todo es exitoso."""
+            es_por_metro = False
             try:
                 # Validar el precio
                 self.precio_venta = round(float(precio_entry.get()), 2)
@@ -831,26 +875,34 @@ class ProductoManager:
                 messagebox.showerror("⚠️ Error", "El código ya existe.")
                 return
 
-            # Validar stock de materiales antes de iniciar la transacción
-            for material in self.materiales_usados:
-                stock_actual = db_connect.obtener_stock_material(material["codigo"])
-                if stock_actual < material["cantidad"]:
-                    messagebox.showerror(
-                        "Stock insuficiente",
-                        f"No hay suficiente stock del material {material['codigo']}. "
-                        f"Stock disponible: {stock_actual}, requerido: {material['cantidad']}."
-                    )
-                    return  # Detener el proceso si no hay stock suficiente
-
-            # Iniciar transacción
-            if not db_connect.begin_transaction():
-                messagebox.showerror("Error", "No se pudo iniciar la transacción.")
-                return
-
             try:
+                # Validar stock de materiales antes de iniciar la transacción
+                for material in self.materiales_usados:
+                    stock_actual = db_connect.obtener_stock_material(material["codigo"])
+                    es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
+                    #print(f"ES POR METROS 1° FOR self.materiales_usados-validacion-stock: {es_por_metro}")
+                    cantidad_a_comparar = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
+                    #print(f"LA CANTIDAD A COMPARAR: {cantidad_a_comparar}")
+                    
+                    if stock_actual < cantidad_a_comparar:
+                        unidad = "metros" if es_por_metro else "unidades"
+                        messagebox.showerror(
+                            "Stock insuficiente",
+                            f"No hay suficiente stock del material {material['codigo']}. "
+                            f"Stock disponible: {stock_actual} {unidad}, requerido: {cantidad_a_comparar} {unidad}."
+                        )
+                        return  # Detener el proceso si no hay stock suficiente
+
+                # Iniciar transacción
+                if not db_connect.begin_transaction():
+                    messagebox.showerror("Error", "No se pudo iniciar la transacción.")
+                    return
+
+            
                 # Validar stock de empaques antes de iniciar la transacción
                 if self.empaques_seleccionados:
                     validado, mensaje_validar = db_connect.validar_stock_empaques(self.empaques_seleccionados) # ahora va el Código del kit
+                    #print(f"VALIDAR STOCK EMPAQUE QUE SE MUESTRA: {self.empaques_seleccionados}\n{validado}")
                     if not validado:
                         respuesta = messagebox.askyesno(
                             "Stock insuficiente",
@@ -866,50 +918,65 @@ class ProductoManager:
                 materiales_reales = []
                 for material in self.materiales_usados:
                     nombre = db_connect.obtener_nombre_material_por_codigo(material["codigo"])
+                    es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
                     materiales_reales.append(nombre)
-                materiales_str = ",".join(materiales_reales) if materiales_reales else ""
-                empaques_str = ",".join(self.empaques_seleccionados) if self.empaques_seleccionados else ""
+                    cantidad_a_comparar_insertar_producto = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
 
-                # Insertar el producto
-                id_registro = db_connect.insertar_producto(
-                    self.codigo_producto,
-                    self.nombre_producto,
-                    self.tipo_producto,
-                    self.costo_produccion,
-                    self.precio_venta,
-                    materiales_str,
-                    self.tiempo_fabricacion,
-                    self.cantidad_creada,
-                    self.descripcion_producto,
-                    empaques_str
-                )
-                
+                    #materiales_str = ",".join(materiales_reales) if materiales_reales else ""
+                    empaques_str = ",".join(self.empaques_seleccionados) if self.empaques_seleccionados else ""
+                    #print(f"El código del Producto es: {self.codigo_producto}")
+                    #print(f"CANTIDAD A COMPARAR: {cantidad_a_comparar}")  # = 0.25
+                    #print(f"ES POR METROS 2° FOR self.materiales_usados-insertar_producto: {es_por_metro}")
+                    # Insertar el producto
+                    id_registro = db_connect.insertar_producto(
+                        self.codigo_producto,
+                        self.nombre_producto,
+                        self.tipo_producto,
+                        self.costo_produccion,
+                        self.precio_venta,
+                        self.materiales_usados, # materiales_str,
+                        self.tiempo_fabricacion,
+                        self.cantidad_creada,
+                        self.descripcion_producto,
+                        empaques_str,
+                        cantidad_a_comparar_insertar_producto
+                    )
+                #print(f"El código del Producto Registrado es: {id_registro}")
                 # Obtener el ID del producto recién insertado
                 id_producto = db_connect.obtener_id_producto_por_codigo(self.codigo_producto)
+                #print(f"EL ID PRODUCTO ES: {id_producto}")
                 if not id_producto:
                     raise Exception("No se pudo obtener el ID del producto.")
 
                 # Insertar los detalles del producto (materiales)
                 for material in self.materiales_usados:
                     id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+                    es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
+                    cantidad_a_comparar_detalle_producto = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
+
                     if id_material is not None:
                         db_connect.insertar_detalle_producto(
                             id_producto,
                             id_material,
-                            material["cantidad"],
+                            cantidad_a_comparar_detalle_producto,#material["cantidad"],
                             material["tipo"],
-                            material["tamaño"]
+                            material["tamaño"],
+                            es_por_metro  # Pasar si es por metros
                         )
                     else:
                         raise Exception(f"Material no encontrado: {material['codigo']}")
-                    
+                    #print(f"ES POR METROS 3° FOR self.materiales_usados-insertar_detalle: {cantidad_a_comparar}")
+                #print(f"self.empaques_seleccionados som: {self.empaques_seleccionados}")
                 # Enviar la lista completa de empaques al método
                 descontado, mensaje_descontado = db_connect.descontar_empaques(self.empaques_seleccionados)
                 if descontado:
                     messagebox.showinfo("Información", f"{mensaje_descontado}")
+                
                 # Descontar stock de materiales y empaques (solo si todo lo anterior tuvo éxito)
                 for material in self.materiales_usados:
-                    db_connect.actualizar_stock_material(material["codigo"], material["cantidad"])
+                    es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
+                    cantidad_a_comparar_actualizar = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
+                    db_connect.actualizar_stock_material(material["codigo"], cantidad_a_comparar_actualizar, es_por_metro)  # Pasar si es por metros
 
                 # Confirmar la transacción
                 if not db_connect.commit_transaction():
@@ -925,77 +992,7 @@ class ProductoManager:
                 # Si algo falla, revertir la transacción
                 db_connect.rollback_transaction()
                 messagebox.showerror("Error", f"Ocurrió un error al guardar el producto: {e}")
-
-
-        """def guardar_producto():
-            """ 'Guarda el nuevo producto en la base de datos.'"""
-            try:
-                self.precio_venta = round(float(precio_entry.get()), 2)
-            except ValueError:
-                messagebox.showerror("⚠️ Error", "Introduce un número válido para el precio")
-                return
-            
-            validar_codigo = db_connect.validar_codigo_producto()
-            
-            codigo_ingresado = self.codigo_entry.get()
-            
-            if codigo_ingresado in validar_codigo:
-                messagebox.showerror("⚠️ Error", "El código ya existe.")
-                return
-            
-            def descontar_material_empaque():
-                self.exito, self.mensaje = db_connect.descontar_empaque(self.empaques_seleccionados)
                 
-                if not self.exito:
-                    respuesta = messagebox.askyesno(
-                        "Stock insuficiente",
-                        f"{self.mensaje}\n\n¿Deseas registrar el producto sin estos empaques?"
-                    )
-                    if respuesta:
-                        messagebox.showinfo("Continuar", "Se continuara con el guardado del producto")
-                    else:
-                        return
-            
-            materiales_reales = []
-            for material in self.materiales_usados:
-                nombre = obtener_nombre_material_por_codigo(material["codigo"])
-                materiales_reales.append(nombre)
-            
-            materiales_str = ",".join(materiales_reales) if materiales_reales else "" # Conversión de materiales a str.
-            materiales_empaque = self.empaques_seleccionados
-            empaques_str = ",".join(materiales_empaque) if materiales_empaque else "" # Conversión  de empaques a str.
-
-            id_registro = db_connect.insertar_producto(
-                self.codigo_producto,
-                self.nombre_producto,
-                self.tipo_producto,
-                self.costo_produccion,
-                self.precio_venta,
-                materiales_str,
-                self.tiempo_fabricacion,
-                self.cantidad_creada,
-                self.descripcion_producto,
-                empaques_str
-            )
-
-            id_producto = db_connect.obtener_id_producto_por_codigo(self.codigo_producto)
-
-            for material in self.materiales_usados:
-                id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
-                if id_material is not None:
-                    insertar_detalle_producto(id_producto, id_material, material["cantidad"], material["tipo"], material["tamaño"])
-                else:
-                    messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
-
-            for material in self.materiales_usados:
-                actualizar_stock_material(material["codigo"], material["cantidad"])
-
-            db_connect.marcar_borrador_como_creado(self.codigo_producto)
-            descontar_material_empaque()
-            messagebox.showinfo("Éxito", "Producto creado y guardado correctamente.")
-            resumen_window.destroy()
-            self.volver_menu()"""
-            
         crear_boton(resumen_window,
             texto="Guardar Producto",
             ancho=30,
