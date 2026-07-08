@@ -363,7 +363,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                     return
 
                 # llamada desde crea_factura_nota_entrega.py
-                convertir_nota_a_factura(id_nota_entrega)
+                convertir_nota_a_factura(id_nota_entrega, usuario_actual)
             except Exception as e:
                 messagebox.showerror("⚠️ Error", f"Ocurrió un error: {e}")
 

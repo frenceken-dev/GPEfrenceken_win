@@ -543,7 +543,8 @@ class VentanaVentas:
                 round(subtotal, 2),
                 descuento,
                 round(impuesto, 2),
-                round(total, 2)
+                round(total, 2),
+                self.usuario_actual
             )
 
             # Guardar los detalles de la factura y actualizar el stock
@@ -561,6 +562,7 @@ class VentanaVentas:
             # Mostrar el botón de imprimir
             self.id_venta_actual = id_venta
             self.boton_imprimir.set_text("Imprimir Factura")
+            self.boton_generar_nota_entrega.set_state("disabled")
             self.boton_imprimir.set_command(lambda: imprimir_factura(self.id_venta_actual))
             self.boton_imprimir.pack(side="left", padx=5, pady=5)
 
@@ -611,8 +613,13 @@ class VentanaVentas:
         confirmar = messagebox.askyesno("Confirmar", "¿Está seguro de generar esta nota de entrega?")
         if not confirmar:
             return
-
-
+        
+        # Comprobar que no exista un factura ya realizada.
+        # facturado = db_connect.comprabar_estado_facturacion()
+        # if facturado:
+        #     messagebox.showerror("⚠️ Error", "No se puede crear una nota de entrega de un producto facturado.")
+        #     return
+        
         try:
             # Obtener el ID del cliente
             id_cliente = int(self.combobox_clientes.get().split(" - ")[0])
@@ -868,58 +875,58 @@ class VentanaVentas:
         
 
 # Función para facturar una Nota de Entrega
-def convertir_nota_a_factura(id_nota_entrega):
+def convertir_nota_a_factura(id_nota_entrega, usuario_actual):
     confirmar = messagebox.askyesno("Confirmar", "¿Estás seguro de que deseas convertir esta nota de entrega en una factura?")
     if not confirmar:
         return
     
-    try:
-        # Verificar si la nota de entrega ya está facturada
-        estado = db_connect.obtener_estado_nota_entrega(id_nota_entrega)
-        
-        if estado == "Facturado":
-            messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
-            return
+    #try:
+    # Verificar si la nota de entrega ya está facturada
+    estado = db_connect.obtener_estado_nota_entrega(id_nota_entrega)
+    
+    if estado == "Facturado":
+        messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
+        return
 
-        # Obtener los datos de la nota de entrega
-        nota_data = db_connect.obtener_datos_nota_entrega(id_nota_entrega)
-        if not nota_data:
-            messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
-            return
+    # Obtener los datos de la nota de entrega
+    nota_data = db_connect.obtener_datos_nota_entrega(id_nota_entrega)
+    if not nota_data:
+        messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
+        return
 
-        id_cliente, fecha, subtotal, descuento, impuesto, total = nota_data
-        
-        # Obtener el siguiente número de factura y actualizarlo en la base de datos.
-        ultimo_numero = db_connect.obtener_ultimo_numero_factura()
-        if ultimo_numero:
-            nuevo_numero = ultimo_numero + 1
-            db_connect.actualizar_ultimo_numero_factura(nuevo_numero)
-        else:
-            messagebox.showerror("⚠️ Error", f"No se ha podido Obtener el ultimo número de factura. Correlación comprometida.")
+    id_cliente, fecha, subtotal, descuento, impuesto, total = nota_data[0]
+    
+    # Obtener el siguiente número de factura y actualizarlo en la base de datos.
+    ultimo_numero = db_connect.obtener_ultimo_numero_factura()
+    if ultimo_numero:
+        nuevo_numero = ultimo_numero + 1
+        db_connect.actualizar_ultimo_numero_factura(nuevo_numero)
+    else:
+        messagebox.showerror("⚠️ Error", f"No se ha podido Obtener el ultimo número de factura. Correlación comprometida.")
 
-        # Guardar la factura en la base de datos
-        db_connect.insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total)
-        id_venta = nuevo_numero
+    # Guardar la factura en la base de datos
+    db_connect.insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total, usuario_actual)
+    id_venta = nuevo_numero
 
-        # Copiar los detalles de la nota de entrega a la factura
-        detalles = db_connect.obtener_detalles_nota_entrega(id_nota_entrega)
+    # Copiar los detalles de la nota de entrega a la factura
+    detalles = db_connect.obtener_detalles_nota_entrega(id_nota_entrega)
 
-        for detalle in detalles:
-            id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_ = detalle
-            id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
-        
-        # Actualizar el estado de la nota de entrega a 'Facturado'
-        actualizado = db_connect.actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
+    for detalle in detalles:
+        id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_ = detalle
+        id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
+    
+    # Actualizar el estado de la nota de entrega a 'Facturado'
+    actualizado = db_connect.actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
 
-        messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
+    messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
 
-        # Preguntar si desea imprimir la nueva factura
-        imprimir = messagebox.askyesno("Imprimir Factura", "¿Deseas imprimir la nueva factura ahora?")
-        if imprimir:
-            imprimir_factura(id_venta, es_copia=False)
+    # Preguntar si desea imprimir la nueva factura
+    imprimir = messagebox.askyesno("Imprimir Factura", "¿Deseas imprimir la nueva factura ahora?")
+    if imprimir:
+        imprimir_factura(id_venta, es_copia=False)
 
-    except Exception as e:
-        messagebox.showerror("⚠️ Error", f"No se pudo convertir la nota de entrega en factura: {e}")
+    #except Exception as e:
+        #messagebox.showerror("⚠️ Error", f"No se pudo convertir la nota de entrega en factura: {e}")
 
 
 # Función para imprimir facturas

@@ -3759,7 +3759,7 @@ class DataBaseManager():
     def guarda_venta_bd(self, id_venta: int,
                         id_cliente: int, fecha_actual: str,
                         tipo_documento: str, subtotal: float,
-                        descuento: float, impuesto: float, total: float) -> bool:
+                        descuento: float, impuesto: float, total: float, usuario_actual:str) -> bool:
         """
         Insertar la venta en la base de datos "FACTURA"
 
@@ -3772,6 +3772,7 @@ class DataBaseManager():
             descuento (float): Descuento dado al comprador (opcional).
             impuesto (float): Taza del impuesto actual.
             total (float): Total del monto de la factua.
+            usuario_actual (str): Usuario que realiza el proceso.
 
         Returns:
             bool: - Retorna True si se guarda correctamente False si se genera algún error.
@@ -3781,10 +3782,12 @@ class DataBaseManager():
             "id_cliente": id_cliente,
             "fecha": fecha_actual,
             "tipo_documento": tipo_documento,
+            "estado":"facturado",
+            "usuario_creador":usuario_actual,
             "subtotal": subtotal,
             "descuento": descuento,
             "impuesto": impuesto,
-            "total": total
+            "total": total,
             }
         
         venta_realizada = self.insert("Ventas", query)
@@ -4012,7 +4015,7 @@ class DataBaseManager():
         if not actualizado:
             messagebox.showerror("⚠️ Error", f"No se ha podido actualizar el ultimo número de factura. La correlación ha fallado.")
 
-    def insertar_factura_venta(self, id_venta:int, id_cliente:int, fecha:str, subtotal:float, descuento:float, impuesto:float, total:float)-> int:
+    def insertar_factura_venta(self, id_venta:int, id_cliente:int, fecha:str, subtotal:float, descuento:float, impuesto:float, total:float, usuario_actual:str)-> int:
         """
         Se guarda los datos de la factura realizada por venta.
 
@@ -4024,21 +4027,24 @@ class DataBaseManager():
             descuento (float): Descuento si aplíca.
             impuesto (float): Tasa delimpuesto actual.
             total (float): Total de factura.
+            usuario_actual (str): Usuario que realiza el proceso.
 
         Returns:
             int: - Retorna el id de la venta si se inserta correctamente si no retorna -1.
         """
         query = {
             "id_venta":id_venta,
-            "id_cliente":id_cliente,
             "fecha":fecha,
             "tipo_documento":"Factura",
+            "id_cliente":id_cliente,
+            "estado":"pendiente",
+            "usuario_creador":usuario_actual,
             "subtotal":subtotal,
             "descuento":descuento,
             "impuesto":impuesto,
-            "total":total
+            "total":total,
         }
-        id_de_venta = self.insert("Factura", query)
+        id_de_venta = self.insert("Ventas", query)
 
         if not id_de_venta:
             messagebox.showerror("⚠️ Error Crítico", f"Fallo el registro de la venta en el sistema.")
@@ -4663,6 +4669,32 @@ class DataBaseManager():
             return id_venta_actualizado
         else:
             return False
+        
+        
+    def comprabar_estado_facturacion(self) -> bool:
+        """
+        Comprueba si no se ha facturado antes de generar la nota de entrega.
+        Comprueba si una factura esta pendiente o fue anulada.
+
+        Args:
+            id_venta (int): Id de venta a comprobar.
+
+        Returns:
+            bool: Retorna True si ya se ha facturado False si no existe
+        """
+        
+        query = "SELECT MAX(id_venta) AS ultimo_id FROM Ventas"
+        #params = id_venta
+        
+        data_dicc = self.select(query)#, (params,))
+        #print(f"El documento es: {data_dicc}")
+        documento_id = data_dicc[0]["ultimo_id"] if data_dicc else None
+        #estado_documento = data_dicc[0]["estado"] if data_dicc else None
+        
+        if documento_id: 
+            return True        
+        else:
+            return False
             
 #######################################################################################################################
 ########################################## SECCIÓN DE DATOS DE LA TIENDA ##############################################
@@ -4938,31 +4970,32 @@ class DataBaseManager():
 
         # Eliminar datos de las tablas en el orden correcto
         # Primero, elimina datos de tablas que tienen claves foráneas
-        cursor.execute("DELETE FROM Detalle_Venta;")
-        cursor.execute("DELETE FROM Ventas;")
-        cursor.execute("DELETE FROM DetalleNotaEntrega;")
-        cursor.execute("DELETE FROM NotasEntrega;")
-        cursor.execute("DELETE FROM Clientes;")
-        cursor.execute("DELETE FROM Productos;")
-        cursor.execute("DELETE FROM Detalle_Producto;")
-        cursor.execute("DELETE FROM Historial_Costos;")
-        cursor.execute("DELETE FROM Historial_Ganancias;")
-        cursor.execute("DELETE FROM Materiales;")
-        cursor.execute("DELETE FROM Proveedores;")
-        cursor.execute("DELETE FROM Detalles_Anulaciones;")
-        cursor.execute("DELETE FROM Anulaciones;")
-        cursor.execute("DELETE FROM Detalle_Factura;")
-        cursor.execute("DELETE FROM Facturas;")
-        cursor.execute("DELETE FROM Configuracion;")
-        cursor.execute("DELETE FROM Empaques;")
-        cursor.execute("DELETE FROM KitEmpaque;")
-        cursor.execute("DELETE FROM Lote_Productos;")
-        cursor.execute("DELETE FROM Lotes;")
-        cursor.execute("DELETE FROM Tienda;")
-        cursor.execute("DELETE FROM UmbralesAlerta;")
-        cursor.execute("DELETE FROM Usuarios;")
-        cursor.execute("DELETE FROM Ventas;")
-        cursor.execute("DELETE FROM productos_borrador;")
+        
+        #cursor.execute("DELETE FROM Detalle_Venta;")
+        #cursor.execute("DELETE FROM Ventas;")
+        #cursor.execute("DELETE FROM DetalleNotaEntrega;")
+        #cursor.execute("DELETE FROM NotasEntrega;")
+        # cursor.execute("DELETE FROM Clientes;")
+        # cursor.execute("DELETE FROM Productos;")
+        # cursor.execute("DELETE FROM Detalle_Producto;")
+        # cursor.execute("DELETE FROM Historial_Costos;")
+        # cursor.execute("DELETE FROM Historial_Ganancias;")
+        # cursor.execute("DELETE FROM Materiales;")
+        # cursor.execute("DELETE FROM Proveedores;")
+        # cursor.execute("DELETE FROM Detalles_Anulaciones;")
+        # cursor.execute("DELETE FROM Anulaciones;")
+        # cursor.execute("DELETE FROM Detalle_Factura;")
+        # cursor.execute("DELETE FROM Facturas;")
+        # cursor.execute("DELETE FROM Configuracion;")
+        # cursor.execute("DELETE FROM Empaques;")
+        # cursor.execute("DELETE FROM KitEmpaque;")
+        # cursor.execute("DELETE FROM Lote_Productos;")
+        # cursor.execute("DELETE FROM Lotes;")
+        # cursor.execute("DELETE FROM Tienda;")
+        # cursor.execute("DELETE FROM UmbralesAlerta;")
+        # cursor.execute("DELETE FROM Usuarios;")
+        # cursor.execute("DELETE FROM Ventas;")
+        # cursor.execute("DELETE FROM productos_borrador;")
         # Añade aquí más tablas según sea necesario
 
         # Volver a activar las restricciones de claves foráneas
@@ -4976,6 +5009,7 @@ class DataBaseManager():
 
 if __name__ == "__main__":
     probar = DataBaseManager()
+    #probar.borrar_base_datos()
     #probar.actualiza_stock_db(70,"EMP-1") #"Caja de carton 11x15", "Estuche de tela con Logo", "Tarjeta de instrucciones"])
     #probar.obtener_id_factura_por_numero(987654321)
     #probar.encontrar_facturas()
@@ -5016,4 +5050,5 @@ if __name__ == "__main__":
     #probar.verificar_stock_bajo()
     #probar.cargar_items("material")
     #probar.actualizar_material("ESP-P-V", 20, 1.10, 0.05)
-    probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
+    #probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
+    probar.comprabar_estado_facturacion()
