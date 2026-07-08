@@ -527,9 +527,16 @@ class VentanaVentas:
 
             # Calcular el subtotal, descuento, impuesto y total
             subtotal = sum(item["subtotal"] for item in self.lista_productos_venta)
-            descuento = float(self.entry_descuento.get() or 0)
+            try:
+                descuento_porcentual = float(self.entry_descuento.get() or 0) / 100
+                print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
+            except ValueError:
+                descuento_porcentual = 0
+                
+            descuento_monto = subtotal * descuento_porcentual  # Calcular el monto del descuento
+            print(f"DESCUENTO MONTO: {descuento_monto}")
             impuesto = subtotal * 0.19  # IVA del 19%
-            total = subtotal - descuento + impuesto
+            total = subtotal - descuento_monto + impuesto
 
             # Conectar a la base de datos para obtener el siguiente número de factura
             id_venta = db_connect.siguiente_numero_factura()
@@ -541,7 +548,7 @@ class VentanaVentas:
                 datetime.now().strftime("%d.%m.%Y"),
                 "factura",
                 round(subtotal, 2),
-                descuento,
+                descuento_monto,
                 round(impuesto, 2),
                 round(total, 2),
                 self.usuario_actual
@@ -626,16 +633,24 @@ class VentanaVentas:
 
             # Calcular el subtotal, descuento, impuesto y total
             subtotal = sum(item["subtotal"] for item in self.lista_productos_venta)
-            descuento = float(self.entry_descuento.get() or 0)
+            
+            try:
+                descuento_porcentual = float(self.entry_descuento.get() or 0) / 100
+                print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
+            except ValueError:
+                descuento_porcentual = 0
+                
+            descuento_monto = subtotal * descuento_porcentual  # Calcular el monto del descuento
+            print(f"DESCUENTO MONTO: {descuento_monto}")
             impuesto = subtotal * 0.19  # IVA del 19%
-            total = subtotal - descuento + impuesto
+            total = subtotal - descuento_monto + impuesto
 
             # Guardar la nota de entrega en la base de datos
             id_nota_entrega = db_connect.guardar_nota_entrega(
                 id_cliente,
                 datetime.now().strftime("%d.%m.%Y"),
                 round(subtotal, 2),
-                descuento,
+                descuento_monto,
                 round(impuesto, 2),
                 round(total, 2)
             )
@@ -740,65 +755,69 @@ class VentanaVentas:
         if not confirmar:
             return
 
-        #try:
-        # Obtener los datos de la factura original
-        datos_factura = db_connect.datos_de_la_venta(id_factura)
-        
-        if not datos_factura:
-            messagebox.showerror("⚠️ Error", "No se encontró la factura.")
-            return
-        print(datos_factura)
-        id_venta,fecha,id_cliente,nombre,direccion,casa_num,zona_postal,identificacion_fiscal,email,telefono,total,tipo_documento,tienda_nombre,tienda_direccion,tienda_identificacion_fiscal,telefono,descuento,subtotal,impuesto = datos_factura[0]
-        
-        # Obtener los detalles de la factura
-        detalles_factura = db_connect.detalle_de_la_venta(id_factura)
-        if not detalles_factura:
-            messagebox.showerror("⚠️ Error", "No se encontraron detalles para esta factura.")
-            return
-
-        # Crear la Gutschrift (factura de anulación)
-        id_gutschrift = db_connect.guardar_gutschrift(
-            id_factura,
-            id_cliente,
-            fecha,
-            subtotal,
-            descuento,
-            impuesto,
-            total,
-            self.entry_motivo.get()
-        )
-
-        # Actualizar el stock (si la anulación es por devolución)
-        for detalle in detalles_factura:  # Es un dicc
-            id_producto=  detalle["id_producto"]
-            codigo = detalle["codigo"]
-            cantidad = detalle["cantidad"]
-            precio_uni = detalle["precio_unitario"]
-            subtotal_detalle = detalle["subtotal"]
+        try:
+            # Obtener los datos de la factura original
+            datos_factura = db_connect.datos_de_la_venta(id_factura)
             
-            # Insertar el detalle en la tabla detalles_gutschrift
-            db_connect.guardar_detalle_gutschrift(
-                id_gutschrift,
-                id_producto,
-                cantidad,
-                precio_uni,
-                subtotal_detalle
+            if not datos_factura:
+                messagebox.showerror("⚠️ Error", "No se encontró la factura.")
+                return
+            #print(datos_factura)
+            (id_venta, fecha, id_cliente, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
+            total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel, email_t,
+            descuento, subtotal, impuesto) = datos_factura
+            
+            # Obtener los detalles de la factura
+            detalles_factura = db_connect.detalle_de_la_venta(id_factura)
+            if not detalles_factura:
+                messagebox.showerror("⚠️ Error", "No se encontraron detalles para esta factura.")
+                return
+
+            # Crear la Gutschrift (factura de anulación)
+            id_gutschrift = db_connect.guardar_gutschrift(
+                id_factura,
+                id_cliente,
+                fecha,
+                subtotal,
+                descuento,
+                impuesto,
+                total,
+                self.entry_motivo.get()
             )
+
+            id_producto = db_connect.id_producto_a_anular(id_venta)
             
-            db_connect.actualizar_stock_producto_devolucion(id_producto, cantidad)
+            # Actualizar el stock (si la anulación es por devolución)
+            for detalle in detalles_factura:  # Es un dicc
+                #id_producto=  detalle[0] #["id_producto"]
+                codigo = detalle[0]  #["codigo"]
+                cantidad = detalle[1]  #["cantidad"]
+                precio_uni = detalle[2]  #["precio_unitario"]
+                subtotal_detalle = detalle[3]  #["subtotal"]
+                
+                # Insertar el detalle en la tabla detalles_gutschrift
+                db_connect.guardar_detalle_gutschrift(
+                    id_gutschrift,
+                    id_producto,
+                    cantidad,
+                    precio_uni,
+                    subtotal_detalle
+                )
+                
+                db_connect.actualizar_stock_producto_devolucion(id_producto, cantidad)
 
-        # Marcar la factura original como anulada
-        db_connect.marcar_factura_como_anulada(id_factura)
+            # Marcar la factura original como anulada
+            db_connect.marcar_factura_como_anulada(id_factura)
 
-        messagebox.showinfo("✅ Éxito", f"Factura # {id_factura} anulada correctamente. ID de Gutschrift: {id_gutschrift}")
-        
-        # Opcional: Imprimir la Gutschrift
-        imprimir = messagebox.askyesno("Imprimir Gutschrift", "¿Desea imprimir la Gutschrift ahora?")
-        if imprimir:
-            imprimir_gutschrift(id_gutschrift)
+            messagebox.showinfo("✅ Éxito", f"Factura # {id_factura} anulada correctamente. ID de Gutschrift: {id_gutschrift}")
+            
+            # Opcional: Imprimir la Gutschrift
+            imprimir = messagebox.askyesno("Imprimir Gutschrift", "¿Desea imprimir la Gutschrift ahora?")
+            if imprimir:
+                imprimir_gutschrift(id_gutschrift)
 
-        #except Exception as e:
-            #messagebox.showerror("⚠️ Error", f"No se pudo anular la factura: {e}")
+        except Exception as e:
+            messagebox.showerror("⚠️ Error", f"No se pudo anular la factura: {e}")
     
     
     def limpiar_pantalla(self):
@@ -880,53 +899,53 @@ def convertir_nota_a_factura(id_nota_entrega, usuario_actual):
     if not confirmar:
         return
     
-    #try:
-    # Verificar si la nota de entrega ya está facturada
-    estado = db_connect.obtener_estado_nota_entrega(id_nota_entrega)
-    
-    if estado == "Facturado":
-        messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
-        return
+    try:
+        # Verificar si la nota de entrega ya está facturada
+        estado = db_connect.obtener_estado_nota_entrega(id_nota_entrega)
+        
+        if estado == "Facturado":
+            messagebox.showerror("⚠️ Error", "Esta nota de entrega ya ha sido facturada.")
+            return
 
-    # Obtener los datos de la nota de entrega
-    nota_data = db_connect.obtener_datos_nota_entrega(id_nota_entrega)
-    if not nota_data:
-        messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
-        return
+        # Obtener los datos de la nota de entrega
+        nota_data = db_connect.obtener_datos_nota_entrega(id_nota_entrega)
+        if not nota_data:
+            messagebox.showerror("⚠️ Error", "No se encontró la nota de entrega.")
+            return
 
-    id_cliente, fecha, subtotal, descuento, impuesto, total = nota_data[0]
-    
-    # Obtener el siguiente número de factura y actualizarlo en la base de datos.
-    ultimo_numero = db_connect.obtener_ultimo_numero_factura()
-    if ultimo_numero:
-        nuevo_numero = ultimo_numero + 1
-        db_connect.actualizar_ultimo_numero_factura(nuevo_numero)
-    else:
-        messagebox.showerror("⚠️ Error", f"No se ha podido Obtener el ultimo número de factura. Correlación comprometida.")
+        id_cliente, fecha, subtotal, descuento, impuesto, total = nota_data[0]
+        
+        # Obtener el siguiente número de factura y actualizarlo en la base de datos.
+        ultimo_numero = db_connect.obtener_ultimo_numero_factura()
+        if ultimo_numero:
+            nuevo_numero = ultimo_numero + 1
+            db_connect.actualizar_ultimo_numero_factura(nuevo_numero)
+        else:
+            messagebox.showerror("⚠️ Error", f"No se ha podido Obtener el ultimo número de factura. Correlación comprometida.")
 
-    # Guardar la factura en la base de datos
-    db_connect.insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total, usuario_actual)
-    id_venta = nuevo_numero
+        # Guardar la factura en la base de datos
+        db_connect.insertar_factura_venta(nuevo_numero, id_cliente, fecha, subtotal, descuento, impuesto, total, usuario_actual)
+        id_venta = nuevo_numero
 
-    # Copiar los detalles de la nota de entrega a la factura
-    detalles = db_connect.obtener_detalles_nota_entrega(id_nota_entrega)
+        # Copiar los detalles de la nota de entrega a la factura
+        detalles = db_connect.obtener_detalles_nota_entrega(id_nota_entrega)
 
-    for detalle in detalles:
-        id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_ = detalle
-        id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
-    
-    # Actualizar el estado de la nota de entrega a 'Facturado'
-    actualizado = db_connect.actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
+        for detalle in detalles:
+            id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_ = detalle
+            id_de_la_venta = db_connect.insertar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario, subtotal_detalle, descuento_)
+        
+        # Actualizar el estado de la nota de entrega a 'Facturado'
+        actualizado = db_connect.actualizar_estado_nota_entrega(id_nota_entrega, "Facturado")
 
-    messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
+        messagebox.showinfo("✅ Éxito", f"Nota de entrega #{id_nota_entrega} convertida en factura #{id_venta}.")
 
-    # Preguntar si desea imprimir la nueva factura
-    imprimir = messagebox.askyesno("Imprimir Factura", "¿Deseas imprimir la nueva factura ahora?")
-    if imprimir:
-        imprimir_factura(id_venta, es_copia=False)
+        # Preguntar si desea imprimir la nueva factura
+        imprimir = messagebox.askyesno("Imprimir Factura", "¿Deseas imprimir la nueva factura ahora?")
+        if imprimir:
+            imprimir_factura(id_venta, es_copia=False)
 
-    #except Exception as e:
-        #messagebox.showerror("⚠️ Error", f"No se pudo convertir la nota de entrega en factura: {e}")
+    except Exception as e:
+        messagebox.showerror("⚠️ Error", f"No se pudo convertir la nota de entrega en factura: {e}")
 
 
 # Función para imprimir facturas
@@ -947,7 +966,7 @@ def imprimir_factura(id_venta, es_copia=False):
         messagebox.showerror("⚠️ Error", "No se encontró la venta.")
         return
 
-    (id_venta, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
+    (id_venta, fecha, id_cliente, nombre_cliente, direccion_cliente, casa_numero, zona_postal, identificacion_fiscal_cliente, email, telefono,
     total, tipo_documento, tienda_nombre, tienda_direccion, tienda_identificacion_fiscal, tel, email_t,
     descuento, subtotal, impuesto) = venta_data
 
@@ -1369,7 +1388,7 @@ def imprimir_gutschrift(id_gutschrift, es_copia=False):
     # Desempaquetar datos de la Gutschrift
     (id_gutschrift, id_factura_original, fecha, nombre_cliente, direccion_cliente, casa_numero, zona_postal,
     identificacion_fiscal_cliente, email, telefono, total, tienda_nombre, tienda_direccion,
-    tienda_identificacion_fiscal, tel, descuento, subtotal, impuesto, motivo) = gutschrift_data[0]
+    tienda_identificacion_fiscal, tel, email_t, descuento, subtotal, impuesto, motivo) = gutschrift_data
 
     # Ruta del archivo PDF
     try:
@@ -1438,7 +1457,8 @@ def imprimir_gutschrift(id_gutschrift, es_copia=False):
         [Paragraph(f"{tienda_nombre}", right_aligned_style)],
         [Paragraph(f"USt-IdNr.: {tienda_identificacion_fiscal}", right_aligned_style)],
         [Paragraph(f"Adresse.: {tienda_direccion}", right_aligned_style)],
-        [Paragraph(f"Tel.: {tel}", right_aligned_style)]
+        [Paragraph(f"Tel.: {tel}", right_aligned_style)],
+        [Paragraph(f"Email.: {email_t}", right_aligned_style)]
     ]
     tabla_tienda = Table(datos_tienda, colWidths=[450])
     tabla_tienda.setStyle(TableStyle([
@@ -1451,7 +1471,7 @@ def imprimir_gutschrift(id_gutschrift, es_copia=False):
     info_factura_cliente = [
         [Paragraph(f"Kunde: {nombre_cliente}", left_aligned_style)],
         [Paragraph(f"Adresse: {direccion_cliente}", left_aligned_style)],
-        [Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
+        #[Paragraph(f"Hsnr: {casa_numero}", left_aligned_style)],
         [Paragraph(f"Postleitzahl: {zona_postal}", left_aligned_style)],
         [Paragraph(f"Email: {email}", left_aligned_style)],
         [Paragraph(f"Tel.: {telefono}", left_aligned_style)],

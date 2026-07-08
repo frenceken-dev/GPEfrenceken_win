@@ -4214,6 +4214,7 @@ class DataBaseManager():
         Returns:
             List[Tuple[Any]]: - Retorna lista de tuplas.
         """
+        print(f"ID GUTSCHRIFT ES: {id_gutschrift}")
         query = """
             SELECT
             g.id_gutschrift,
@@ -4231,6 +4232,7 @@ class DataBaseManager():
             t.direccion AS direccion_tienda,
             t.identificacion_fiscal AS id_fiscal_tienda,
             t.telefono AS telefono_tienda,
+            t.email AS email_t,
             g.descuento,
             g.subtotal,
             g.impuesto,
@@ -4258,6 +4260,7 @@ class DataBaseManager():
             "direccion_tienda",
             "id_fiscal_tienda",
             "telefono_tienda",
+            "email_t",
             "descuento",
             "subtotal",
             "impuesto",
@@ -4268,12 +4271,33 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in datos_anulacio_dicc
         ]
-        
+        print(f"DATOS GUTSCHRIFT-> {datos_anulacio_tupla}")
         if datos_anulacio_tupla:
-            return datos_anulacio_tupla
+            return datos_anulacio_tupla[0]
         else:
-            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los datos da la Factura de anulación.")
+            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los datos de la Factura de anulación.")
             
+    
+    def id_producto_a_anular(self, id_venta:int)-> int:
+        """
+        selecciona id de venta para la anulacion de factura.
+
+        Args:
+            id_venta (int): id de la venta.
+
+        Returns:
+            int: Retorna el id de venta. 
+        """
+        query = "SELECT id_producto FROM Detalle_Venta WHERE id_venta = ?"
+        params = id_venta
+        
+        id_produc = self.select(query, (params,))
+        
+        if id_produc:
+            return id_produc[0]["id_producto"]
+        else:
+            return None
+        
     
     def guardar_detalle_gutschrift(self, id_gutschrift:int, id_producto:int, cantidad:int, precio_unitario:float, subtotal:float)-> int:
         """
@@ -4291,7 +4315,7 @@ class DataBaseManager():
         """
         query = {
             "id_gutschrift":id_gutschrift,
-            "id_producto":id_gutschrift,
+            "id_producto":id_producto,
             "cantidad":cantidad,
             "precio_unitario":precio_unitario,
             "subtotal":subtotal
@@ -4341,7 +4365,7 @@ class DataBaseManager():
         if detalles_anulacion_tupla:
             return detalles_anulacion_tupla
         else:
-            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los detalles da la Factura de anulación.")
+            messagebox.showerror("⚠️ Error", f"No se pudo Cargar los detalles de la Factura de anulación.")
     
     
     def actualizar_stock_producto_devolucion(self, id_producto:int, cantidad:int)-> bool:
@@ -4355,11 +4379,11 @@ class DataBaseManager():
         Returns:
             bool: - Retorna True si la actualizacion es exitosa si no False.
         """
-        print(f"ID: {id_producto} -- Cantidad: {cantidad}")
+        #print(f"ID: {id_producto} -- Cantidad: {cantidad}")
         query = "SELECT codigo, cantidad FROM Productos WHERE id_producto = ?"
         params = id_producto
         cantidad_bd = self.select(query, (params,))
-        print(f"Resultado de SELECT: {cantidad_bd}")
+        #print(f"Resultado de SELECT: {cantidad_bd}")
         cantidad_actual = cantidad_bd[0]["cantidad"]
         
         actualizado = self.update(
@@ -4427,7 +4451,7 @@ class DataBaseManager():
                 t.direccion AS tienda_direccion,
                 t.identificacion_fiscal AS tienda_identificacion_fiscal,
                 t.telefono AS telf_tienda,
-                t.email,
+                t.email AS email_t,
                 v.descuento,
                 v.subtotal,
                 v.impuesto
@@ -4446,12 +4470,12 @@ class DataBaseManager():
         campos = [
             "id_venta", # 0
             "fecha", # 1
-            #"id_cliente",  # 2
+            "id_cliente",  # 2
             "nombre",  # 3
             "direccion",  # 4
             "casa_num",  # 5
             "zona_postal",  # 6
-            "identificacion_fiscal", #  7
+            "identificacion_fiscal", # 7
             "email",  # 8
             "telefono",  # 9
             "total",  # 10
@@ -4460,17 +4484,17 @@ class DataBaseManager():
             "tienda_direccion",  # 13
             "tienda_identificacion_fiscal", # 14
             "telf_tienda",# 15
-            "email", 
-            "descuento", # 16
-            "subtotal",  # 17
-            "impuesto"  # 18
+            "email_t",  # 16
+            "descuento", # 17
+            "subtotal",  # 18
+            "impuesto"  # 19
         ]
         
         datos_venta_tupla = [
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in datos_venta_dicc
         ]
-        print(f"Datos para imprimir: {datos_venta_tupla[0]}")
+        #print(f"Datos para imprimir: {datos_venta_tupla[0]}")
         return datos_venta_tupla[0]
     
     
@@ -4490,7 +4514,7 @@ class DataBaseManager():
             JOIN Productos p ON dv.id_producto = p.id_producto
             WHERE dv.id_venta = ?
         """
-        print(f"Detalle de venta id: {id_venta}")
+        #print(f"Detalle de venta id: {id_venta}")
         params = id_venta
         
         detalle_venta_dicc = self.select(query, (params,))
@@ -4507,7 +4531,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in detalle_venta_dicc
             ]        
-        print(f"LOS DETALLES DE LA VENTA SON: {detalle_venta_tupla[0]}")
+        #print(f"LOS DETALLES DE LA VENTA SON: {detalle_venta_tupla[0]}")
         return detalle_venta_tupla
     
     
@@ -4525,8 +4549,8 @@ class DataBaseManager():
         params = id_cliente
         
         cliente_dicc = self.select(query, (params,))
-        print(f"El cliente: {cliente_dicc}")
-        print(f"El cliente: {cliente_dicc[0]["nombre"]}")
+        #print(f"El cliente: {cliente_dicc}")
+        #print(f"El cliente: {cliente_dicc[0]["nombre"]}")
         if cliente_dicc:
             return cliente_dicc
         else:
@@ -4971,10 +4995,12 @@ class DataBaseManager():
         # Eliminar datos de las tablas en el orden correcto
         # Primero, elimina datos de tablas que tienen claves foráneas
         
-        #cursor.execute("DELETE FROM Detalle_Venta;")
-        #cursor.execute("DELETE FROM Ventas;")
-        #cursor.execute("DELETE FROM DetalleNotaEntrega;")
-        #cursor.execute("DELETE FROM NotasEntrega;")
+        # cursor.execute("DELETE FROM Detalle_Venta;")
+        # cursor.execute("DELETE FROM Ventas;")
+        # cursor.execute("DELETE FROM DetalleNotaEntrega;")
+        # cursor.execute("DELETE FROM NotasEntrega;")
+        # cursor.execute("DELETE FROM Detalles_Anulaciones;")
+        # cursor.execute("DELETE FROM Anulaciones;")
         # cursor.execute("DELETE FROM Clientes;")
         # cursor.execute("DELETE FROM Productos;")
         # cursor.execute("DELETE FROM Detalle_Producto;")
@@ -4982,8 +5008,6 @@ class DataBaseManager():
         # cursor.execute("DELETE FROM Historial_Ganancias;")
         # cursor.execute("DELETE FROM Materiales;")
         # cursor.execute("DELETE FROM Proveedores;")
-        # cursor.execute("DELETE FROM Detalles_Anulaciones;")
-        # cursor.execute("DELETE FROM Anulaciones;")
         # cursor.execute("DELETE FROM Detalle_Factura;")
         # cursor.execute("DELETE FROM Facturas;")
         # cursor.execute("DELETE FROM Configuracion;")
@@ -4994,7 +5018,6 @@ class DataBaseManager():
         # cursor.execute("DELETE FROM Tienda;")
         # cursor.execute("DELETE FROM UmbralesAlerta;")
         # cursor.execute("DELETE FROM Usuarios;")
-        # cursor.execute("DELETE FROM Ventas;")
         # cursor.execute("DELETE FROM productos_borrador;")
         # Añade aquí más tablas según sea necesario
 
@@ -5051,4 +5074,4 @@ if __name__ == "__main__":
     #probar.cargar_items("material")
     #probar.actualizar_material("ESP-P-V", 20, 1.10, 0.05)
     #probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
-    probar.comprabar_estado_facturacion()
+    #probar.comprabar_estado_facturacion()
