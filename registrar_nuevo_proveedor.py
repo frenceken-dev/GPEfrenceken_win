@@ -104,7 +104,7 @@ def nuevo_proveedor(root, imagen_panel_tk, volver_menu):
             email_entry.get(),
             direccion_entry.get(),
         )
-        print(f"El ID del nuevo Proveedor es: {id_nuevo_proveedor}")
+        #print(f"El ID del nuevo Proveedor es: {id_nuevo_proveedor}")
         # 2. Luego, comprueba si se guardó
         comprobacion_registro(nombre_entry.get(), frame, volver_menu, root, imagen_panel_tk)
 

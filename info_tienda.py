@@ -256,7 +256,7 @@ def actualizar_tienda(frame_contenido, mostrar_menu_principal):
 
         # Recuperación de datos (dirección, telefono, email)
         datos_actuales = db_conect.datos_registrados_tienda()
-        print(datos_actuales)
+        #print(datos_actuales)
 
         if datos_actuales:
             # Obtener la primera tupla de la lista

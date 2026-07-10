@@ -738,7 +738,7 @@ class LoteManager:
     def _on_lote_seleccionado(self, event):
         """Carga los datos del lote seleccionado en el formulario."""
         seleccion = self.tree_lotes.selection()
-        print(f"El lote seleccionado es: {seleccion}")###################################################################
+        #print(f"El lote seleccionado es: {seleccion}")###################################################################
         if not seleccion:
             return
         
@@ -772,7 +772,7 @@ class LoteManager:
         productos_lote = self.db_connect.obtener_productos_del_lote_con_cantidades(lote_id)
         if not productos_lote:
             return
-        print(f"Los productos_lote: {productos_lote}")
+        #print(f"Los productos_lote: {productos_lote}")
         # Agregar productos al Treeview
         for prod in productos_lote:
             id_producto, codigo, cantidad = prod

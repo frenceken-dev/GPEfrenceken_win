@@ -22,7 +22,7 @@ class VentanaVentas:
             self.imagen_panel_resize = self.imagen_panel.resize((60, 60), Image.LANCZOS)
             self.imagen_panel_tk = ImageTk.PhotoImage(self.imagen_panel_resize)
         except Exception as e:
-            print(f"Error al cargar la imagen: {e}")
+            #print(f"Error al cargar la imagen: {e}")
             self.imagen_panel_tk = tk.Label(self.root, text="Ikigai Designs", font=("Arial", 24), bg="#f0f0f0").pack(pady=20)
 
         for widget in self.root.winfo_children():
@@ -386,7 +386,7 @@ class VentanaVentas:
             try:
                 # guarda en bd clientes.
                 id_num = db_connect.nuevo_cliente(nombre, direccion, casa_num, zona_postal, id_fiscal, email, telefono)
-                print(f"ID del nuevo cliente registrado: {id_num}")
+                #print(f"ID del nuevo cliente registrado: {id_num}")
                 if id_num:
                     messagebox.showinfo("✅ Éxito", "Cliente registrado correctamente.")
                     ventana_cliente.destroy()
@@ -529,12 +529,12 @@ class VentanaVentas:
             subtotal = sum(item["subtotal"] for item in self.lista_productos_venta)
             try:
                 descuento_porcentual = float(self.entry_descuento.get() or 0) / 100
-                print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
+                #print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
             except ValueError:
                 descuento_porcentual = 0
                 
             descuento_monto = subtotal * descuento_porcentual  # Calcular el monto del descuento
-            print(f"DESCUENTO MONTO: {descuento_monto}")
+            #print(f"DESCUENTO MONTO: {descuento_monto}")
             impuesto = subtotal * 0.19  # IVA del 19%
             total = subtotal - descuento_monto + impuesto
 
@@ -636,12 +636,12 @@ class VentanaVentas:
             
             try:
                 descuento_porcentual = float(self.entry_descuento.get() or 0) / 100
-                print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
+                #print(f"DESCUENTO PORCENTUAL: {descuento_porcentual}")
             except ValueError:
                 descuento_porcentual = 0
                 
             descuento_monto = subtotal * descuento_porcentual  # Calcular el monto del descuento
-            print(f"DESCUENTO MONTO: {descuento_monto}")
+            #print(f"DESCUENTO MONTO: {descuento_monto}")
             impuesto = subtotal * 0.19  # IVA del 19%
             total = subtotal - descuento_monto + impuesto
 
@@ -732,7 +732,7 @@ class VentanaVentas:
             return
         
         # Validar que la factura no esté ya anulada
-        print(f"Id de factura a anular : {self.factura_id}")
+        #print(f"Id de factura a anular : {self.factura_id}")
         estado_actual = db_connect.obtener_estado_venta(self.factura_id[0])
         if estado_actual == "Anulada":
             messagebox.showerror("⚠️ Error", "Esta factura ya está anulada.")

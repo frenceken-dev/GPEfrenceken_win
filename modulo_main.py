@@ -62,7 +62,8 @@ class PantallaPrincipal:
             nuevo_alto = int(alto * 0.25)
             self.imagen_tk_login = redimensionar_imagen(LOGO_PATH, nuevo_ancho, nuevo_alto)
         except Exception as e:
-            print(f"⚠️ Error al ajustar imágenes: {e}")
+            pass
+            #print(f"⚠️ Error al ajustar imágenes: {e}")
 
 
     def pantalla_login(self):
@@ -153,7 +154,7 @@ class PantallaPrincipal:
                     # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 
             except tk.TclError:
-                print("⚠️ El combobox ya no existe. No se puede leer el usuario.")
+                #print("⚠️ El combobox ya no existe. No se puede leer el usuario.")
                 return
             
             if es_valido:

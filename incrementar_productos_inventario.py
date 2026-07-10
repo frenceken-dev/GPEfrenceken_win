@@ -104,6 +104,7 @@ class VentanaIncrementarStock:
         
 
     def incrementar_stock(self):
+        es_por_metro = False
         producto_seleccionado = self.combobox_productos.get()
         cantidad = self.entry_cantidad.get()
 
@@ -118,7 +119,7 @@ class VentanaIncrementarStock:
         # Extraer el código único del producto
         codigo_unico = producto_seleccionado.split("-")[1].strip()
         id_producto = db_connect.obtener_id_producto_por_codigo(codigo_unico)
-        cantidad = int(cantidad)
+        cantidad_a_fabricar = int(cantidad)
 
         # Obtener materiales requeridos (usando tu tabla "detalle")
         materiales_requeridos = db_connect.obtener_materiales_por_producto(id_producto)
@@ -126,25 +127,26 @@ class VentanaIncrementarStock:
         # Verificar stock suficiente
         for material in materiales_requeridos:
             stock_disponible = material["stock"]  # Stock actual del material
-            es_por_metro = material["es_por_metro"]
-            print(f"Es por metros? = {es_por_metro}")
-            if es_por_metro == "Si":
+            es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
+            
+            if es_por_metro:
+                #print(f"MATERIAL CM si es TRUE: {material["cantidad_cm"]}")
                 cantidad_requerida_por_producto = material["cantidad_cm"]
                 calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
-                cantidad_total_a_descontar = calcula_cantidad_cm * cantidad
+                cantidad_total_a_descontar = calcula_cantidad_cm * cantidad_a_fabricar
             else:
                 cantidad_requerida_por_producto = material["cantidad"]  # Cantidad necesaria por producto
-                cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad  # Cantidad total a descontar
+                cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar # Cantidad total a descontar
 
-            print(f"DEBUG: Material {material['nombre']} - Stock disponible: {stock_disponible:.4f}, Cantidad a descontar: {cantidad_total_a_descontar}")
+            #print(f"DEBUG: Material {material['nombre']} - Stock disponible: {stock_disponible:.4f}, Cantidad a descontar: {cantidad_total_a_descontar}")
 
             if stock_disponible < cantidad_total_a_descontar:
                 messagebox.showerror("⚠️ Error", f"No hay suficiente stock del material {material['nombre']} Código -> {material["codigo"]}.")
                 return
 
         # Descontar materiales
-        db_connect.descontar_materiales(materiales_requeridos, cantidad)
+        db_connect.descontar_materiales(materiales_requeridos, cantidad_a_fabricar)
 
         # Incrementar stock del producto
-        db_connect.incrementar_stock_producto(id_producto, cantidad)
+        db_connect.incrementar_stock_producto(id_producto, cantidad_a_fabricar)
         messagebox.showinfo("✅ Éxito", "Stock incrementado y materiales descontados correctamente.")

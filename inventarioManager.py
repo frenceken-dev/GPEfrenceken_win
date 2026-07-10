@@ -303,7 +303,7 @@ class InventarioManager:
         def es_por_metros(event):
             # Capturamos la selección del usuario.
             self.son_metros = es_por_metro.get()
-            print(f"Es <> {self.son_metros}")
+            #print(f"Es <> {self.son_metros}")
 
         codigo_entry["postcommand"] = filtrar_codigos_postcommand
         codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
@@ -432,7 +432,7 @@ class InventarioManager:
         def emb_por_metro(event):
             # Capturamos la selección de usuario.
             self.emb_metros = es_por_metro.get()
-            print(f"Es <> {self.emb_metros}")
+            #print(f"Es <> {self.emb_metros}")
 
         codigo_entry["postcommand"] = filtrar_codigos_postcommand
         codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
@@ -501,12 +501,16 @@ class InventarioManager:
 
 
     def convertir_a_float(self, valor_str):
+        """Recibe un valor numerico y lo convierte en un dato float, sino retora 0.0"""
+        if not valor_str or valor_str == "" or valor_str is None:
+            return 0.0
+        
         try:
             valor_str = str(valor_str).replace(",", ".")
             return float(valor_str)
         except ValueError:
-            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
-            return None
+            messagebox.showerror(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return 0.0
 
     def limpiar_campos(self, frame_contenido):
         for widget in frame_contenido.winfo_children():
@@ -546,7 +550,7 @@ class InventarioManager:
                     material["costo_unitario"] = round(material["costo_unitario"], 4)
                     
                 except:
-                    print(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
+                    messagebox.showerror(f"⚠️ Error",  f"El valor {material['costo_unitario']} no es un número válido.")
                     material["costo_unitario"] = 0.0
                     
                 codigo_true = db_connect.codigo_existe(material["codigo"])

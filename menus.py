@@ -21,7 +21,7 @@ def menu_gestion_inventario(root, mostrar_menu_principal, imagen_panel_tk, rol, 
     def usuario_actual_main(usuario):
         """Obtiene el usuario actual y su ID."""
         nombre_usuario_creador = usuario
-        print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
+        #print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
         if nombre_usuario_creador:
             crear_producto.usuario_actual(nombre_usuario_creador)
     

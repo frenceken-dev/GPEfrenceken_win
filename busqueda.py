@@ -680,8 +680,8 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
                     cantidad = convertir_a_float(nuevos_valores["Stock"])
                     nuevo_precio_unitario = precio_total / cantidad
                     nuevos_valores["Costo Unit."] = f"{nuevo_precio_unitario:.2f}"
-                    print("Resultado del nuevo Costo Unitario: ", nuevo_precio_unitario)
-                    print("El Costo Unitario Actualizado es: ", nuevos_valores["Costo Unit."])
+                    #print("Resultado del nuevo Costo Unitario: ", nuevo_precio_unitario)
+                    #print("El Costo Unitario Actualizado es: ", nuevos_valores["Costo Unit."])
                     
                     # Actualizar el precio unitario en la lista del Treeview
                     if "Costo Unit." in campo_indice:  # Verificar si "Costo Unit." está en campo_indice
@@ -761,7 +761,7 @@ def mostrar_resultados(resultados, tipo_busqueda, root, usuario_actual, volver_m
         comando=imprimir_resultados
     )
     boton_imprimir.pack(side="left", padx=5, pady=5)
-    print(f"El Usuario es: {usuario_actual} en la busqueda")
+    #print(f"El Usuario es: {usuario_actual} en la busqueda")
     # Dar acceso si es admin
     if usuario_actual == "administrador":
         # Botón para editar
@@ -792,5 +792,5 @@ def convertir_a_float(valor_str):
             valor_str = str(valor_str).replace(",", ".")
             return float(valor_str)
         except ValueError:
-            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            messagebox.showerror("⚠️ Error", f"'{valor_str}' no es un número válido.")
             return None

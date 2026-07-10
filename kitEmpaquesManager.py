@@ -159,7 +159,7 @@ class kitEmpaques:
         # Cargar ítems desde la base de datos
         items = self.db_connect.selecion_empaques()
         for item_nombre in items:
-            print(f"CARGA LOS ITEMS DISPONIBLES QUE SON: {item_nombre}")
+            #print(f"CARGA LOS ITEMS DISPONIBLES QUE SON: {item_nombre}")
             self.listbox_items.insert(tk.END, item_nombre)
 
         # Botón para adardar/actualizar el kit
@@ -563,7 +563,7 @@ class kitEmpaques:
                 if cantidad_cm is None:  # Usuario canceló
                     return
                 cantidades_cm[item] = cantidad_cm
-                print(f"cantidades_cm: {cantidades_cm}")
+                #print(f"cantidades_cm: {cantidades_cm}")
             
         if codigo_kit:
             kit_costo, mensaje = self.db_connect.guardar_kit(codigo_kit, empaques, usuario, cantidades_cm)

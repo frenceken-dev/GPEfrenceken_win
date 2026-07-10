@@ -9,7 +9,7 @@ class ProductoManager:
     """Clase para gestionar la creación, edición y visualización de productos."""
 
     def __init__(self, root, imagen_panel_tk, volver_menu):
-        print("¡NUEVA INSTANCIA DE ProductoManager CREADA!")  # Depuración
+        #print("¡NUEVA INSTANCIA DE ProductoManager CREADA!")  # Depuración
         self.root = root
         self.imagen_panel_tk = imagen_panel_tk
         self.volver_menu = volver_menu
@@ -299,14 +299,11 @@ class ProductoManager:
                 return
 
             # Consultar si el material es por metros
-            query = "SELECT es_por_metro FROM Materiales WHERE codigo = ?"
-            resultado = db_connect.select(query, (codigo_material,))
-            if resultado:
-                es_por_metro = resultado[0]["es_por_metro"] == "Si"
-                if es_por_metro:
-                    cantidad_label.config(text="Cantidad en cm:")
-                else:
-                    cantidad_label.config(text="Cantidad:")
+            es_por_metro = db_connect.comprobar_si_es_por_metro(codigo_material)
+            if es_por_metro:
+                cantidad_label.config(text="Cantidad en cm:")
+            else:
+                cantidad_label.config(text="Cantidad:")
         
         # Vincular eventos para actualizar los Combobox y el label de cantidad
         material_entry.bind("<KeyRelease>", self.filtrar_codigos)
@@ -443,7 +440,7 @@ class ProductoManager:
                     "tipo": tipo_material_actual,
                     "tamaño": tamaño_material_actual,
                     "cantidad": cantidad_a_guardar,
-                    "es_por_metro": es_por_metro
+                    #"es_por_metro": es_por_metro
                 })
                 material_window.destroy()
                 messagebox.showinfo("Éxito", f"Material {material_actual} registrado correctamente.")
@@ -805,7 +802,7 @@ class ProductoManager:
                 # Si es por metros, convertir la cantidad de cm a metros
                 cantidad_en_metros = material["cantidad"] / 100
                 costo_materiales = cantidad_en_metros * costo_unitario # despues del = era +=
-                print(f"EL COSTO de material por CM ES: {costo_materiales}")
+                #print(f"EL COSTO de material por CM ES: {costo_materiales}")
             else:
                 # Si no es por metros, usar la cantidad directamente
                 costo_materiales += material["cantidad"] * costo_unitario
@@ -832,32 +829,212 @@ class ProductoManager:
             return
 
         self.costo_produccion = self.calcular_costo_producto()
-        precio_sugerido = self.costo_produccion * 2
+        precio_sugerido = self.costo_produccion * 2.5
 
         resumen_window = tk.Toplevel(self.root)
-        configurar_toplevel(resumen_window, titulo="Resumen del Producto", ancho_min=500, alto_min=450)
+        configurar_toplevel(resumen_window, titulo="Resumen del Producto", color_fondo="#a0b9f0", ancho_min=500, alto_min=650)
+        
+        # Crear un LabelFrame para el resumen
+        resumen_frame = tk.LabelFrame(
+            resumen_window,
+            text=" RESUMEN DEL PRODUCTO ",
+            font=("Arial", 11, "bold"),
+            fg="#333333",
+            bg="#a0b9f0",
+            padx=10,
+            pady=10
+        )
+        resumen_frame.pack(padx=10, pady=10, fill=tk.X)
 
         # Acortar la descripción si es muy larga
         descripcion_corta = (
-            f"{self.descripcion_producto[:16]}..."
-            if len(self.descripcion_producto) > 16
-            else self.descripcion_producto)
-        
-        tk.Label(resumen_window, text=f"""=== RESUMEN DEL PRODUCTO ===\n
-                    Código: {self.codigo_producto}\n
-                    Tipo: {self.tipo_producto}\n
-                    Descripción: {descripcion_corta}\n
-                    Kit de Empaque: {len(self.empaques_seleccionados)}\n
-                    Materiales usados: {len(self.materiales_usados)}\n
-                    Costo de producción: {self.costo_produccion}\n
-                    Precio de venta sugerido: {precio_sugerido:.2f}""", justify=tk.LEFT).pack(padx=10, pady=10)
-        
-        tk.Label(resumen_window, text="Precio de venta:").pack()
-        precio_entry = tk.Entry(resumen_window)
-        precio_entry.pack(pady=5)
-        precio_entry.insert(0, precio_sugerido)
-        
+            f"{self.descripcion_producto[:50]}..."
+            if len(self.descripcion_producto) > 50
+            else self.descripcion_producto
+        )
 
+        # Crear Labels para cada item del resumen
+        tk.Label(
+            resumen_frame,
+            text=f"Código:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{self.codigo_producto}",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Tipo:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{self.tipo_producto}",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Descripción:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{descripcion_corta}",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            wraplength=300,  # Ajusta el ancho según tu ventana
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Kit de Empaque:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{len(self.empaques_seleccionados)}",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Materiales usados:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{len(self.materiales_usados)}",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Costo de producción:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{self.costo_produccion:.2f} €",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"Precio sin costo de envío:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        tk.Label(
+            resumen_frame,
+            text=f"{precio_sugerido:.2f} €",
+            font=("Arial", 10, "bold"),
+            fg="#2a5aaa",
+            bg="#a0b9f0",
+            anchor="w",
+            justify=tk.LEFT
+        ).pack(anchor="w", pady=2)
+
+        # --- Sección de costo de envío y precio final ---
+        tk.LabelFrame(
+            resumen_window,
+            text=" Costo de Envío y Precio Final ",
+            font=("Arial", 11, "bold"),
+            fg="#333333",
+            bg="#a0b9f0",
+            padx=10,
+            pady=10
+        ).pack(padx=10, pady=5, fill=tk.X)
+
+        tk.Label(
+            resumen_window,
+            text="Ingresa el costo de envío:",
+            font=("Arial", 10),
+            bg="#a0b9f0",
+            fg="#333333"
+        ).pack(pady=5)
+
+        costo_envio_entry = tk.Entry(resumen_window, font=("Arial", 10))
+        costo_envio_entry.pack(pady=5)
+        costo_envio_entry.insert(0, 0)
+
+        iva = precio_sugerido * 0.19
+        precio_sugerido_con_iva = precio_sugerido + iva
+
+        tk.Label(
+            resumen_window,
+            text="Precio de venta (con IVA):",
+            font=("Arial", 10),
+            fg="#a0b9f0"
+        ).pack(pady=5)
+
+        precio_entry = tk.Entry(resumen_window, font=("Arial", 10))
+        precio_entry.pack(pady=5)
+        precio_entry.insert(0, round(precio_sugerido_con_iva, 2))
+
+        def actualiza_precio_final(event):
+            try:
+                costo_envio = self.convertir_a_float(costo_envio_entry.get())
+                precio_final_sugerido = precio_sugerido + costo_envio + iva
+                precio_entry.delete(0, tk.END)
+                precio_entry.insert(0, round(precio_final_sugerido, 2))
+            except ValueError:
+                pass
+
+        costo_envio_entry.bind("<KeyRelease>", actualiza_precio_final)
+        
         def guardar_producto():
             """Guarda el nuevo producto y descuenta empaques/materiales solo si todo es exitoso."""
             es_por_metro = False
@@ -887,7 +1064,7 @@ class ProductoManager:
                     if stock_actual < cantidad_a_comparar:
                         unidad = "metros" if es_por_metro else "unidades"
                         messagebox.showerror(
-                            "Stock insuficiente",
+                            "⚠️ Stock insuficiente",
                             f"No hay suficiente stock del material {material['codigo']}. "
                             f"Stock disponible: {stock_actual} {unidad}, requerido: {cantidad_a_comparar} {unidad}."
                         )
@@ -895,7 +1072,7 @@ class ProductoManager:
 
                 # Iniciar transacción
                 if not db_connect.begin_transaction():
-                    messagebox.showerror("Error", "No se pudo iniciar la transacción.")
+                    messagebox.showerror("⚠️ Error", "No se pudo iniciar la transacción.")
                     return
 
             
@@ -905,7 +1082,7 @@ class ProductoManager:
                     #print(f"VALIDAR STOCK EMPAQUE QUE SE MUESTRA: {self.empaques_seleccionados}\n{validado}")
                     if not validado:
                         respuesta = messagebox.askyesno(
-                            "Stock insuficiente",
+                            "⚠️ Stock insuficiente",
                             f"{mensaje_validar}\n\n¿Deseas continuar sin estos empaques?"
                         )
                         if not respuesta:
@@ -1017,9 +1194,13 @@ class ProductoManager:
         
         
     def convertir_a_float(self, valor_str):
+        """Recibe un valor numerico y lo convierte en un dato float, sino retora 0.0"""
+        if not valor_str or valor_str == "" or valor_str is None:
+            return 0.0
+        
         try:
             valor_str = str(valor_str).replace(",", ".")
             return float(valor_str)
         except ValueError:
-            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
-            return None
+            messagebox.showerror(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return 0.0

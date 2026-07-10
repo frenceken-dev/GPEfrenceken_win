@@ -316,12 +316,16 @@ class CrearEmpaques():
             
     
     def convertir_a_float(self, valor_str):
+        """Recibe un valor numerico y lo convierte en un dato float, sino retora 0.0"""
+        if not valor_str or valor_str == "" or valor_str is None:
+            return 0.0
+        
         try:
             valor_str = str(valor_str).replace(",", ".")
             return float(valor_str)
         except ValueError:
-            print(f"⚠️ Error: '{valor_str}' no es un número válido.")
-            return None
+            messagebox.showerror(f"⚠️ Error: '{valor_str}' no es un número válido.")
+            return 0.0
     
     def cerrar_ventana(self):
         self.emp_frame.destroy()

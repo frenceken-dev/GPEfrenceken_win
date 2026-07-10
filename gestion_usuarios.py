@@ -93,7 +93,7 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
 
         if usuario and pregunta_seguridad and respuesta_seguridad and clave and rol:
             clave_valida, mensaje_clave = validar_clave_segura(clave)
-            print(f"{mensaje_clave}")
+            #print(f"{mensaje_clave}")
             if clave_valida:                
                 exito, mensaje_registro = db_connect.registrar_usuario(usuario, clave,  rol, pregunta_seguridad, respuesta_seguridad.lower())
                 if exito:
@@ -103,7 +103,8 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
                 else:
                     messagebox.showerror("Error de Registro", f"{mensaje_registro}")
             else:
-                print(f"Hubo un problema de esturctura de la clave")
+                pass
+                #print(f"Hubo un problema de esturctura de la clave")
         else:
             messagebox.showerror("⚠️ Error", "Todos los campos son obligatorios.")
 

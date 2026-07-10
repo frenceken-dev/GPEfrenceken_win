@@ -44,8 +44,8 @@ def registrar_usuario(usuario, clave, pregunta, respuesta):
         "pregunta": pregunta,
         "respuesta": respuesta.lower()  # Guardar en minúsculas para evitar errores
     }
-    print(f"Usuario '{usuario}' registrado con éxito.")
-    print("Clave Hash: ", usuarios[usuario[-1]])
+    #print(f"Usuario '{usuario}' registrado con éxito.")
+    #print("Clave Hash: ", usuarios[usuario[-1]])
     
 
 def validar_clave(usuario, clave):
@@ -102,8 +102,8 @@ if __name__ == "__main__":
     #     usuario_recuperar = input("Usuario: ")
     #     respuesta_recuperar = input(f"Responde: {usuarios[usuario_recuperar]['pregunta']}: ")
     #     recuperado, mensaje = recuperar_clave(usuario_recuperar, respuesta_recuperar)
-    #     print(mensaje)
+    #     #print(mensaje)
 
     clave = "Ro123.123"
     hash_clave = cifrar_clave(clave)
-    print(hash_clave)
+    #print(hash_clave)

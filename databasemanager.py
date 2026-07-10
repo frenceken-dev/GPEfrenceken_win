@@ -32,9 +32,9 @@ class DataBaseManager():
         """
         try:
             self.connection = sqlite3.connect(self.db_name)
-            print(f"Conección establecida con exito")
+            #print(f"Conección establecida con exito")
         except sqlite3.Error as e:
-            print(f"Error al conectar a la base de datos: {e}")
+            messagebox.showerror(f"Error al conectar a la base de datos: {e}")
             
     
     def begin_transaction(self) -> bool:
@@ -47,13 +47,13 @@ class DataBaseManager():
             if not self.in_transaction:
                 self.connection.execute("BEGIN TRANSACTION")
                 self.in_transaction = True
-                print("Transacción iniciada.")
+                #print("Transacción iniciada.")
                 return True
             else:
-                print("Ya hay una transacción activa.")
+                #print("Ya hay una transacción activa.")
                 return False
         except sqlite3.Error as e:
-            print(f"Error al iniciar transacción: {e}")
+            #print(f"Error al iniciar transacción: {e}")
             return False
         
 
@@ -67,13 +67,13 @@ class DataBaseManager():
             if self.in_transaction:
                 self.connection.commit()
                 self.in_transaction = False
-                print("Transacción confirmada.")
+                #print("Transacción confirmada.")
                 return True
             else:
-                print("No hay una transacción activa para confirmar.")
+                #print("No hay una transacción activa para confirmar.")
                 return False
         except sqlite3.Error as e:
-            print(f"Error al confirmar transacción: {e}")
+            #print(f"Error al confirmar transacción: {e}")
             return False
         
 
@@ -87,13 +87,13 @@ class DataBaseManager():
             if self.in_transaction:
                 self.connection.rollback()
                 self.in_transaction = False
-                print("Transacción revertida.")
+                #print("Transacción revertida.")
                 return True
             else:
-                print("No hay una transacción activa para revertir.")
+                #print("No hay una transacción activa para revertir.")
                 return False
         except sqlite3.Error as e:
-            print(f"Error al revertir transacción: {e}")
+            #print(f"Error al revertir transacción: {e}")
             return False
         
                 
@@ -105,9 +105,9 @@ class DataBaseManager():
             if self.in_transaction:
                 self.rollback_transaction()  # Revertir transacciones pendientes al cerrar
             self.connection.close()
-            print("Base de datos cerrada correctamente.")
+            #print("Base de datos cerrada correctamente.")
         except sqlite3.Error as e:
-            print(f"Error al cerrar la base de datos: {e}")
+            messagebox.showerror(f"⚠️ Error", "Problemas al cerrar la base de datos: {e}")
             
 #######################################################################################################################
 ################################ SECCIÓN DE SELECCIÓN-INSERCIÓN-ACTUALIZACIÓN-ELIMINACIÓN #############################
@@ -142,7 +142,7 @@ class DataBaseManager():
                 return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
         except sqlite3.Error as e:
-            print(f"Error en consulta SELECT: {e}")
+            #print(f"Error en consulta SELECT: {e}")
             return [] if not fetch_one else None
     
     
@@ -171,7 +171,7 @@ class DataBaseManager():
             return cursor.lastrowid
 
         except sqlite3.Error as e:
-            print(f"Error al insertar en {table}: {e}")
+            #print(f"Error al insertar en {table}: {e}")
             self.connection.rollback()
             return -1
     
@@ -202,7 +202,7 @@ class DataBaseManager():
             return True
 
         except sqlite3.Error as e:
-            print(f"Error al actualizar {table}: {e}")
+            #print(f"Error al actualizar {table}: {e}")
             self.connection.rollback()
             return False
     
@@ -231,7 +231,7 @@ class DataBaseManager():
             return True
 
         except sqlite3.Error as e:
-            print(f"Error al eliminar de {table}: {e}")
+            #print(f"Error al eliminar de {table}: {e}")
             self.connection.rollback()
             return False
 
@@ -384,14 +384,14 @@ class DataBaseManager():
 
             # Obtener los nombres de las columnas
             columns = [column[0] for column in cursor.description]
-            print(columns)
+            #print(columns)
             # Convertir los resultados a una lista de diccionarios
             #return [dict(zip(columns, row)) for row in resultados]
-            print(resultados) # duvuelve una lista de diccionarios con los valores
+            #print(resultados) # duvuelve una lista de diccionarios con los valores
             return resultados
 
         except sqlite3.Error as e:
-            print(f"Error al realizar la búsqueda: {e}")
+            #print(f"Error al realizar la búsqueda: {e}")
             return []
         
     
@@ -407,9 +407,9 @@ class DataBaseManager():
         Returns:
             bool: True si la actualización fue exitosa, False en caso contrario.
         """
-        print(f"Tipo de búsqueda: {tipo_busqueda}")
-        print(f"Nuevos valores: {nuevos_valores}")
-        print(f"Valores originales: {valores_originales}")
+        #print(f"Tipo de búsqueda: {tipo_busqueda}")
+        #print(f"Nuevos valores: {nuevos_valores}")
+        #print(f"Valores originales: {valores_originales}")
 
         if not self.connection:
             self.connect()
@@ -418,7 +418,7 @@ class DataBaseManager():
             # --- Todos los Materiales ---
             if tipo_busqueda == "Todos los Materiales":
                 codigo_original = valores_originales[0]  # Usar el código original para el WHERE
-                print(f"Actualizando material con código original: {codigo_original}")
+                #print(f"Actualizando material con código original: {codigo_original}")
 
                 updates = {
                     "codigo": nuevos_valores.get("Código", valores_originales[0]),
@@ -440,16 +440,16 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Todos los Materiales'.")
+                    #print("Actualización exitosa para 'Todos los Materiales'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Todos los Materiales'.")
+                    #print("No se actualizó ningún registro para 'Todos los Materiales'.")
                     return False
 
             # --- Material Específico ---
             elif tipo_busqueda == "Material especifico":
                 codigo_original = valores_originales[3]  # Índice correcto para el código original
-                print(f"Actualizando material específico con código original: {codigo_original}")
+                #print(f"Actualizando material específico con código original: {codigo_original}")
 
                 updates = {
                     "nombre": nuevos_valores.get("Nombre", valores_originales[4]),
@@ -470,20 +470,20 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Material Específico'.")
+                    #print("Actualización exitosa para 'Material Específico'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Material Específico'.")
+                    #print("No se actualizó ningún registro para 'Material Específico'.")
                     return False
 
             # --- Código Específico ---
             elif tipo_busqueda == "Código especifico":
                 codigo_nuevo = nuevos_valores.get("Código", valores_originales[3])
                 id_material = self.obtener_codigo_por_id(codigo_nuevo)
-                print(f"ID del material para código {codigo_nuevo}: {id_material}")
+                #print(f"ID del material para código {codigo_nuevo}: {id_material}")
 
                 if not id_material:
-                    print("No se encontró el ID del material.")
+                    #print("No se encontró el ID del material.")
                     return False
 
                 resultado = self.update(
@@ -495,20 +495,20 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Código Específico'.")
+                    #print("Actualización exitosa para 'Código Específico'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Código Específico'.")
+                    #print("No se actualizó ningún registro para 'Código Específico'.")
                     return False
 
             # --- Proveedor Específico ---
             elif tipo_busqueda == "Proveedor especifico":
                 proveedor_nuevo = nuevos_valores.get("Proveedor", valores_originales[0])
                 id_proveedor = self.obtener_id_proveedor_por_nombre(proveedor_nuevo)
-                print(f"ID del proveedor para {proveedor_nuevo}: {id_proveedor}")
+                #print(f"ID del proveedor para {proveedor_nuevo}: {id_proveedor}")
 
                 if not id_proveedor:
-                    print("No se encontró el ID del proveedor.")
+                    #print("No se encontró el ID del proveedor.")
                     return False
 
                 resultado = self.update(
@@ -520,10 +520,10 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Proveedor Específico'.")
+                    #print("Actualización exitosa para 'Proveedor Específico'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Proveedor Específico'.")
+                    #print("No se actualizó ningún registro para 'Proveedor Específico'.")
                     return False
 
             # --- Factura Proveedor ---
@@ -533,17 +533,17 @@ class DataBaseManager():
                 proveedor_original = valores_originales[0]
 
                 id_proveedor = self.obtener_id_proveedor_por_nombre(proveedor_original)
-                print(f"ID del proveedor para {proveedor_original}: {id_proveedor}")
+                #print(f"ID del proveedor para {proveedor_original}: {id_proveedor}")
 
                 if not id_proveedor:
-                    print("No se encontró el ID del proveedor.")
+                    #print("No se encontró el ID del proveedor.")
                     return False
 
                 id_factura = self.obtener_id_factura_por_proveedor(id_proveedor, valores_originales[1])
-                print(f"ID de la factura: {id_factura}")
+                #print(f"ID de la factura: {id_factura}")
 
                 if not id_factura:
-                    print("No se encontró el ID de la factura.")
+                    #print("No se encontró el ID de la factura.")
                     return False
 
                 resultado = self.update(
@@ -555,20 +555,20 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Factura Proveedor'.")
+                    #print("Actualización exitosa para 'Factura Proveedor'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Factura Proveedor'.")
+                    #print("No se actualizó ningún registro para 'Factura Proveedor'.")
                     return False
 
             # --- Todos los Productos / Producto Específico ---
             elif tipo_busqueda in ["Todos los Productos", "Producto especifico"]:
                 codigo_original = valores_originales[0]
                 id_producto = self.obtener_id_producto_por_codigo(codigo_original)
-                print(f"ID del producto para código {codigo_original}: {id_producto}")
+                #print(f"ID del producto para código {codigo_original}: {id_producto}")
 
                 if not id_producto:
-                    print("No se encontró el ID del producto.")
+                    #print("No se encontró el ID del producto.")
                     return False
 
                 updates = {
@@ -592,16 +592,16 @@ class DataBaseManager():
 
                 if resultado:
                     self.connection.commit()
-                    print("Actualización exitosa para 'Productos'.")
+                    #print("Actualización exitosa para 'Productos'.")
                     return True
                 else:
-                    print("No se actualizó ningún registro para 'Productos'.")
+                    #print("No se actualizó ningún registro para 'Productos'.")
                     return False
 
             # --- Material Empaque ---
             elif tipo_busqueda == "Materiales de Empaque":
                 codigo_original = valores_originales[0]  # Índice correcto para el código original
-                print(f"Actualizando material específico con código original: {codigo_original}")
+                #print(f"Actualizando material específico con código original: {codigo_original}")
 
                 updates = {
                     "codigo_emp": nuevos_valores.get("Codigo", valores_originales[0]),
@@ -622,7 +622,7 @@ class DataBaseManager():
                 raise ValueError(f"Tipo de búsqueda no válido: {tipo_busqueda}")
 
         except Exception as e:
-            print(f"Error al actualizar la base de datos: {e}")
+            #print(f"Error al actualizar la base de datos: {e}")
             self.connection.rollback()
             return False
 
@@ -684,9 +684,9 @@ class DataBaseManager():
         Returns:
             Union[int, None]: ID del producto o None si no se encuentra.
         """
-        print("EL Código para obtener el id es: ",codigo_producto)
-        query = "SELECT id_producto FROM Productos WHERE codigo LIKE ?"
-        resultado = self.select(query, (f"%{codigo_producto}%",), fetch_one=True)
+        #print("EL Código para obtener el id es: ",codigo_producto)
+        query = "SELECT id_producto FROM Productos WHERE codigo = ?"
+        resultado = self.select(query, (codigo_producto,), fetch_one=True)
         
         return resultado.get("id_producto") if resultado else None
 
@@ -743,7 +743,7 @@ class DataBaseManager():
             return True, f"El usuario {usuario} se ha registrado exitosamente."
         
         except sqlite3.Error as e:
-            print(f"Error al registrar al usuario {e}")
+            #print(f"Error al registrar al usuario {e}")
             return False, f"Error al registrar al usuario {e}"
     
     
@@ -762,7 +762,7 @@ class DataBaseManager():
         
         if resultado is None:
             return False, "Usuario no registrado."
-        print(f"DataBaseManager: {resultado}")
+        #print(f"DataBaseManager: {resultado}")
         usuario_data = resultado[0]
         hash_almacenado = usuario_data["clave"]
         hash_ingresado = hashlib.sha256(clave.encode()).hexdigest()
@@ -794,7 +794,7 @@ class DataBaseManager():
             WHERE nombre_usuario = ?
             '''
         resultado = self.select(query, (usuario,))
-        print(f"La pregunta de seguridad se ve asi: {resultado}")
+        #print(f"La pregunta de seguridad se ve asi: {resultado}")
         pregunta = resultado[0]["pregunta_seguridad"]
         if pregunta is None:
             return False, "Indica tu Usuario"
@@ -819,13 +819,13 @@ class DataBaseManager():
             SELECT respuesta_seguridad FROM Usuarios
             WHERE nombre_usuario = ?
         '''
-        print(f"Los argumentos para la respuesta son: {usuario}, y {respuesta}")
+        #print(f"Los argumentos para la respuesta son: {usuario}, y {respuesta}")
         
         resultado = self.select(query, (usuario,))
         
         if resultado is None:
             return False, "Usuario no registrado."
-        print(f"Lo que llega de la consulta Generica: {resultado}")
+        #print(f"Lo que llega de la consulta Generica: {resultado}")
         respuesta_almacenada = resultado[0]["respuesta_seguridad"]
         if respuesta.lower() == respuesta_almacenada:
             return True, f"Respuesta correcta. {usuario}, puedes restablecer tu clave."
@@ -847,7 +847,7 @@ class DataBaseManager():
                 - Si no se puede restablecer la clave: (False, mensaje de error).
         """
         clave_str = str(nueva_clave)
-        print(type(clave_str), clave_str)
+        #print(type(clave_str), clave_str)
         # Cifrar la nueva clave
         nuevo_hash = hashlib.sha256(clave_str.encode()).hexdigest()
 
@@ -944,14 +944,14 @@ class DataBaseManager():
                     "pregunta_seguridad": pregunta,
                     "respuesta_seguridad": respuesta
                 }
-        print(actualizar_usuario_)
+        #print(actualizar_usuario_)
         actualizado = self.update(
             table="Usuarios",
             updates=actualizar_usuario_,
             where_condition="id_usuario = ?",
             where_params=(id_usuario,)
         )
-        print(actualizado)
+        #print(actualizado)
         if actualizado:
             messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
         else:
@@ -972,7 +972,7 @@ class DataBaseManager():
         
         nombres_list = [nombre["nombre_usuario"] for nombre in nombres_dic]
         
-        print(nombres_list)
+        #print(nombres_list)
         return nombres_list
     
     
@@ -1113,8 +1113,10 @@ class DataBaseManager():
             JOIN Detalle_Producto d ON m.id_material = d.id_material
             WHERE d.id_producto = ?
         """
-        print(f"DEBUG: id_producto recibido = {id_producto}")  # Verificar el valor de id_producto
+        #print(f"DEBUG: id_producto recibido = {id_producto}")  # Verificar el valor de id_producto
+        
         materiales = self.select(query, (id_producto,))
+        #print((f"MATERIALES DEL PRODUCTO: {materiales}"))
         return materiales
     
     
@@ -1135,9 +1137,10 @@ class DataBaseManager():
         try:
             for material in materiales_requeridos:
                 id_material = material["id_material"]
-                es_por_metro = material["es_por_metro"]
-                
-                if es_por_metro == "Si":
+                es_por_metro = self.comprobar_si_es_por_metro(material["codigo"])
+                #print(f"Materiales {material["codigo"]}--- es por metro {es_por_metro}")
+                if es_por_metro:
+                    #print(f"La CAntidad en CM: {material["cantidad_cm"]}")
                     cantidad_requerida_por_producto = material["cantidad_cm"]
                     calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
                     cantidad_total_a_descontar = calcula_cantidad_cm * cantidad_a_fabricar
@@ -1149,11 +1152,11 @@ class DataBaseManager():
 
                 # Verificar que no se vaya a valores negativos
                 if stock_actual < cantidad_total_a_descontar:
-                    print(f"Error: No hay suficiente stock del material {material['nombre']}.")
+                    #print(f"Error: No hay suficiente stock del material {material['nombre']}.")
                     return False
 
                 nuevo_stock = stock_actual - cantidad_total_a_descontar
-                print(f"EL Nuevo Stock es: {nuevo_stock:.4f}")
+                #print(f"EL Nuevo Stock es: {nuevo_stock:.4f}")
                 # Actualizar el stock del material
                 exito = self.update(
                     table="Materiales",
@@ -1163,17 +1166,17 @@ class DataBaseManager():
                 )
 
                 if not exito:
-                    print(f"Error al actualizar el stock del material {material['nombre']}.")
+                    #print(f"Error al actualizar el stock del material {material['nombre']}.")
                     return False
 
             return True  # Retornar True solo después de procesar todos los materiales
 
         except Exception as e:
-            print(f"⚠️ Error al descontar materiales: {e}")
+            #print(f"⚠️ Error al descontar materiales: {e}")
             return False
 
         
-    def incrementar_stock_producto(self, id_producto, cantidad) -> bool:
+    def incrementar_stock_producto(self, id_producto, cantidad_a_fabricar) -> bool:
         """
         Realiza el incremento del stock de un producto.
 
@@ -1186,6 +1189,7 @@ class DataBaseManager():
                 - Retorna True si la actualización fue exitosa.
                 - Retorna False si existe algún error.
         """
+        #print(f"INCREMENTAR PRODUCTO {id_producto} CANTIDAD {cantidad_a_fabricar}")
         # Obtener la cantidad actual del producto
         cantidad_actual = self.select(
             "SELECT cantidad FROM Productos WHERE id_producto = ?",
@@ -1196,7 +1200,7 @@ class DataBaseManager():
         if cantidad_actual is None:
             return False
 
-        nueva_cantidad = cantidad_actual["cantidad"] + cantidad
+        nueva_cantidad = cantidad_actual["cantidad"] + cantidad_a_fabricar
 
         # Actualizar la cantidad del producto
         exito = self.update(
@@ -1540,9 +1544,11 @@ class DataBaseManager():
         id_detalle = self.insert("Detalle_Producto", detalle)
         
         if id_detalle:
-            print(f"El id de la relación es: {id_detalle}")
+            #print(f"El id de la relación es: {id_detalle}")
+            return id_detalle
         else:
-            print(f"Algo salio mal No se guardo en Detalle_Producto")
+            return False
+            #print(f"Algo salio mal No se guardo en Detalle_Producto")
             
     
     def obtener_materiales_pro(self) -> tuple:
@@ -1575,7 +1581,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in orden_campos)
             for diccionario in datos
         ]
-        print(materiales_tupla)
+        #print(materiales_tupla)
         return materiales_tupla
     
     def obtener_productos(self) -> tuple:
@@ -1607,7 +1613,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in orden_campos)
             for diccionario in productos_lis
         ]
-        print(productos_tupla)
+        #print(productos_tupla)
         return productos_tupla
         
     
@@ -1625,9 +1631,9 @@ class DataBaseManager():
         query = "SELECT DISTINCT color FROM Materiales WHERE codigo  LIKE ?"
         
         color_list = self.select(query, (codigo_material,))
-        print(color_list)
+        #print(color_list)
         color_str = [color["color"] for color in color_list]
-        print(f"RESULTADO DE LA BUSQUEDA DEL COLOR: {color_str}")
+        #print(f"RESULTADO DE LA BUSQUEDA DEL COLOR: {color_str}")
         return color_str
         
     
@@ -1642,12 +1648,12 @@ class DataBaseManager():
         Returns:
             str: - Retorna el tipo de material.
         """
-        print(f"OBTENER TIPOS MATERIAL: {codigo_material}, {color_material}")
+        #print(f"OBTENER TIPOS MATERIAL: {codigo_material}, {color_material}")
         query = "SELECT DISTINCT tipo FROM Materiales WHERE codigo = ? AND color = ?"
         params = (codigo_material, color_material,)
-        print(f"PARAMETROS PARA LA CONSULTA SELECT EN TIPO MATERIAL: {params}")
+        #print(f"PARAMETROS PARA LA CONSULTA SELECT EN TIPO MATERIAL: {params}")
         tipo_list = self.select(query, params)
-        print(f"RESULTADO DE LA CONSULTA SELECT EN TIPO DE MATERIAL ES: {tipo_list}")
+        #print(f"RESULTADO DE LA CONSULTA SELECT EN TIPO DE MATERIAL ES: {tipo_list}")
         tipos_str = [tipo["tipo"] for tipo in tipo_list]
         
         return tipos_str
@@ -1660,13 +1666,13 @@ class DataBaseManager():
         Returns:
             str: - Retorna el valor obtenido.
         """
-        print(f"VALORES QUE LLEGAN PARA TAMAÑO MATERIAL: {nombre_material}, {color_material}, {tipo_material}")
+        #print(f"VALORES QUE LLEGAN PARA TAMAÑO MATERIAL: {nombre_material}, {color_material}, {tipo_material}")
         query = "SELECT DISTINCT tamaño FROM Materiales WHERE codigo = ? AND color = ? AND tipo = ?"
             
         params = (nombre_material, color_material, tipo_material)
-        print(f"PARAMETROS PARA LA CONSULTA DEL TAMAÑO DEL MATERIAL ES: {params}")
+        #print(f"PARAMETROS PARA LA CONSULTA DEL TAMAÑO DEL MATERIAL ES: {params}")
         tamaño_material = self.select(query, params)
-        print(f"RESULTADO DE LA CONSULTA PARA OBTENER EL TAMAÑO ES: {tamaño_material}")
+        #print(f"RESULTADO DE LA CONSULTA PARA OBTENER EL TAMAÑO ES: {tamaño_material}")
         tamaño_str = [tamaño["tamaño"] for tamaño in tamaño_material]
         return tamaño_str
     
@@ -1676,14 +1682,15 @@ class DataBaseManager():
 
         query = "SELECT es_por_metro FROM Materiales WHERE codigo = ?"
         resultado = self.select(query, (codigo_material,))
-
+    
         articulo_por_metro = resultado[0]["es_por_metro"] == "Si"
+    
 
         if articulo_por_metro:
-            print(f"ARTICULO ES POR METROS: {codigo_material} - {articulo_por_metro}")
+            #print(f"ARTICULO ES POR METROS: {codigo_material} - {articulo_por_metro}")
             return articulo_por_metro
         else:
-            print(f"ARTICULO NO ES POR METROS: {codigo_material} - {articulo_por_metro}")
+            #print(f"ARTICULO NO ES POR METROS: {codigo_material} - {articulo_por_metro}")
             return articulo_por_metro
         
     
@@ -1743,16 +1750,16 @@ class DataBaseManager():
             str:
             - Retorna los valores antes mensionados
         """
-        print(f"El Código que llega es: {codigo}")
+        #print(f"El Código que llega es: {codigo}")
         query = 'SELECT nombre, tipo, tamaño, color FROM Materiales WHERE codigo = ?'
         materiales = self.select(query, (codigo,))
         
         if not materiales:
             # Error al consultar la base de datos.
-            print(f"No se encontraron materiales con el código: {codigo}")
+            #print(f"No se encontraron materiales con el código: {codigo}")
             return "", "", "", ""
             
-        print(materiales) 
+        #print(materiales) 
         nombre = materiales[0]["nombre"]
         tipo = materiales[0]["tipo"]
         tamaño = materiales[0]["tamaño"]
@@ -1784,8 +1791,8 @@ class DataBaseManager():
         nuevo_costo_total = precio_anterior + precio_material
         nuevo_costo_unitario = nuevo_costo_total / nuevo_stock
         
-        print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
-        print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
+        #print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
+        #print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
         
         actualizar = self.update(
             table= "Materiales",
@@ -1902,7 +1909,7 @@ class DataBaseManager():
         }
         
         id_nuevo_materia = self.insert("Materiales", materiales)
-        print(f"ID Asignado al insertar material: {id_nuevo_materia}")
+        #print(f"ID Asignado al insertar material: {id_nuevo_materia}")
         if id_nuevo_materia:
             return id_nuevo_materia
         else:
@@ -1925,7 +1932,7 @@ class DataBaseManager():
         resultado = self.select(query, (codigo_material,))
         
         stock = resultado[0]["stock"]
-        print(f"El stock del material es: {stock} de tipo {type(stock)}")
+        #print(f"El stock del material es: {stock} de tipo {type(stock)}")
         return stock if stock else 0
     
     
@@ -1943,7 +1950,7 @@ class DataBaseManager():
         Returns:
             bool: True si es exitoso, False si no lo es.
         """
-        #print(f"LO QUE LLEGA EN actualizar_stock_material es : {es_por_metro}")
+        ##print(f"LO QUE LLEGA EN actualizar_stock_material es : {es_por_metro}")
         # Consultar el stock actual
         query = "SELECT stock FROM Materiales WHERE codigo = ?"
         material_data = self.select(query, (codigo,))
@@ -2010,7 +2017,7 @@ class DataBaseManager():
         Returns:
             list: - Retorna una lista.
         """
-        print("EL MATERIAL ACTUAL RECIBIDO PARA LA CONSULTA ES: ", codigo)
+        #print("EL MATERIAL ACTUAL RECIBIDO PARA LA CONSULTA ES: ", codigo)
         if not self.connection:
             self.connect()
         try:
@@ -2024,7 +2031,7 @@ class DataBaseManager():
             #print(f"Resultado directo: {resultado}")  # Depuración
             return resultado[0] if resultado else None
         except sqlite3.Error as e:
-            print(f"Error en consulta directa: {e}")
+            #print(f"Error en consulta directa: {e}")
             return None
         
     
@@ -2058,14 +2065,14 @@ class DataBaseManager():
         Returns:
             List[str]: - Retorna una lista con los nombres filtrados
         """
-        print(f"Esto llega para actualizar proveedores: {texto}")
+        #print(f"Esto llega para actualizar proveedores: {texto}")
         query = "SELECT nombre FROM Proveedores WHERE nombre LIKE ?"
         params = (f'%{texto}%',)
         
         proveedores_filtrados = self.select(query, params)
         
         proveedores = [proveedores_filtrados[0]["nombre"]]
-        print(f"Los Proveedores a Actualizar son: {proveedores}")
+        #print(f"Los Proveedores a Actualizar son: {proveedores}")
         return proveedores
     
     
@@ -2079,9 +2086,9 @@ class DataBaseManager():
         Returns:
             bool: Si la operación es exitosa retorna True o False si existe un error.
         """
-        print(f"El nombre es: {nombre_material}")
+        #print(f"El nombre es: {nombre_material}")
         codigo_material = nombre_material.split(" ")
-        print(f"El codigo es: {codigo_material[0]}")
+        #print(f"El codigo es: {codigo_material[0]}")
         material_eliminado = self.delete(
             table= "Materiales",
             where_condition= "codigo = ?",
@@ -2113,7 +2120,7 @@ class DataBaseManager():
         Returns:
             int: _description_
         """
-        print(" DESDE INSERTAR EMPAQUES: ", codigo, nombre, tamaño, cantidad, precio, costo_unitario, es_por_metro)
+        #print(" DESDE INSERTAR EMPAQUES: ", codigo, nombre, tamaño, cantidad, precio, costo_unitario, es_por_metro)
         query = {
             "codigo_emp": codigo,
             "nombre_emp": nombre,
@@ -2145,13 +2152,13 @@ class DataBaseManager():
         empaques = self.select(query)
         
         tipos_de_empaques = [empaque["nombre_emp"] for empaque in empaques]
-        print(tipos_de_empaques)
+        #print(tipos_de_empaques)
         
         return tipos_de_empaques
         
     def costo_embalaje(self, emp_kit) -> List[Dict[str, Any]]:
         # Filtrar solo los empaques que no están vacíos
-        print(f"EMPAQUE SELECCIONADO ES: {emp_kit}")
+        #print(f"EMPAQUE SELECCIONADO ES: {emp_kit}")
         empaques = [e for e in emp_kit if e]
 
         if not empaques:  # Si no hay empaques, devolver lista vacía
@@ -2164,9 +2171,10 @@ class DataBaseManager():
         #print(nombre_empaques[0]['items_del_kit'])
         if nombre_empaques:
             empaques_list = ast.literal_eval(nombre_empaques[0]['items_del_kit'])  # Ahora es una lista.
-            print(empaques_list)
+            #print(empaques_list)
         else:
-            print("No se esta obtwniendo el resultado de los empaques")
+            pass
+            #print("No se esta obteniendo el resultado de los empaques")
 
         # Crear la consulta con IN
         placeholders = ", ".join(["?"] * len(empaques_list))  # Ej: "?, ?, ?"
@@ -2279,7 +2287,7 @@ class DataBaseManager():
 
                 # Descontar del stock
                 nuevo_stock = stock_actual - cantidad_m
-                print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
+                #print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
                 self.update(
                     table="Empaques",
                     updates={"stock_emp": round(float(nuevo_stock), 4)},
@@ -2373,7 +2381,7 @@ class DataBaseManager():
             - True si la actualización es exitosa
             - False si se manifiesta un problema 
         """
-        print(f"Valor a actualizar: {nuevo_stock}-- código es: {codigo}")
+        #print(f"Valor a actualizar: {nuevo_stock}-- código es: {codigo}")
         actualizado = self.update(
             table="Empaques",
             updates={"stock_emp": nuevo_stock},
@@ -2477,9 +2485,9 @@ class DataBaseManager():
         
         query = "SELECT codigo_emp FROM Empaques WHERE codigo_emp = ?"
         params = codigo
-        print(f"El codigo que llega para ver si existe es {codigo}")
+        #print(f"El codigo que llega para ver si existe es {codigo}")
         cod_existe = self.select(query, (params,))
-        print(cod_existe)
+        #print(cod_existe)
         if cod_existe:
             return True
         else:
@@ -2514,8 +2522,8 @@ class DataBaseManager():
         nuevo_costo_total = precio_anterior + precio_empaque
         nuevo_costo_unitario = nuevo_costo_total / nuevo_stock
         
-        print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
-        print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
+        #print(f"COSTO TOTAL NUEVO: {nuevo_costo_total}")
+        #print(f"PRECIO UNI NUEVO: {nuevo_costo_unitario}")
         
         actualizar = self.update(
             table= "Empaques",
@@ -2742,7 +2750,7 @@ class DataBaseManager():
         )
         
         if actualiza:
-            print(actualiza)
+            #print(actualiza)
             return costo_actualizado, "Kit actualizado correctamente"
         else:
             messagebox.showerror("⚠️ Error", "No se pudo Actualizar el Kit de empaque.")
@@ -3002,7 +3010,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in datos_historial)
             for diccionario in historial_producto
         ]
-        print(historial_producto_tupla)
+        #print(historial_producto_tupla)
         return historial_producto_tupla
     
     
@@ -3037,7 +3045,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in datos_historial)
             for diccionario in historial_general
         ]
-        print(historial_general_tuple)
+        #print(historial_general_tuple)
         return historial_general_tuple
     
     
@@ -3073,7 +3081,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in datos_historial)
             for diccionario in historial
         ]
-        print(historial_tupla)
+        #print(historial_tupla)
         return historial_tupla
     
     
@@ -3109,7 +3117,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in datos_historial)
             for diccionario in historial_general_mensual
         ]
-        print(historial_general_mensual_tupla)
+        #print(historial_general_mensual_tupla)
         return historial_general_mensual_tupla
     
     
@@ -3128,8 +3136,8 @@ class DataBaseManager():
             "costo_producto": nuevo_costo
         }
         params = id_producto
-        print(params, type(params))
-        print(actualiza_coto)
+        #print(params, type(params))
+        #print(actualiza_coto)
         costo_actualizado = self.update(
             table= "Productos",
             updates= actualiza_coto,
@@ -3138,7 +3146,7 @@ class DataBaseManager():
         )
         
         if costo_actualizado:
-            print(f"COSTO ACTUALIZADO? {costo_actualizado}")
+            #print(f"COSTO ACTUALIZADO? {costo_actualizado}")
             return True
         else: 
             return False
@@ -3256,7 +3264,7 @@ class DataBaseManager():
             "cantidad_asignada": cantidad
         }
         insertado_id = self.insert("Lote_productos", query)
-        print(f"EL ID  ES: {insertado_id}")
+        #print(f"EL ID  ES: {insertado_id}")
         if insertado_id:
             pass
             # messagebox.showinfo("✅ Éxito", "Lote actualizado correctamente.")
@@ -3453,7 +3461,7 @@ class DataBaseManager():
         Returns:
             bool: - Retorna True si la eliminación es exitosa o False si no.
         """
-        print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
+        #print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
         eliminado = self.delete(
             table= "Lotes",
             where_condition= "id_lote = ?",
@@ -3475,7 +3483,7 @@ class DataBaseManager():
         Returns:
             bool: - Retorna True si la eliminación es exitosa o False si no.
         """
-        print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
+        #print(f"EL ID a eliminar es: {id_lote} y es de tipo {type(id_lote)}")
         eliminado = self.delete(
             table= "Lote_Productos",
             where_condition= "id_lote = ?",
@@ -3498,7 +3506,7 @@ class DataBaseManager():
         Returns:
             List[dict[Any]]: - Retorna una lista con diccionarios
         """
-        print(f"CODIGO A BUSCAR en productos_del_lote: {id_lote}")  
+        #print(f"CODIGO A BUSCAR en productos_del_lote: {id_lote}")  
         query = """
             SELECT p.id_producto, p.codigo
             FROM Lote_Productos lp
@@ -3573,7 +3581,7 @@ class DataBaseManager():
         ]
         notas_entregas_tuplas = [tuple(diccionario.get(campo) for campo in datos_nota_entrega) 
                                 for diccionario in notas_entregas]
-        print(notas_entregas_tuplas)
+        #print(notas_entregas_tuplas)
         return notas_entregas_tuplas
     
     
@@ -3601,7 +3609,7 @@ class DataBaseManager():
         """
         facturas = self.select(query)
         
-        print("Las facturas son:  ", facturas)
+        #print("Las facturas son:  ", facturas)
         
         datos_facturas = [
             "id_venta",
@@ -3617,7 +3625,7 @@ class DataBaseManager():
             tuple(diccionario.get(campos) for campos in datos_facturas) 
             for diccionario in facturas
         ]
-        print("ESTOS SON LOS DATOS DE LA CONSULTA DE LAS FACTURAS", facturas_tupla)
+        #print("ESTOS SON LOS DATOS DE LA CONSULTA DE LAS FACTURAS", facturas_tupla)
         return facturas_tupla
     
     
@@ -3642,7 +3650,7 @@ class DataBaseManager():
             return False, 0, "Producto no encontrado en la base de datos."
 
         stock_actual = cantidad_act[0]["cantidad"]
-        print(f"Stock disponible: {stock_actual}")
+        #print(f"Stock disponible: {stock_actual}")
         if stock_actual <= 0:
             #print(f"⚠️ No hay stock disponible para este producto: {stock_actual}")
             return False, stock_actual, "No hay stock disponible para este producto."
@@ -3752,7 +3760,7 @@ class DataBaseManager():
         datos_dicc = self.select(query, (params,))        
     
         codigo, precio_uni = datos_dicc[0].values()
-        print(f"Los datos del producto son: {codigo}, {precio_uni}")
+        #print(f"Los datos del producto son: {codigo}, {precio_uni}")
         return codigo, precio_uni
         
 
@@ -3810,7 +3818,7 @@ class DataBaseManager():
         Return"s:
             int: - Retorna el id de detalle factura.
         """
-        print(f"LOS DATOS PARA DETALLE FACTURA: {id_venta}-{id_producto}-{cantidad}-{precio_unitario}-{subtotal}-{descuento}")
+        #print(f"LOS DATOS PARA DETALLE FACTURA: {id_venta}-{id_producto}-{cantidad}-{precio_unitario}-{subtotal}-{descuento}")
         query = {
             "id_venta": id_venta,
             "id_producto": id_producto,
@@ -3901,12 +3909,12 @@ class DataBaseManager():
         Returns:
             bool: Si la actualización es exitosa retorna True sino retorna False.
         """
-        print(f"Cantidad a descontar: {cantidad} - id del producto: {id_producto}")
+        #print(f"Cantidad a descontar: {cantidad} - id del producto: {id_producto}")
         query_1 = "SELECT cantidad FROM Productos WHERE id_producto = ?"
         cantidad_actual = self.select(query_1, (id_producto,))
-        print(f"El Monto seleccionado es: {cantidad_actual}")
+        #print(f"El Monto seleccionado es: {cantidad_actual}")
         nueva_cantidad = cantidad_actual[0]["cantidad"] - cantidad
-        print(f"El Monto actualizado es: {nueva_cantidad}")
+        #print(f"El Monto actualizado es: {nueva_cantidad}")
         query_2 = {"cantidad": nueva_cantidad}
         
         actualizado = self.update(
@@ -4214,7 +4222,7 @@ class DataBaseManager():
         Returns:
             List[Tuple[Any]]: - Retorna lista de tuplas.
         """
-        print(f"ID GUTSCHRIFT ES: {id_gutschrift}")
+        #print(f"ID GUTSCHRIFT ES: {id_gutschrift}")
         query = """
             SELECT
             g.id_gutschrift,
@@ -4271,7 +4279,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in datos_anulacio_dicc
         ]
-        print(f"DATOS GUTSCHRIFT-> {datos_anulacio_tupla}")
+        #print(f"DATOS GUTSCHRIFT-> {datos_anulacio_tupla}")
         if datos_anulacio_tupla:
             return datos_anulacio_tupla[0]
         else:
@@ -4650,7 +4658,7 @@ class DataBaseManager():
         params = id_nota_entrega
         
         detalles_nota_dicc = self.select(query, (params,))
-        print(f"DETALLES TUPLA NOTA ENTREGA DICC: {detalles_nota_dicc}")
+        #print(f"DETALLES TUPLA NOTA ENTREGA DICC: {detalles_nota_dicc}")
         campos = [
             "codigo",
             "cantidad",
@@ -4662,7 +4670,7 @@ class DataBaseManager():
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in detalles_nota_dicc
         ]
-        print(f"DETALLES TUPLA NOTA ENTREGA: {detalles_nota_tupla[0]}")
+        #print(f"DETALLES TUPLA NOTA ENTREGA: {detalles_nota_tupla[0]}")
         if detalles_nota_tupla:
             return detalles_nota_tupla
         else:
@@ -4688,7 +4696,7 @@ class DataBaseManager():
             where_params=(1,)
         )
         
-        print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta_actualizado}")
+        #print(f"EL SIGUIENTE ID DE VENTA ES: {id_venta_actualizado}")
         if id_venta_actualizado:
             return id_venta_actualizado
         else:
@@ -4842,7 +4850,7 @@ class DataBaseManager():
         item = None
         
         for tipo, id_item, umbral in umbrales:
-            print(f"El Umbral es: {umbral}")
+            #print(f"El Umbral es: {umbral}")
             if tipo == 'material':
                 query = "SELECT nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?"
                 umbral_materiales = self.select(query, (id_item,))
@@ -4870,7 +4878,7 @@ class DataBaseManager():
                 cantidad_actual = item[0][-1]  # La cantidad es el último elemento de la tupla
                 if cantidad_actual <= umbral:
                     if tipo == 'material':
-                        print(f"El material es: {item[0]}")
+                        #print(f"El material es: {item[0]}")
                         nombre, tipo_material, tamaño, color, cantidad = item[0]
                         alertas.append({
                             'tipo': tipo,
@@ -4881,7 +4889,7 @@ class DataBaseManager():
                             'cantidad': cantidad
                         })
                     elif tipo == 'producto':
-                        print(f"El producto es: {item[0]}")
+                        #print(f"El producto es: {item[0]}")
                         codigo, tipo_producto, cantidad = item[0]
                         alertas.append({
                             'tipo': tipo,
@@ -4889,7 +4897,7 @@ class DataBaseManager():
                             'tipo_producto': tipo_producto,
                             'cantidad': cantidad
                         })
-        print(alertas)
+        #print(alertas)
         return alertas
     
     
@@ -4918,13 +4926,13 @@ class DataBaseManager():
             campos = [
                 "id_producto", "codigo", "tipo", "cantidad"
                 ]
-        print(f"Los Campos son: {campos}")
-        print(f"El tipo_dicc es: {tipo_dicc}")  
+        #print(f"Los Campos son: {campos}")
+        #print(f"El tipo_dicc es: {tipo_dicc}")  
         items = [
             tuple(diccionario.get(campo) for campo in campos)
             for diccionario in tipo_dicc
             ]
-        print(f"Los Items son: {items}")
+        #print(f"Los Items son: {items}")
         if items:
             return items
         else:
@@ -4948,7 +4956,7 @@ class DataBaseManager():
         # Verificar si ya existe un umbral para este item
         
         umbral_dicc = self.select(query_select, (tipo, id_item))
-        print(f"EL UMBRAL DICC ES: {umbral_dicc}")
+        #print(f"EL UMBRAL DICC ES: {umbral_dicc}")
         campos = ["id_umbral"]
         umbral_tupla = [tuple(diccionario.get(campo) for campo in campos)
                         for diccionario in umbral_dicc]  # -> int 15
@@ -5026,7 +5034,7 @@ class DataBaseManager():
 
         conn.commit()
         conn.close()
-        print("borrado")
+        messagebox.showinfo("Información", " Base de datos borrada")
 
 
 

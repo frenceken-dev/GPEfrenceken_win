@@ -119,9 +119,9 @@ class VentanaConfigurarUmbrales:
                 "Debe seleccionar un item."
             )
             return
-        print(f"LA SELECCION ES:{seleccion}")
+        #print(f"LA SELECCION ES:{seleccion}")
         item_str = self.listbox_item.get(seleccion[0])
-        print(f"LA DATA EN 0 ES:{item_str}")
+        #print(f"LA DATA EN 0 ES:{item_str}")
         umbral = self.entry_umbral.get()
 
         if not tipo or not item_str or not umbral:
