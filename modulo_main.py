@@ -266,7 +266,7 @@ class PantallaPrincipal:
                     ),
                     font=("Arial", 10),
                     bg="#101113",
-                    fg="#f0f0f0",
+                    fg="#fa0000",
                     justify=tk.LEFT,
                     pady=5
                 )
@@ -283,7 +283,7 @@ class PantallaPrincipal:
                     ),
                     font=("Arial", 10),
                     bg="#101113",
-                    fg="#f0f0f0",
+                    fg="#1100ff",
                     justify=tk.LEFT,
                     pady=5
                 )

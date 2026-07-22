@@ -1153,7 +1153,7 @@ class ProductoManager:
                 for material in self.materiales_usados:
                     es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
                     cantidad_a_comparar_actualizar = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
-                    db_connect.actualizar_stock_material(material["codigo"], cantidad_a_comparar_actualizar, es_por_metro)  # Pasar si es por metros
+                    db_connect.actualizar_stock_material(material["codigo"], self.cantidad_creada, cantidad_a_comparar_actualizar, es_por_metro)  # Pasar si es por metros
 
                 # Confirmar la transacción
                 if not db_connect.commit_transaction():

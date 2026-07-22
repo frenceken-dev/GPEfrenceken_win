@@ -1704,6 +1704,64 @@ class DataBaseManager():
             bool: Si la eliminación es exitosa retorna True o False si no.
         """
         params = codigo_producto
+        
+        query0 = "SELECT id_producto, cantidad FROM Productos WHERE codigo = ?"
+        id_prod = self.select(query0, (params,))
+        id_num = id_prod[0]["id_producto"]
+        print(id_num)        
+        
+        query1 = """SELECT dm.id_material, dm.cantidad, m.stock, m.es_por_metro
+                    FROM Detalle_Producto dm
+                    JOIN Materiales m ON dm.id_material = m.id_material
+                    WHERE dm.id_producto = ?"""
+        datos = self.select(query1, (id_num,))
+        
+        print(f"Datos de JOIN: {datos}")        
+        true = "Si"
+        
+        for convertir in datos:
+            if convertir["es_por_metro"] == true:
+                
+                cant_pro = convertir["cantidad"]
+                #print(f"Cantidad en Metros: {cant_pro}")
+                
+                convertir_cm = cant_pro / 100
+                #print(f"Cantidad en cm: {convertir_cm}")
+                
+                stock_act = convertir["stock"]
+                #print(f"Stock en db: {stock_act}")
+                
+                reponer_stock = stock_act + convertir_cm
+                #print(f"Nuevo stock para guardar: {reponer_stock}")
+                
+                id_material = convertir["id_material"]
+                #print(f"El id Material en material por metro: {id_material}")
+                actualizado = self.update(
+                        table="Materiales",
+                        updates={"stock": reponer_stock},
+                        where_condition="id_material = ?",
+                        where_params=(id_material,)
+                        )
+                
+            else:                
+                cant_pro = convertir["cantidad"]
+                #print(f"Cantidad Entera: {cant_pro}")
+                
+                stock_act = convertir["stock"]
+                #print(f"Stock en db : {stock_act}")
+                
+                reponer_stock = stock_act + cant_pro
+                #print(f"Nuevo stock para guardar: {reponer_stock}")
+                
+                id_material = convertir["id_material"]
+                #print(f"El id Material en material entero: {id_material}")
+                actualizado = self.update(
+                        table="Materiales",
+                        updates={"stock": reponer_stock},
+                        where_condition="id_material = ?",
+                        where_params=(id_material,)
+                        )
+            
         producto_eliminado = self.delete(
             table= "Productos",
             where_condition= "codigo = ?",
@@ -1936,7 +1994,7 @@ class DataBaseManager():
         return stock if stock else 0
     
     
-    def actualizar_stock_material(self, codigo, cantidad, es_por_metro=False) -> bool:
+    def actualizar_stock_material(self, codigo, cantidad_creada, cantidad, es_por_metro=False) -> bool:
         """
         Actualiza el stock del material.
         - Si el material es por metros, descuenta la cantidad en metros (cantidad / 100).
@@ -1962,12 +2020,13 @@ class DataBaseManager():
 
         if es_por_metro:
             # Convertir cm a metros
-            cantidad_m = cantidad #/ 100
+            cantidad_m = cantidad * cantidad_creada#/ 100
             nuevo_stock = stock_actual - cantidad_m
             #print(f"NUEVO STOCK = {stock_actual} - {cantidad_m} RESULTADO -> {nuevo_stock}")
         else:
             # Descontar en unidades
-            nuevo_stock = stock_actual - cantidad
+            cantidad_u = cantidad * cantidad_creada
+            nuevo_stock = stock_actual - cantidad_u
             #print(f"NUEVO STOCK = {stock_actual} - {cantidad} RESULTADO -> {nuevo_stock}")
         # Validar que no quede stock negativo
         if nuevo_stock < 0:
@@ -4986,7 +5045,23 @@ class DataBaseManager():
                 return id_umbral_item
             else:
                 return False
+            
 
+#######################################################################################################################
+########################################## PERSONALIZACIÓN DE LA SESIÓN ###############################################
+#######################################################################################################################
+
+    def configurar_perfil(self, usuario_actual:str)-> List[dict[Any]]:
+        """
+        Cargar la configuración guardada por el usuario.
+
+        Args:
+            usuario_actual (str): Nombre del Usuario.
+
+        Returns:
+            List[Dict[Any]]: Retorna un diccionario con los datos del usuario.
+        """        
+        pass
 
 #######################################################################################################################
 ########################################## BORRADO COMPLETO DE BASE DE DATOS ##########################################
@@ -5083,3 +5158,4 @@ if __name__ == "__main__":
     #probar.actualizar_material("ESP-P-V", 20, 1.10, 0.05)
     #probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
     #probar.comprabar_estado_facturacion()
+    probar.eliminar_producto_bd("Probando_descontado_cm")

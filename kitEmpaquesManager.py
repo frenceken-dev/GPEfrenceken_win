@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import messagebox
 from databasemanager import DataBaseManager
 from recursos import crear_boton
 import ast

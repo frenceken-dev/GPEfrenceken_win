@@ -325,6 +325,7 @@ def eliminar_producto(root, volver_menu, imagen_tk, imagen_panel_tk):
             eliminado = db_connect.eliminar_producto_bd(producto_seleccionado)
             if eliminado:
                 messagebox.showinfo("✅ Éxito", f"Producto {producto_seleccionado} eliminado correctamente.")
+                messagebox.showinfo("✅ Materiales", "Los materiales han retonado al inventario")
             volver_menu()
 
     crear_boton(eliminar_producto_frame, 
