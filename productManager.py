@@ -1129,13 +1129,13 @@ class ProductoManager:
                 for material in self.materiales_usados:
                     id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
                     es_por_metro = db_connect.comprobar_si_es_por_metro(material["codigo"])
-                    cantidad_a_comparar_detalle_producto = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
+                    #cantidad_a_comparar_detalle_producto = material["cantidad"] / 100 if es_por_metro else material["cantidad"]
 
                     if id_material is not None:
                         db_connect.insertar_detalle_producto(
                             id_producto,
                             id_material,
-                            cantidad_a_comparar_detalle_producto,#material["cantidad"],
+                            material["cantidad"], #cantidad_a_comparar_detalle_producto,#material["cantidad"],
                             material["tipo"],
                             material["tamaño"],
                             es_por_metro  # Pasar si es por metros

@@ -32,7 +32,7 @@ class DataBaseManager():
         """
         try:
             self.connection = sqlite3.connect(self.db_name)
-            #print(f"Conección establecida con exito")
+            print(f"Conección establecida con exito")
         except sqlite3.Error as e:
             messagebox.showerror(f"Error al conectar a la base de datos: {e}")
             
@@ -50,10 +50,10 @@ class DataBaseManager():
                 #print("Transacción iniciada.")
                 return True
             else:
-                #print("Ya hay una transacción activa.")
+                print("Ya hay una transacción activa.")
                 return False
         except sqlite3.Error as e:
-            #print(f"Error al iniciar transacción: {e}")
+            print(f"Error al iniciar transacción: {e}")
             return False
         
 
@@ -67,13 +67,13 @@ class DataBaseManager():
             if self.in_transaction:
                 self.connection.commit()
                 self.in_transaction = False
-                #print("Transacción confirmada.")
+                print("Transacción confirmada.")
                 return True
             else:
-                #print("No hay una transacción activa para confirmar.")
+                print("No hay una transacción activa para confirmar.")
                 return False
         except sqlite3.Error as e:
-            #print(f"Error al confirmar transacción: {e}")
+            print(f"Error al confirmar transacción: {e}")
             return False
         
 
@@ -87,13 +87,13 @@ class DataBaseManager():
             if self.in_transaction:
                 self.connection.rollback()
                 self.in_transaction = False
-                #print("Transacción revertida.")
+                print("Transacción revertida.")
                 return True
             else:
-                #print("No hay una transacción activa para revertir.")
+                print("No hay una transacción activa para revertir.")
                 return False
         except sqlite3.Error as e:
-            #print(f"Error al revertir transacción: {e}")
+            print(f"Error al revertir transacción: {e}")
             return False
         
                 
@@ -105,7 +105,7 @@ class DataBaseManager():
             if self.in_transaction:
                 self.rollback_transaction()  # Revertir transacciones pendientes al cerrar
             self.connection.close()
-            #print("Base de datos cerrada correctamente.")
+            print("Base de datos cerrada correctamente.")
         except sqlite3.Error as e:
             messagebox.showerror(f"⚠️ Error", "Problemas al cerrar la base de datos: {e}")
             
@@ -142,7 +142,7 @@ class DataBaseManager():
                 return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
         except sqlite3.Error as e:
-            #print(f"Error en consulta SELECT: {e}")
+            print(f"Error en consulta SELECT: {e}")
             return [] if not fetch_one else None
     
     
@@ -171,7 +171,7 @@ class DataBaseManager():
             return cursor.lastrowid
 
         except sqlite3.Error as e:
-            #print(f"Error al insertar en {table}: {e}")
+            print(f"Error al insertar en {table}: {e}")
             self.connection.rollback()
             return -1
     
@@ -202,7 +202,7 @@ class DataBaseManager():
             return True
 
         except sqlite3.Error as e:
-            #print(f"Error al actualizar {table}: {e}")
+            print(f"Error al actualizar {table}: {e}")
             self.connection.rollback()
             return False
     
@@ -231,7 +231,7 @@ class DataBaseManager():
             return True
 
         except sqlite3.Error as e:
-            #print(f"Error al eliminar de {table}: {e}")
+            print(f"Error al eliminar de {table}: {e}")
             self.connection.rollback()
             return False
 
@@ -1138,25 +1138,27 @@ class DataBaseManager():
             for material in materiales_requeridos:
                 id_material = material["id_material"]
                 es_por_metro = self.comprobar_si_es_por_metro(material["codigo"])
-                #print(f"Materiales {material["codigo"]}--- es por metro {es_por_metro}")
+                print(f"Materiales {material["codigo"]}--- es por metro {es_por_metro}")
                 if es_por_metro:
-                    #print(f"La CAntidad en CM: {material["cantidad_cm"]}")
+                    print(f"La Cantidad en CM DB: {material["cantidad_cm"]}")
                     cantidad_requerida_por_producto = material["cantidad_cm"]
-                    calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
-                    cantidad_total_a_descontar = calcula_cantidad_cm * cantidad_a_fabricar
+                    #calcula_cantidad_cm = round(float(cantidad_requerida_por_producto), 4) / 100
+                    cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
+                    cantidad_total_a_descontar_float = float(cantidad_total_a_descontar)
                 else:
                     cantidad_requerida_por_producto = material["cantidad"]
                     cantidad_total_a_descontar = cantidad_requerida_por_producto * cantidad_a_fabricar
+                    cantidad_total_a_descontar_float = float(cantidad_total_a_descontar)
                     
                 stock_actual = material["stock"]  # Usar el stock obtenido en la consulta inicial
 
                 # Verificar que no se vaya a valores negativos
-                if stock_actual < cantidad_total_a_descontar:
+                if stock_actual < cantidad_total_a_descontar_float:
                     #print(f"Error: No hay suficiente stock del material {material['nombre']}.")
                     return False
 
-                nuevo_stock = stock_actual - cantidad_total_a_descontar
-                #print(f"EL Nuevo Stock es: {nuevo_stock:.4f}")
+                nuevo_stock = stock_actual - cantidad_total_a_descontar_float
+                print(f"EL Nuevo Stock es: {nuevo_stock:.4f}")
                 # Actualizar el stock del material
                 exito = self.update(
                     table="Materiales",
@@ -1172,7 +1174,7 @@ class DataBaseManager():
             return True  # Retornar True solo después de procesar todos los materiales
 
         except Exception as e:
-            #print(f"⚠️ Error al descontar materiales: {e}")
+            print(f"⚠️ Error al descontar materiales: {e}")
             return False
 
         
@@ -1279,7 +1281,7 @@ class DataBaseManager():
                 
         # Convertir el diccionario a JSON string
         cantidad_cm_json = json.dumps(cantidad_cm_dict) if cantidad_cm_dict else "{}"
-        #print(f"Formato JSON: {cantidad_cm_json}")
+        print(f"Formato JSON: {cantidad_cm_json}")
         
         
         # Convertir materiales y empaques a strings
@@ -1538,7 +1540,7 @@ class DataBaseManager():
             "tipo_material": tipo,
             "tamaño_material": tamaño,
             "es_por_metro": "Si" if es_por_metro else "No",
-            "cantidad_cm": cantidad if es_por_metro else 0  # Guardar la cantidad en cm si es por metros
+            "cantidad_cm": cantidad / 100 if es_por_metro else 0  # Guardar la cantidad en cm si es por metros
         }
 
         id_detalle = self.insert("Detalle_Producto", detalle)
