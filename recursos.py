@@ -29,6 +29,7 @@ DB_PATH = '/home/frenceken/Escritorio/GPEfrencekenApp-Win/GPEfrencekenApp-win/ik
 LOGO_PATH = resource_path("Img/logo/logo_ikigai.png")
 IMAGEN_BUSQUEDA_PATH = resource_path('Img/busqueda/img-busqueda.png')
 ICO_PATH = resource_path('ini.icns')
+DOWLOAD_LOGO = resource_path("/home/frenceken/Imágenes")
 
 
 # --- Función auxiliar para oscurecer colores ---

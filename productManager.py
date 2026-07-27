@@ -1145,7 +1145,7 @@ class ProductoManager:
                     #print(f"ES POR METROS 3° FOR self.materiales_usados-insertar_detalle: {cantidad_a_comparar}")
                 #print(f"self.empaques_seleccionados som: {self.empaques_seleccionados}")
                 # Enviar la lista completa de empaques al método
-                descontado, mensaje_descontado = db_connect.descontar_empaques(self.empaques_seleccionados)
+                descontado, mensaje_descontado = db_connect.descontar_empaques(self.empaques_seleccionados, self.cantidad_creada)
                 if descontado:
                     messagebox.showinfo("Información", f"{mensaje_descontado}")
                 

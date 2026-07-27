@@ -747,6 +747,15 @@ class DataBaseManager():
             return False, f"Error al registrar al usuario {e}"
     
     
+    def configuracion_usuario(self) -> bool:
+        """
+        Configuración de colores y fondo del usuario.
+
+        Returns:
+            bool: Retorna True si la acción es exitosa o False si no lo es.
+        """
+    
+    
     def validar_clave(self, usuario: str, clave: str) -> Tuple[bool, str, str]:
         """
         Valida los datos ingresados por un usuario.
@@ -2282,7 +2291,7 @@ class DataBaseManager():
         return True, "Stock de empaques suficiente."
     
 
-    def descontar_empaques(self, emp_list) -> bool: #Modificar aqui
+    def descontar_empaques(self, emp_list, cantidad_creada) -> bool: #Modificar aqui
         """
         Con los nombres se tomo el costo unitario y se retorna y se descuenta de inventario.
 
@@ -2345,9 +2354,10 @@ class DataBaseManager():
                 if stock_actual < cantidad_m:
                     empaques_sin_stock.append(empaque)
                     continue
-
+                
+                cantidad_mts = cantidad_m * cantidad_creada
                 # Descontar del stock
-                nuevo_stock = stock_actual - cantidad_m
+                nuevo_stock = stock_actual - cantidad_mts
                 #print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
                 self.update(
                     table="Empaques",
@@ -2363,7 +2373,7 @@ class DataBaseManager():
                     empaques_sin_stock.append(empaque)
                     continue
 
-                nuevo_stock = stock_actual - 1
+                nuevo_stock = stock_actual - cantidad_creada
                 #print(f"NO ES POR METRO: {nuevo_stock}")
                 self.update(
                     table="Empaques",
