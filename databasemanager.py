@@ -747,14 +747,47 @@ class DataBaseManager():
             return False, f"Error al registrar al usuario {e}"
     
     
-    def configuracion_usuario(self) -> bool:
+    def configuracion_usuario(self, conf_usuario: list[Any], usuario:str) -> bool:
         """
         Configuración de colores y fondo del usuario.
 
+        Args:
+            conf_usuario (list[Any]): datos de configuración.
+            usuario (str): id del usuario.
         Returns:
             bool: Retorna True si la acción es exitosa o False si no lo es.
         """
-    
+        fondo_p = conf_usuario[0]
+        fondo_m = conf_usuario[1]
+        fondo_f = conf_usuario[2]
+        img_fondo = conf_usuario[3]
+        
+        print(f"""CONFIGURACIÖN FINAL
+            Pantalla Principal : {fondo_p}\n
+            Color de la fuente: {fondo_m}\n
+            Pantalla Menú: {fondo_f}\n
+            Logo: {img_fondo}""")
+        
+        query = "SELECT id_usuario FROM Usuarios WHERE nombre_usuario = ?"
+        params = usuario
+        print(f"Usuario Actual: {usuario}")
+        id_usuario = self.select(query, (params,))
+        
+        print(f"ID: {id_usuario}")
+        actualizaciones = {
+            "fondo_letra":fondo_f,
+            "fondo_pantalla":fondo_p,
+            "fondo_menu":fondo_m,
+            "logo":img_fondo
+        }
+        # actualizado = self.update(
+        #     table="Usuarios",
+        #     updates=actualizaciones,
+        #     where_condition="id_usuario",
+        #     where_params=id_usuario
+        # )
+        return "El resultado ha llegado al Base de Datos."
+        
     
     def validar_clave(self, usuario: str, clave: str) -> Tuple[bool, str, str]:
         """
@@ -1126,7 +1159,12 @@ class DataBaseManager():
         
         materiales = self.select(query, (id_producto,))
         #print((f"MATERIALES DEL PRODUCTO: {materiales}"))
-        return materiales
+        
+        query_emp = "SELECT empaques FROM Productos WHERE id_producto = ?"
+        empaque_producto = self.select(query_emp, (id_producto,))
+        #print(f"El kit de empaque es: {empaque_producto}")
+        
+        return materiales, empaque_producto
     
     
     def descontar_materiales(self, materiales_requeridos, cantidad_a_fabricar) -> bool:
@@ -1850,10 +1888,17 @@ class DataBaseManager():
         query = "SELECT stock, precio FROM Materiales WHERE codigo = ?"
         db_stock = self.select(query, (codigo,))
         
+        stock_c = self.conversion_decimal(stock)
+        #print(f"Stock conversión : {stock_c}")
+        precio_c = self.conversion_decimal(precio)
+        #print(f"precio conversión : {precio_c}")
+        
         stock_actual = Decimal(db_stock[0]["stock"])
         precio_anterior = Decimal(db_stock[0]["precio"])
-        stock_incrementa = Decimal(stock)
-        precio_material = Decimal(precio)
+        #print(f"Stock: {stock}")
+        stock_incrementa = Decimal(stock_c)
+        #print(f"Stock: {precio}")
+        precio_material = Decimal(precio_c)
         
         # Calcular el nuevo stock y el nuevo costo total acumulado
         nuevo_stock = stock_actual + stock_incrementa
@@ -1874,7 +1919,7 @@ class DataBaseManager():
         )
         
         if actualizar:
-            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.4f}€.", nuevo_costo_unitario
+            return True, f"Stock actualizado. Nuevo stock: {nuevo_stock}, nuevo costo promedio: {nuevo_costo_unitario:.4f}€."  # , nuevo_costo_unitario
         else:
             return False, "No se pudo actualizar el material."
         
@@ -2308,10 +2353,11 @@ class DataBaseManager():
         if not empaques:  # Si no hay empaques, devolver lista vacía
             return []
 
-        #print(f"Descontar empaques: {emp_list}")
+        print(f"Descontar empaques que llegan: {emp_list}")
+        print(f"Descontar empaques que for interno: {empaques}")
         
         emp_kit_str = empaques[0]
-        #print(emp_kit_str)
+        print(f"El codigo extraido es: {emp_kit_str}")
         query_emp = "SELECT items_del_kit, cantidad_cm FROM KitEmpaque WHERE codigo_kit = ?"
         nombre_empaques = self.select(query_emp, (emp_kit_str,))
         
@@ -2337,11 +2383,11 @@ class DataBaseManager():
 
             item = item_data[0]
             es_por_metro = item["es_por_metro"] == "Si"
-            #print(f"ES POR METROS: {item}--- O NO: {es_por_metro}")
+            print(f"ES POR METROS: {item}--- O NO: {es_por_metro}")
             stock_actual = item["stock_emp"]
 
             if es_por_metro:
-                #print(f"ENTRO EN EL CONDICIONAL if es_por_metro:")
+                print(f"ENTRO EN EL CONDICIONAL if es_por_metro:")
                 # Obtener la cantidad en cm usada en el kit
                 cm = cantidades_cm.get(empaque, 0)
                 if cm <= 0:
@@ -2358,7 +2404,7 @@ class DataBaseManager():
                 cantidad_mts = cantidad_m * cantidad_creada
                 # Descontar del stock
                 nuevo_stock = stock_actual - cantidad_mts
-                #print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
+                print(f"LA RESTA DEL EMPAQUE ES: {nuevo_stock}")
                 self.update(
                     table="Empaques",
                     updates={"stock_emp": round(float(nuevo_stock), 4)},
@@ -2374,7 +2420,7 @@ class DataBaseManager():
                     continue
 
                 nuevo_stock = stock_actual - cantidad_creada
-                #print(f"NO ES POR METRO: {nuevo_stock}")
+                print(f"NO ES POR METRO: {nuevo_stock}")
                 self.update(
                     table="Empaques",
                     updates={"stock_emp": nuevo_stock},
@@ -2391,9 +2437,9 @@ class DataBaseManager():
             )
             return False, mensaje
         else:
-            return True, "✅ Inventario de Empaques Actualizado."
+            return True, "✅ Inventario de Empaques Actualizado."        
         
-    
+        
     def empaque_incremento_db(self, nombre_empaque) -> List[Dict[str, any]]:
         """
         Selcciona Código y Tamaño de un empaque para actualizar combobox de incremento de stock.
@@ -2583,10 +2629,13 @@ class DataBaseManager():
         query = "SELECT stock_emp, precio_emp FROM Empaques WHERE codigo_emp = ?"
         db_stock = self.select(query, (codigo,))
         
+        stock_c = self.conversion_decimal(stock)
+        precio_c = self.conversion_decimal(precio)
+        
         en_stock = Decimal(db_stock[0]["stock_emp"])
         precio_anterior = Decimal(db_stock[0]["precio_emp"])
-        stock_incrementa = Decimal(stock)
-        precio_empaque = Decimal(precio)
+        stock_incrementa = Decimal(stock_c)
+        precio_empaque = Decimal(precio_c)
         
         # Calcular el nuevo stock y el nuevo costo total acumulado
         nuevo_stock = en_stock + stock_incrementa
@@ -5125,6 +5174,23 @@ class DataBaseManager():
 
 
 
+    def conversion_decimal(self, dato:float) -> float:
+        """
+        Realizar conversión de coma (,) a punto (.)
+
+        Args:
+            dato (float): Recibe una dato con coma y retorna un dato con punto.
+        """
+        
+        dato_str = str(dato)
+        conversion = dato_str.replace(",", ".")
+        dato_float = float(conversion)
+        
+        return dato_float
+        
+    
+
+
 if __name__ == "__main__":
     probar = DataBaseManager()
     #probar.borrar_base_datos()
@@ -5170,4 +5236,5 @@ if __name__ == "__main__":
     #probar.actualizar_material("ESP-P-V", 20, 1.10, 0.05)
     #probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
     #probar.comprabar_estado_facturacion()
-    probar.eliminar_producto_bd("Probando_descontado_cm")
+    #probar.eliminar_producto_bd("Probando_descontado_cm")
+    probar.configuracion_usuario([{'fondo_pantalla': "ffffff"}, {'fondo_letra': None}, {'fondo_menu': None}, {'imag_fondo': None}])

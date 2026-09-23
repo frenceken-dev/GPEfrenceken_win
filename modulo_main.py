@@ -20,6 +20,7 @@ from recursos import LOGO_PATH, IMAGEN_BUSQUEDA_PATH, crear_boton, configurar_to
 from alerta_stock import VentanaConfigurarUmbrales
 #from productos import usuario_actual
 from databasemanager import DataBaseManager
+from perfilManager import perfilUsuario
 
 
 db_connect = DataBaseManager()
@@ -150,6 +151,8 @@ class PantallaPrincipal:
                 
                 if self.usuario in self.usuarios:
                     es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
+                    # Configurar colores y fondo de usuario.
+                    self.conf_usuario = perfilUsuario(self.root, self.usuario)
                     #print(f"El ROL es: {self.rol}")
                     # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 
@@ -328,12 +331,12 @@ class PantallaPrincipal:
         self.root.title(f"Sistema de Inventario - usuario: {self.usuario}-{self.rol}")
         
         # Frame para los botones (lado izquierdo)
-        frame_botones = tk.Frame(self.root, bg="#2C3E50", width=200, height=800, bd=3, borderwidth=3, relief="solid")
+        frame_botones = tk.Frame(self.root, bg="#2C3E50", width=200, height=800, bd=3, borderwidth=3, relief="solid") # frame del Menu conf Perfil
         frame_botones.pack(side=tk.LEFT, fill=tk.Y)
         frame_botones.pack_propagate(False)
         
         # Frame del Titulo
-        frame_titulo = tk.Frame(root, bg="#a0b9f0")
+        frame_titulo = tk.Frame(self.root, bg="#a0b9f0") # Aplica conf perfil
         frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
         
         # Botón de advertencia de stock bajo (solo si hay alertas)
@@ -426,6 +429,22 @@ class PantallaPrincipal:
                 comando=lambda: busqueda_articulos(self.root, self.mostrar_menu_principal, self.imagen_panel_tk, self.imagen_buscar_tk, self.rol),
                 
             ).pack(pady=10)
+            # crear_boton(
+            #     frame_botones,
+            #     texto="Confg Usuario", 
+            #     ancho=30,
+            #     alto=30,
+            #     color_fondo="#319139",                
+            #     color_texto="white",
+            #     font=("Arial", 11, "bold"),
+            #     #bd=0,
+            #     #relief=tk.FLAT,
+            #     hover_color="#222423",
+            #     #activeforeground="black",
+            #     #bg=0,
+            #     comando=lambda: self.conf_usuario.interfaz_configuracion()
+                
+            # ).pack(pady=10)
             crear_boton(
                 frame_botones,
                 texto="Salir", 
@@ -513,13 +532,13 @@ class PantallaPrincipal:
             
             ).pack(pady=10)
 
-        frame_imagen = tk.Frame(self.root, bg="#a0b9f0")
-        frame_imagen.pack(expand=True)
+        # frame_imagen = tk.Frame(self.root, bg="#d7a0f0")  # Aplica cong perfil
+        # frame_imagen.pack(expand=True)
         
         if self.imagen_tk:
-            tk.Label(frame_imagen, image=self.imagen_tk, bg="#a0b9f0").pack(pady=20)
+            tk.Label(self.root, image=self.imagen_tk, bg="#a0b9f0").pack(pady=20)
         else:
-            tk.Label(frame_imagen, text="Ikigai Designs", font=("Arial", 24), bg="#a0b9f0").pack(pady=20)
+            tk.Label(self.root, text="Ikigai Designs", font=("Arial", 24), bg="#a0b9f0").pack(pady=20)
         
         # Asociar la función on_closing al evento de cierre de la ventana
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)

@@ -809,10 +809,10 @@ class ProductoManager:
 
         # Costo de los kits de empaque
         costos_embalaje = db_connect.costo_embalaje(self.empaques_seleccionados)
-        costo_total = sum(costos_embalaje) + costo_materiales + costo_tiempo
+        costo_total = sum(costos_embalaje) + costo_materiales
 
         print(f"Costo de materiales: {costo_materiales}, Costo de empaques: {costos_embalaje}, Costo de tiempo: {costo_tiempo}")
-        return round(costo_total, 2)
+        return round(costo_total, 2), costo_tiempo
     
 
     def registrar_producto(self):
@@ -828,8 +828,8 @@ class ProductoManager:
             messagebox.showerror("⚠️ Error", "No se han ingresado materiales para el producto.")
             return
 
-        self.costo_produccion = self.calcular_costo_producto()
-        precio_sugerido = self.costo_produccion * 2.5
+        self.costo_produccion, tiempo_trabajo = self.calcular_costo_producto()
+        precio_sugerido = (self.costo_produccion * 2.5) + tiempo_trabajo
 
         resumen_window = tk.Toplevel(self.root)
         configurar_toplevel(resumen_window, titulo="Resumen del Producto", color_fondo="#a0b9f0", ancho_min=500, alto_min=650)

@@ -530,121 +530,121 @@ class InventarioManager:
             messagebox.showerror("⚠️ Error", "No se han ingresado materiales.")
             return
         
-        try:
-            id_factura = db_connect.insertar_factura(
-                self.datos_factura["numero_factura"],
-                self.datos_factura["fecha"],
-                self.datos_factura["proveedor"]
-            )
-            # Obtener nombres de proveedores desde BD
-            self.actualizar_proveedores()
-            
-            id_proveedor = db_connect.obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
-            if isinstance(id_proveedor, tuple):
-                id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
-            
-            id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
-            
-            for material in self.materia_prima: #self.materiales_temporales:
-                try:
-                    material["costo_unitario"] = round(material["costo_unitario"], 4)
-                    
-                except:
-                    messagebox.showerror(f"⚠️ Error",  f"El valor {material['costo_unitario']} no es un número válido.")
-                    material["costo_unitario"] = 0.0
-                    
-                codigo_true = db_connect.codigo_existe(material["codigo"])
-
-                # Verificar si el material existe en la base de datos
-                if codigo_true:
-                    # Si existe, actualizar el stock y el costo
-                    exito, mensaje = db_connect.actualizar_material(
-                        material["codigo"],
-                        int(material["stock"]),
-                        material["precio"],
-                        material["costo_unitario"],
-                        material["es_por_metro"]
-                    )
-                    messagebox.showinfo("✅ Exito", mensaje)
-                    
-                    if not exito:
-                        messagebox.showwarning("Advertencia", mensaje)
-                else:
-                    # Si no existe, insertar el material completo
-                    id_material = db_connect.insertar_material(
-                        material["codigo"],
-                        material["nombre"],
-                        material["tipo"],
-                        material["tamaño"],
-                        material["color"],
-                        material["stock"],
-                        material["precio"],
-                        material["costo_unitario"],
-                        material["es_por_metro"],
-                        id_proveedor
-                    )
-
-                # 4. Obtener el id_material
-                id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+        #try:
+        id_factura = db_connect.insertar_factura(
+            self.datos_factura["numero_factura"],
+            self.datos_factura["fecha"],
+            self.datos_factura["proveedor"]
+        )
+        # Obtener nombres de proveedores desde BD
+        self.actualizar_proveedores()
+        
+        id_proveedor = db_connect.obtener_id_proveedor_por_nombre(self.datos_factura["proveedor"])
+        if isinstance(id_proveedor, tuple):
+            id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
+        
+        id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
+        
+        for material in self.materia_prima: #self.materiales_temporales:
+            try:
+                material["costo_unitario"] = round(material["costo_unitario"], 4)
                 
-                # 5. Insertar en Detalle_Factura
-                if id_material is not None:
-                    id_detalle = db_connect.insertar_detalle_factura(
-                        id_factura,
-                        id_material,
-                        material["stock"],
-                        material["precio"],
-                        material["costo_unitario"]
-                    )
-                else:
-                    messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
+            except:
+                messagebox.showerror(f"⚠️ Error",  f"El valor {material['costo_unitario']} no es un número válido.")
+                material["costo_unitario"] = 0.0
                 
-            # Guardar Empaques  OJO al guardar una lista vacia.
-            for material in self.empaques_temporales: #self.materiales_temporales:
-                try:
-                    material["costo_unitario"] = round(material["costo_unitario"], 2)
-                except:
-                    messagebox.showerror(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
-                    material["costo_unitario"] = 0.0
-                    
-                codigo_true = db_connect.codigo_existe_emp(material["codigo"])
+            codigo_true = db_connect.codigo_existe(material["codigo"])
+
+            # Verificar si el material existe en la base de datos
+            if codigo_true:
+                # Si existe, actualizar el stock y el costo
+                exito, mensaje = db_connect.actualizar_material(
+                    material["codigo"],
+                    int(material["stock"]),
+                    material["precio"],
+                    material["costo_unitario"],
+                    material["es_por_metro"]
+                )
+                messagebox.showinfo("✅ Exito", mensaje)
                 
-                # Verificar si el material existe en la base de datos
-                if codigo_true:
-                    # Si existe, actualizar el stock y el costo
-                    exito, mensaje, = db_connect.actualizar_empaque(
-                        material["codigo"],
-                        int(material["stock"]),
-                        material["precio"],
-                        material["costo_unitario"],
-                        material["es_por_metro"]
-                        
-                    )
-                    messagebox.showinfo("✅ Exito", mensaje)
+                if not exito:
+                    messagebox.showwarning("Advertencia", mensaje)
+            else:
+                # Si no existe, insertar el material completo
+                id_material = db_connect.insertar_material(
+                    material["codigo"],
+                    material["nombre"],
+                    material["tipo"],
+                    material["tamaño"],
+                    material["color"],
+                    material["stock"],
+                    material["precio"],
+                    material["costo_unitario"],
+                    material["es_por_metro"],
+                    id_proveedor
+                )
+
+            # 4. Obtener el id_material
+            id_material = db_connect.obtener_id_material_por_codigo(material["codigo"])
+            
+            # 5. Insertar en Detalle_Factura
+            if id_material is not None:
+                id_detalle = db_connect.insertar_detalle_factura(
+                    id_factura,
+                    id_material,
+                    material["stock"],
+                    material["precio"],
+                    material["costo_unitario"]
+                )
+            else:
+                messagebox.showinfo("No encontrado", f"No se encontró el material con código {material['codigo']}")
+            
+        # Guardar Empaques  OJO al guardar una lista vacia.
+        for material in self.empaques_temporales: #self.materiales_temporales:
+            try:
+                material["costo_unitario"] = round(material["costo_unitario"], 2)
+            except:
+                messagebox.showerror(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
+                material["costo_unitario"] = 0.0
+                
+            codigo_true = db_connect.codigo_existe_emp(material["codigo"])
+            
+            # Verificar si el material existe en la base de datos
+            if codigo_true:
+                # Si existe, actualizar el stock y el costo
+                exito, mensaje, = db_connect.actualizar_empaque(
+                    material["codigo"],
+                    int(material["stock"]),
+                    material["precio"],
+                    material["costo_unitario"],
+                    material["es_por_metro"]
                     
-                    if not exito:
-                        messagebox.showwarning("Advertencia", mensaje)
-                else:
-                    # Si no existe, insertar el material completo
-                    id_material = db_connect.insertar_empaque(
-                        material["codigo"],
-                        material["nombre"],
-                        material["tamaño"],
-                        material["stock"],
-                        material["precio"],
-                        material["costo_unitario"],
-                        material["es_por_metro"]
-                    )
+                )
+                messagebox.showinfo("✅ Exito", mensaje)
+                
+                if not exito:
+                    messagebox.showwarning("Advertencia", mensaje)
+            else:
+                # Si no existe, insertar el material completo
+                id_material = db_connect.insertar_empaque(
+                    material["codigo"],
+                    material["nombre"],
+                    material["tamaño"],
+                    material["stock"],
+                    material["precio"],
+                    material["costo_unitario"],
+                    material["es_por_metro"]
+                )
 
-            # 6. Mostrar mensaje de éxito
-            messagebox.showinfo("Éxito", "Factura y materiales guardados correctamente.")
-            self.limpiar_campos(frame_contenido)
-            self.materiales_temporales.clear()
-            self.materia_prima.clear()
-            self.empaques_temporales.clear()
+        # 6. Mostrar mensaje de éxito
+        messagebox.showinfo("Éxito", "Factura y materiales guardados correctamente.")
+        self.limpiar_campos(frame_contenido)
+        self.materiales_temporales.clear()
+        self.materia_prima.clear()
+        self.empaques_temporales.clear()
 
-        except Exception as e:
-            messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
+        # except Exception as e:
+        #     messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
 
     def mostrar_datos_ingresados(self):
         getcontext().prec = 6  # Maneja la cantidad de números de hasta 6 digitos.
@@ -733,8 +733,9 @@ class InventarioManager:
         def guardar_cambios():
             for item in tree.get_children():
                 valores = tree.item(item, "values")
-                codigo, nombre, tipo, tamaño, color, cantidad, precio, _ = valores
-
+                print(f"Guardar Cambios Valor: {valores}")
+                codigo, nombre, tipo, tamaño, color, cantidad, precio, precio_unit, _ = valores
+                
                 material = {
                     "codigo": codigo,
                     "nombre": nombre,
@@ -743,7 +744,7 @@ class InventarioManager:
                     "color": color,
                     "stock": cantidad,
                     "precio": precio,
-                    "costo_unitario": self.convertir_a_float(precio) / self.convertir_a_float(cantidad) if self.convertir_a_float(cantidad) != 0 else 0
+                    "costo_unitario": precio_unit # self.convertir_a_float(precio) / self.convertir_a_float(cantidad) if self.convertir_a_float(cantidad) != 0 else 0
                 }
 
                 for i, mat in enumerate(self.materiales_temporales):
@@ -754,6 +755,7 @@ class InventarioManager:
                         break
 
             frame_total.config(text=f"{sum(self.total_actual):.2f}", font=("Arial", 12, "bold"))
+            messagebox.showinfo("Información", "✅ El cambio se ha guardado")
 
         def eliminar_dato():
             item = tree.selection()

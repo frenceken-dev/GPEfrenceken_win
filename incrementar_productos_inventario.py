@@ -122,8 +122,9 @@ class VentanaIncrementarStock:
         cantidad_a_fabricar = int(cantidad)
 
         # Obtener materiales requeridos (usando tu tabla "detalle")
-        materiales_requeridos = db_connect.obtener_materiales_por_producto(id_producto)
-
+        materiales_requeridos, empaque_kit = db_connect.obtener_materiales_por_producto(id_producto)
+        empaque_kit_str = str(empaque_kit[0]["empaques"])
+        str_codigo_empaque = empaque_kit_str.split(",")
         # Verificar stock suficiente
         for material in materiales_requeridos:
             stock_disponible = material["stock"]  # Stock actual del material
@@ -147,8 +148,9 @@ class VentanaIncrementarStock:
 
         # Descontar materiales
         materiales_descontado = db_connect.descontar_materiales(materiales_requeridos, cantidad_a_fabricar)
+        empaques_descontados = db_connect.descontar_empaques(str_codigo_empaque, cantidad_a_fabricar)
         
-        if materiales_descontado:
+        if materiales_descontado and empaques_descontados:
             # Incrementar stock del producto
             db_connect.incrementar_stock_producto(id_producto, cantidad_a_fabricar)
             messagebox.showinfo("✅ Éxito", "Stock incrementado y materiales descontados correctamente.")
