@@ -1888,17 +1888,12 @@ class DataBaseManager():
         query = "SELECT stock, precio FROM Materiales WHERE codigo = ?"
         db_stock = self.select(query, (codigo,))
         
-        stock_c = self.conversion_decimal(stock)
-        #print(f"Stock conversión : {stock_c}")
-        precio_c = self.conversion_decimal(precio)
-        #print(f"precio conversión : {precio_c}")
-        
-        stock_actual = Decimal(db_stock[0]["stock"])
-        precio_anterior = Decimal(db_stock[0]["precio"])
+        stock_actual = Decimal(self.conversion_decimal(db_stock[0]["stock"]))
+        precio_anterior = Decimal(self.conversion_decimal(db_stock[0]["precio"]))
         #print(f"Stock: {stock}")
-        stock_incrementa = Decimal(stock_c)
+        stock_incrementa = Decimal(self.conversion_decimal(stock))
         #print(f"Stock: {precio}")
-        precio_material = Decimal(precio_c)
+        precio_material = Decimal(self.conversion_decimal(precio))
         
         # Calcular el nuevo stock y el nuevo costo total acumulado
         nuevo_stock = stock_actual + stock_incrementa
@@ -2007,18 +2002,17 @@ class DataBaseManager():
 
         Returns:
             int: - Retorna el id del material
-        """
-        
+        """        
         materiales = {
             "codigo": codigo,
             "nombre": nombre,
             "tipo": tipo,
             "tamaño": tamaño,
             "color": color,
-            "stock": stock,
-            "precio": precio,
-            "costo_unitario": costo_unitario,
-            "es_por_metro": es_por_metro,
+            "stock": self.conversion_decimal(stock),
+            "precio": self.conversion_decimal(precio),
+            "costo_unitario": self.conversion_decimal(costo_unitario),
+            "es_por_metro": es_por_metro if es_por_metro is None else "No",
             "id_proveedor": id_proveedor
         }
         
@@ -2215,6 +2209,82 @@ class DataBaseManager():
         else:
             messagebox.showerror("⚠️ Error", "No se ha podido eliminar el material.")
             return False
+        
+    
+    def existe_borrador_factura(self, numero_factura):
+        """Verifica si ya existe un borrador PENDIENTE para ese número de factura."""
+        query = "SELECT id FROM facturas_borrador WHERE numero_factura = ? AND estado = 'pendiente'"
+        resultado = self.select(query, (numero_factura,))
+        return resultado[0]["id"] if resultado else None
+
+    def guardar_borrador_factura_db(self, id_creador, nombre_creador, proveedor,
+                                    numero_factura, fecha_factura,
+                                    materiales_json, empaques_json):
+        """Guarda un nuevo borrador de factura."""
+        return self.insert(
+            table="facturas_borrador",
+            data={
+                "usuario_creador_id": id_creador,
+                "nombre_usuario_creador": nombre_creador,
+                "proveedor": proveedor,
+                "numero_factura": numero_factura,
+                "fecha_factura": fecha_factura,
+                "materiales": materiales_json,
+                "empaques": empaques_json,
+                "estado": "pendiente"
+            }
+        )
+
+    def actualizar_borrador_factura(self, id_creador, nombre_creador, proveedor,
+                                    numero_factura, fecha_factura,
+                                    materiales_json, empaques_json):
+        """Actualiza un borrador de factura pendiente existente."""
+        return self.update(
+            table="facturas_borrador",
+            updates={
+                "usuario_creador_id": id_creador,
+                "nombre_usuario_creador": nombre_creador,
+                "proveedor": proveedor,
+                "fecha_factura": fecha_factura,
+                "materiales": materiales_json,
+                "empaques": empaques_json
+            },
+            where_condition="numero_factura = ? AND estado = 'pendiente'",
+            where_params=(numero_factura,)
+        )
+
+    def borradores_facturas_pendientes(self):
+        """Devuelve todos los borradores pendientes. NUNCA devuelve None (fix del TypeError)."""
+        query = """
+            SELECT id, nombre_usuario_creador, proveedor, numero_factura,
+                fecha_factura, materiales, empaques, fecha_creacion
+            FROM facturas_borrador
+            WHERE estado = 'pendiente'
+            ORDER BY fecha_creacion DESC
+        """
+        borradores = self.select(query)
+        return borradores if borradores else []
+
+    def cargar_borrador_factura_db(self, borrador_id):
+        """Carga un borrador completo de factura."""
+        query = """
+            SELECT id, proveedor, numero_factura, fecha_factura, materiales, empaques
+            FROM facturas_borrador WHERE id = ?
+        """
+        resultado = self.select(query, (borrador_id,))
+        return resultado[0] if resultado else None
+
+    def finalizar_borrador_factura(self, borrador_id):
+        """Marca el borrador como finalizado al guardar la factura definitiva."""
+        return self.update(
+            table="facturas_borrador",
+            updates={
+                "estado": "finalizado",
+                "fecha_finalizacion": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            },
+            where_condition="id = ?",
+            where_params=(borrador_id,)
+        )
             
 #######################################################################################################################
 ################################################## SECCIÓN DE EMBALAJES ###############################################
@@ -2240,9 +2310,9 @@ class DataBaseManager():
             "codigo_emp": codigo,
             "nombre_emp": nombre,
             "tamaño_emp": tamaño,
-            "stock_emp": cantidad,
-            "precio_emp": precio,
-            "costo_unitario_emp": costo_unitario,
+            "stock_emp": self.conversion_decimal(cantidad),
+            "precio_emp": self.conversion_decimal(precio),
+            "costo_unitario_emp": self.conversion_decimal(costo_unitario),
             "es_por_metro": es_por_metro
         }
         
@@ -2629,13 +2699,10 @@ class DataBaseManager():
         query = "SELECT stock_emp, precio_emp FROM Empaques WHERE codigo_emp = ?"
         db_stock = self.select(query, (codigo,))
         
-        stock_c = self.conversion_decimal(stock)
-        precio_c = self.conversion_decimal(precio)
-        
-        en_stock = Decimal(db_stock[0]["stock_emp"])
-        precio_anterior = Decimal(db_stock[0]["precio_emp"])
-        stock_incrementa = Decimal(stock_c)
-        precio_empaque = Decimal(precio_c)
+        en_stock = Decimal(self.conversion_decimal(db_stock[0]["stock_emp"]))
+        precio_anterior = Decimal(self.conversion_decimal(db_stock[0]["precio_emp"]))
+        stock_incrementa = Decimal(self.conversion_decimal(stock))
+        precio_empaque = Decimal(self.conversion_decimal(precio))
         
         # Calcular el nuevo stock y el nuevo costo total acumulado
         nuevo_stock = en_stock + stock_incrementa
@@ -2963,9 +3030,9 @@ class DataBaseManager():
         factura = {
             "id_factura": id_factura,
             "id_material": id_material,
-            "stock": stock,
-            "precio": precio,
-            "costo_unitario": costo_unitario
+            "stock": self.conversion_decimal(stock),
+            "precio": self.conversion_decimal(precio),
+            "costo_unitario": self.conversion_decimal(costo_unitario)
         }
         
         id_detalle = self.insert("Detalle_Factura", factura)

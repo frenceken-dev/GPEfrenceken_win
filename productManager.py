@@ -31,10 +31,10 @@ class ProductoManager:
     def usuario_actual(self, usuario):
         """Obtiene el usuario actual y su ID."""
         self.nombre_usuario_creador = usuario
-        #print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
+        print(f"EL USUARIO EN LA CLASE PRODUCTO ES: {usuario}")
         if self.nombre_usuario_creador:
             self.id_usuario_creador = db_connect.id_usuario_nombre_actual(self.nombre_usuario_creador)
-            #print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
+            print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
             #return self.id_usuario_creador[0][0], self.nombre_usuario_creador
 
     def crear_producto(self, volver_menu):
@@ -742,7 +742,7 @@ class ProductoManager:
         
     def cargar_borrador(self, borrador_id, borradores_window):
         """Carga un borrador seleccionado."""
-        borrador = db_connect.cargar_borrador_db(borrador_id) # Consulta a la db vieja
+        borrador = db_connect.cargar_borrador_db(borrador_id) 
         if borrador: # and borrador_emp:
             self.codigo_entry.delete(0, tk.END)
             self.descripcion_entry.delete(0, tk.END)

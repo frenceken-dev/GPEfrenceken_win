@@ -5,6 +5,7 @@ from recursos import crear_boton, configurar_toplevel
 from decimal import Decimal, getcontext
 from databasemanager import DataBaseManager
 from empaqueManager import CrearEmpaques
+import json
 
 
 db_connect = DataBaseManager()
@@ -14,6 +15,8 @@ class InventarioManager:
         self.root = root
         self.imagen_panel_tk = imagen_panel_tk
         self.volver_menu = volver_menu
+        self.id_usuario_creador = None
+        self.nombre_usuario_creador = None
         self.materiales_temporales = []
         self.empaques_temporales = []
         self.materia_prima = []
@@ -33,6 +36,15 @@ class InventarioManager:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+    def usuario_actual(self, usuario):
+            """Obtiene el usuario actual y su ID."""
+            self.nombre_usuario_creador = usuario
+            print(f"EL USUARIO EN LA CLASE INVENTARIO ES: {usuario}")
+            if self.nombre_usuario_creador:
+                self.id_usuario_creador = db_connect.id_usuario_nombre_actual(self.nombre_usuario_creador)
+                print(f"EL ID DEL USUARIO ACTUAL ES: {self.id_usuario_creador}")
+                #return self.id_usuario_creador[0][0], self.nombre_usuario_creador
+    
     def iniciar_interfaz(self):
         self.limpiar_frame()
         self.crear_interfaz_principal()
@@ -174,6 +186,31 @@ class InventarioManager:
             state=tk.DISABLED
         )
         self.btn_guardar_factura.grid(row=4, column=1, pady=20) # , columnspan=2
+        
+        self.btn_guardar_borrador = crear_boton(self.form_frame,
+                    texto="Guardar borrador",
+                    ancho=20,
+                    alto=25,
+                    color_fondo="#DEE90D",
+                    color_texto="white",
+                    font=("Arial", 11, "bold"),
+                    hover_color="#2ECC71",
+                    comando=lambda: self.guardar_borrador(),
+                    state=tk.DISABLED
+        )
+        self.btn_guardar_borrador.grid(row=4, column=0, pady=20)  # columnspan=2,
+        
+        self.btn_ver_borradores = crear_boton(
+            self.form_frame,
+            texto="Ver Borradores",
+            ancho=20,
+            alto=25,
+            color_fondo="#324f98",
+            color_texto="white",
+            font=("Arial", 11, "bold"),
+            comando=self.mostrar_borradores_pendientes
+        )
+        self.btn_ver_borradores.grid(row=4, column=2, pady=20)
 
         # Botón Volver
         self.back_button = crear_boton(
@@ -203,7 +240,8 @@ class InventarioManager:
 
     def actualizar_estado_botones(self, proveedor, num_factura, fecha):
         estado_activo = self.validar_campos_obligatorios(proveedor, num_factura, fecha)
-        botones = [self.btn_agregar_material, self.btn_agregar_empaque, self.btn_mostrar_datos, self.btn_guardar_factura]
+        botones = [self.btn_agregar_material, self.btn_agregar_empaque, self.btn_mostrar_datos,
+                self.btn_guardar_factura, self.btn_guardar_borrador, self.btn_ver_borradores]
 
         for boton in botones:
             if hasattr(boton, "set_state"):
@@ -316,7 +354,7 @@ class InventarioManager:
             precio = self.convertir_a_float(precio_entry.get())
             cantidad = self.convertir_a_float(stock_entry.get())
             costo_unitario = precio / cantidad if cantidad != 0 else 0
-
+            es_por_metro_ = es_por_metro.get()
             try:
                 cantidad_float = float(cantidad)
                 precio_float = float(precio)
@@ -333,10 +371,11 @@ class InventarioManager:
                 "stock": stock_entry.get(),
                 "precio": precio_entry.get(),
                 "costo_unitario": costo_unitario,
-                "es_por_metro": self.son_metros  #es_por_metro.get()
+                "es_por_metro": es_por_metro_#self.son_metros  #es_por_metro.get() SI o NO
             }
             # Agregar en temporales para ver datos y insertar DB. 
             self.materiales_temporales.append(material)
+            print(f"Inicio de guardado materiales temporales -> {self.materiales_temporales}")
             self.materia_prima.append(material)
             
             messagebox.showinfo("Éxito", "Material agregado temporalmente.")
@@ -401,7 +440,7 @@ class InventarioManager:
         precio_entry.grid(row=5, column=1, sticky="ns", pady=5)
         
         tk.Label(empaque_window, text="Es por metro?:", bg="#101113", fg="#ffffff").grid(row=6, column=0, sticky="ns")
-        es_por_metro = ttk.Combobox(empaque_window, values=["Si No"], state="readonly")
+        es_por_metro = ttk.Combobox(empaque_window, values=["Si", "No"], state="readonly")
         es_por_metro.grid(row=6, column=1, sticky="ns", pady=5)
 
         def filtrar_codigos_key(event):
@@ -522,6 +561,7 @@ class InventarioManager:
                         child.set('')
 
     def guardar_factura_y_materiales(self, frame_contenido):
+        
         if not self.datos_factura["proveedor"] or not self.datos_factura["numero_factura"] or not self.datos_factura["fecha"]:
             messagebox.showerror("⚠️ Error", "Faltan datos de la factura (proveedor, número o fecha).")
             return
@@ -544,10 +584,11 @@ class InventarioManager:
                 id_proveedor = id_proveedor[0]  # Extrae el valor si es una tupla
             
             id_factura = db_connect.obtener_id_factura_por_numero(self.datos_factura["numero_factura"])
-            
+            print(f"Materiales antes del round = {self.materia_prima}")
             for material in self.materia_prima: #self.materiales_temporales:
+                #print(f"Materiales antes del round TIPO = {type(material["costo_unitario"])}  -> {material}")
                 try:
-                    material["costo_unitario"] = round(material["costo_unitario"], 4)
+                    material["costo_unitario"] = round(self.convertir_a_float(material["costo_unitario"]), 4)
                     
                 except:
                     messagebox.showerror(f"⚠️ Error",  f"El valor {material['costo_unitario']} no es un número válido.")
@@ -560,8 +601,8 @@ class InventarioManager:
                     # Si existe, actualizar el stock y el costo
                     exito, mensaje = db_connect.actualizar_material(
                         material["codigo"],
-                        int(material["stock"]),
-                        material["precio"],
+                        self.convertir_a_float(material["stock"]),
+                        self.convertir_a_float(material["precio"]),
                         material["costo_unitario"],
                         material["es_por_metro"]
                     )
@@ -602,7 +643,7 @@ class InventarioManager:
             # Guardar Empaques  OJO al guardar una lista vacia.
             for material in self.empaques_temporales: #self.materiales_temporales:
                 try:
-                    material["costo_unitario"] = round(material["costo_unitario"], 2)
+                    material["costo_unitario"] = round(self.convertir_a_float(material["costo_unitario"]), 4)
                 except:
                     messagebox.showerror(f"⚠️ Error: El valor {material['costo_unitario']} no es un número válido.")
                     material["costo_unitario"] = 0.0
@@ -614,8 +655,8 @@ class InventarioManager:
                     # Si existe, actualizar el stock y el costo
                     exito, mensaje, = db_connect.actualizar_empaque(
                         material["codigo"],
-                        int(material["stock"]),
-                        material["precio"],
+                        self.convertir_a_float(material["stock"]),
+                        self.convertir_a_float(material["precio"]),
                         material["costo_unitario"],
                         material["es_por_metro"]
                         
@@ -635,7 +676,12 @@ class InventarioManager:
                         material["costo_unitario"],
                         material["es_por_metro"]
                     )
-
+                    
+            # Marcar el borrador como finalizado si existía
+            id_borrador = db_connect.existe_borrador_factura(self.datos_factura["numero_factura"])
+            if id_borrador:
+                db_connect.finalizar_borrador_factura(id_borrador)
+                
             # 6. Mostrar mensaje de éxito
             messagebox.showinfo("Éxito", "Factura y materiales guardados correctamente.")
             self.limpiar_campos(frame_contenido)
@@ -680,8 +726,9 @@ class InventarioManager:
         def cargar_datos():
             for item in tree.get_children():
                 tree.delete(item)
-            
+            print(f"Materiales Temporales: {self.materiales_temporales}")
             for material in self.materiales_temporales:
+                print(f"Materiales Temporales bucle for: {material}")
                 precio = self.convertir_a_float(material["precio"])
                 cantidad = self.convertir_a_float(material["stock"])
                 
@@ -734,29 +781,38 @@ class InventarioManager:
             for item in tree.get_children():
                 valores = tree.item(item, "values")
                 print(f"Guardar Cambios Valor: {valores}")
-                codigo, nombre, tipo, tamaño, color, cantidad, precio, precio_unit, _ = valores
-                
-                material = {
-                    "codigo": codigo,
-                    "nombre": nombre,
-                    "tipo": tipo,
-                    "tamaño": tamaño,
-                    "color": color,
-                    "stock": cantidad,
-                    "precio": precio,
-                    "costo_unitario": precio_unit # self.convertir_a_float(precio) / self.convertir_a_float(cantidad) if self.convertir_a_float(cantidad) != 0 else 0
-                }
+                codigo, nombre, tipo, tamaño, color, cantidad, precio, precio_unit, es_metro_tree = valores
 
                 for i, mat in enumerate(self.materiales_temporales):
                     if mat["codigo"] == codigo:
+                        # ✅ Preservar es_por_metro (y cualquier otro campo que el Treeview no muestra)
+                        es_por_metro = es_metro_tree if es_metro_tree in ("Si", "No") else mat.get("es_por_metro")
+                        material = {
+                            "codigo": codigo,
+                            "nombre": nombre,
+                            "tipo": tipo,
+                            "tamaño": tamaño,
+                            "color": color,
+                            "stock": self.convertir_a_float(cantidad),
+                            "precio": self.convertir_a_float(precio),
+                            "costo_unitario": self.convertir_a_float(precio_unit), # self.convertir_a_float(precio) / self.convertir_a_float(cantidad) if self.convertir_a_float(cantidad) != 0 else 0
+                            "es_por_metro": es_por_metro
+                        }
                         self.materiales_temporales[i] = material
+                        
+                        # ✅ Sincronizar también materia_prima (misma posición o buscar por código)
+                        for k, mp in enumerate(self.materia_prima):
+                            if mp["codigo"] == codigo:
+                                self.materia_prima[k] = material
+                                break
+                            
                         if i < len(self.total_actual):
                             self.total_actual[i] = self.convertir_a_float(precio)
                         break
 
             frame_total.config(text=f"{sum(self.total_actual):.2f}", font=("Arial", 12, "bold"))
             messagebox.showinfo("Información", "✅ El cambio se ha guardado")
-
+            
         def eliminar_dato():
             item = tree.selection()
             if not item:
@@ -769,14 +825,35 @@ class InventarioManager:
 
             tree.delete(item_id)
 
-            for i, material in enumerate(self.materiales_temporales):
-                if material["codigo"] == codigo_a_eliminar:
-                    self.materiales_temporales.pop(i)
-                    if i < len(self.total_actual):
-                        self.total_actual.pop(i)
-                    break
+            # Eliminar de todas las listas donde pueda estar
+            self.materiales_temporales = [m for m in self.materiales_temporales if m["codigo"] != codigo_a_eliminar]
+            self.materia_prima = [m for m in self.materia_prima if m["codigo"] != codigo_a_eliminar]
+            self.empaques_temporales = [m for m in self.empaques_temporales if m["codigo"] != codigo_a_eliminar]
+
+            self.total_actual = [t for i, t in enumerate(self.total_actual) if i < len(self.materiales_temporales)]
 
             frame_total.config(text=f"{sum(self.total_actual):.2f}")
+
+        # def eliminar_dato():
+        #     item = tree.selection()
+        #     if not item:
+        #         messagebox.showwarning("Advertencia", "Selecciona un ítem para eliminar.")
+        #         return
+
+        #     item_id = item[0]
+        #     valores = tree.item(item_id, "values")
+        #     codigo_a_eliminar = valores[0]
+
+        #     tree.delete(item_id)
+
+        #     for i, material in enumerate(self.materiales_temporales):
+        #         if material["codigo"] == codigo_a_eliminar:
+        #             self.materiales_temporales.pop(i)
+        #             if i < len(self.total_actual):
+        #                 self.total_actual.pop(i)
+        #             break
+
+        #     frame_total.config(text=f"{sum(self.total_actual):.2f}")
 
         def cerrar_ventana():
             ventana_datos.destroy()
@@ -834,3 +911,181 @@ class InventarioManager:
         boton_cerrar.pack(side=tk.LEFT, padx=5)
 
         cargar_datos()
+        
+
+    def guardar_borrador(self):
+        """Guarda la factura actual como borrador."""
+        proveedor = self.proveedor_combobox.get()
+        numero_factura = self.factura_entry.get()
+        fecha_factura = self.fecha_entry.get()
+
+        if not numero_factura and not proveedor and not self.materiales_temporales and not self.empaques_temporales:
+            messagebox.showwarning("Advertencia", "No hay datos para guardar como borrador.")
+            return
+
+        if not numero_factura:
+            messagebox.showwarning("Advertencia", "Ingresa al menos el número de factura.")
+            return
+        
+        print(f"GUARDAR BORRADOR : {self.materiales_temporales}")
+        materiales_json = json.dumps(self.materiales_temporales)
+        empaques_json = json.dumps(self.empaques_temporales)
+
+        borrador_existente = db_connect.existe_borrador_factura(numero_factura)
+
+        if borrador_existente is not None:
+            db_connect.actualizar_borrador_factura(
+                self.id_usuario_creador, self.nombre_usuario_creador,
+                proveedor, numero_factura, fecha_factura,
+                materiales_json, empaques_json
+            )
+            messagebox.showinfo("Éxito", "Borrador actualizado correctamente.")
+        else:
+            db_connect.guardar_borrador_factura_db(
+                self.id_usuario_creador, self.nombre_usuario_creador,
+                proveedor, numero_factura, fecha_factura,
+                materiales_json, empaques_json
+            )
+            messagebox.showinfo("Éxito", "Borrador guardado correctamente.")
+    
+    
+    def mostrar_borradores_pendientes(self):
+        """Muestra una ventana con los borradores de facturas pendientes."""
+        borradores_window = tk.Toplevel(self.root)
+        configurar_toplevel(borradores_window, titulo="Borradores de Facturas",
+                            ancho_min=830, alto_min=300, color_fondo="#101113")
+
+        borradores_main = tk.Frame(borradores_window)
+        borradores_main.pack(fill=tk.BOTH, expand=True)
+
+        canvas = tk.Canvas(borradores_main, bg="#101113")
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar = tk.Scrollbar(borradores_main, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        borradores_frame = tk.Frame(canvas, bg="#101113")
+        canvas.create_window((0, 0), window=borradores_frame, anchor="nw")
+
+        # Doble protección: [] si la BD devuelve None
+        borradores = db_connect.borradores_facturas_pendientes() or []
+        #print(f"Borrador Factura: {borradores}")
+        encabezados = ["ID", "Creador", "Proveedor", "N° Factura", "Fecha Factura", "Materiales", "Empaques", "Fecha inicio", "Acciones"]
+        for col, encabezado in enumerate(encabezados):
+            tk.Label(borradores_frame, text=encabezado, font=("Arial", 10, "bold"),
+                    bg="#d1d1d1", fg="#101113").grid(row=0, column=col, padx=5, pady=5, sticky="nsew")
+        
+        orden_campos = [
+                            "usuario_creador_id",
+                            "nombre_usuario_creador",
+                            "proveedor",
+                            "numero_factura",
+                            "fecha_factura",
+                            "materiales",
+                            "empaques",
+                            "fecha_creacion",
+                            
+                        ]
+        for i, borrador in enumerate(borradores):
+            # Columnas 0 a 9 (datos)
+            #print(f"for i = {i}")
+            #print(f"for borrador = {borrador}")
+            for j, orden_campos in enumerate(borrador):
+                valor = borrador[orden_campos] if borrador[orden_campos] is not None else ""
+                texto_limitado = self.limitar_texto(str(valor))
+                label = tk.Label(borradores_frame, text=texto_limitado, bg="#101113",
+                                fg="#ffffff", cursor="hand2")
+                label.grid(row=i + 1, column=j, padx=5, pady=5, sticky="nsew")
+                label.bind("<Button-1>", lambda e, txt=valor: self.mostrar_contenido_completo(txt))
+
+            # Botón "Cargar" en la columna 6
+            btn_cargar = tk.Button(borradores_frame, text="Cargar", bg="#4B82F0", fg="#101113",
+                                command=lambda id=borrador["id"]: self.cargar_borrador(id, borradores_window))
+            btn_cargar.grid(row=i + 1, column=8, padx=5, pady=5)
+
+        for col in range(len(encabezados)):
+            borradores_frame.columnconfigure(col, weight=1)
+    
+    
+    def cargar_borrador(self, borrador_id, borradores_window):
+        """Carga un borrador de factura seleccionado en el formulario."""
+        borrador = db_connect.cargar_borrador_factura_db(borrador_id)
+
+        if not borrador:
+            messagebox.showerror("⚠️ Error", "No se encontró el borrador.")
+            return
+
+        # Limpiar el formulario actual
+        self.proveedor_combobox.set('')
+        self.factura_entry.delete(0, tk.END)
+        self.fecha_entry.delete(0, tk.END)
+        self.materiales_temporales.clear()
+        self.materia_prima.clear()
+        self.empaques_temporales.clear()
+
+        # Cargar datos de la factura
+        self.proveedor_combobox.set(borrador["proveedor"] or "")
+        self.factura_entry.insert(0, borrador["numero_factura"] or "")
+        self.fecha_entry.insert(0, borrador["fecha_factura"] or "")
+
+        # Deserializar con json.loads (NUNCA eval)
+        try:
+            self.materiales_temporales = json.loads(borrador["materiales"]) if borrador["materiales"] else []
+            self.empaques_temporales = json.loads(borrador["empaques"]) if borrador["empaques"] else []
+            
+            # Normalizar valores faltantes
+            for material in self.materiales_temporales:
+                if material.get("es_por_metro") is None:
+                    material["es_por_metro"] = "No"
+
+            for empaque in self.empaques_temporales:
+                if empaque.get("es_por_metro") is None:
+                    empaque["es_por_metro"] = "No"
+                    
+        except json.JSONDecodeError:
+            messagebox.showerror("⚠️ Error", "El borrador contiene datos corruptos.")
+            return
+
+        # Reconstruir materia_prima (materiales que van a la tabla Materiales, no empaques)
+        self.materia_prima = self.materiales_temporales.copy()
+        #print(f"Materia Prima AL cargar borrador {self.materia_prima}")
+        #print(f"Materia Prima AL cargar borrador (TYPE) {type(self.materia_prima)}")
+
+        # Actualizar el estado de los botones con los datos cargados
+        self.on_campo_cambiado()
+
+        borradores_window.destroy()
+        messagebox.showinfo("Éxito", f"Borrador {borrador_id} cargado correctamente.")      
+    
+    def limitar_texto(self, texto, limite=15):
+            """Limitara la cantidad de caracteres dentro de una columna de borradores pendientes."""
+            if len(texto) > limite:
+                return texto[:limite] + "..."
+            return texto
+    
+    def mostrar_contenido_completo(self, texto, titulo="Información completa"):
+        """Muestra la información completa de la columna."""        
+        informacion_completa = tk.Toplevel(self.frame)
+        informacion_completa.title(titulo)
+        informacion_completa.geometry("400x200")
+
+        def cerrar_toplevel():
+            informacion_completa.grab_release()
+            informacion_completa.destroy()
+
+        # ✕ de la ventana también libera el grab
+        informacion_completa.protocol("WM_DELETE_WINDOW", cerrar_toplevel)
+
+        texto_label = tk.Label(informacion_completa, text=texto, wraplength=380, justify=tk.LEFT)
+        texto_label.pack(padx=10, pady=10)
+
+        btn_cerrar = tk.Button(informacion_completa, text="Cerrar", command=cerrar_toplevel)
+        btn_cerrar.pack(pady=10)
+
+        informacion_completa.update_idletasks()
+        informacion_completa.grab_set()
+        informacion_completa.lift()          # Trae la ventana al frente
+        informacion_completa.focus_force() 

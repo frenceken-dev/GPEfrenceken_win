@@ -20,7 +20,7 @@ from recursos import LOGO_PATH, IMAGEN_BUSQUEDA_PATH, crear_boton, configurar_to
 from alerta_stock import VentanaConfigurarUmbrales
 #from productos import usuario_actual
 from databasemanager import DataBaseManager
-from perfilManager import perfilUsuario
+#from perfilManager import perfilUsuario
 
 
 db_connect = DataBaseManager()
@@ -152,7 +152,7 @@ class PantallaPrincipal:
                 if self.usuario in self.usuarios:
                     es_valido, self.rol, mensaje = db_connect.validar_clave(self.usuario, self.contraseña)
                     # Configurar colores y fondo de usuario.
-                    self.conf_usuario = perfilUsuario(self.root, self.usuario)
+                    #self.conf_usuario = perfilUsuario(self.root, self.usuario)
                     #print(f"El ROL es: {self.rol}")
                     # Enviar el usuario actual a producto para guardar borrador de creación de producto
                 
