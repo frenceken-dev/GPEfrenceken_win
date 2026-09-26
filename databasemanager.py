@@ -5241,12 +5241,12 @@ class DataBaseManager():
 
 
 
-    def conversion_decimal(self, dato:float) -> float:
+    def conversion_decimal(self, dato:str) -> float:
         """
         Realizar conversión de coma (,) a punto (.)
 
         Args:
-            dato (float): Recibe una dato con coma y retorna un dato con punto.
+            dato (str): Recibe una dato con coma y retorna un dato con punto.
         """
         
         dato_str = str(dato)
