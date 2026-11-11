@@ -1,282 +1,246 @@
-# Modulo para la personalización de sesión de un usuario.
+# perfilManager.py
+# Módulo para la personalización de branding del NEGOCIO (Fase 7).
+
+# perfilManager.py
+# Módulo para la personalización de branding del NEGOCIO (Fase 7).
+
+import os
+import shutil
 import tkinter as tk
-from tkinter import messagebox, ttk, colorchooser, filedialog
-import subprocess, os, shutil
-from pathlib import Path
-from recursos import crear_boton, redimensionar_imagen, DOWLOAD_LOGO, configurar_toplevel
+from tkinter import colorchooser, filedialog, messagebox
+from recursos import crear_boton, redimensionar_imagen, configurar_toplevel, carpeta_logo_negocio
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
-class perfilUsuario():
-    """Maneja la configuración de la sesión del usuario"""
-    
-    def __init__(self, root, usuario_actual):
-        self.usuario = usuario_actual
-        self.root = root
-        #self.root.title("Configuración del Perfil")
-        self.color_fondo_default = {"fondo": "#a0b9f0", "fuente": "#ffffff", "fondo_menu": "#2C3E50", "fondo_img": "#94a7ac"}
-        self.color_pantalla = ""
-        self.color_menu = ""
-        self.color_letra = ""
-        self.logotipo = "Frenceken-dev"
-        self.ruta = None 
-        self.conf_aplicada = [{"fondo_pantalla": None},
-                                {"fondo_letra": None},
-                                {"fondo_menu": None},
-                                {"imag_fondo": None} ]
-        self.guardar_config = []   
-        self.interfaz_configuracion()        
-        
-    def cargar_configuracion(self):
-        """Cargar la configuración"""
-        pass
-    
-    
-    def interfaz_configuracion(self):
-        """Usuario configura su perfil"""
-        
-        # Tamaño fijo.
-        frame_fijo = tk.Toplevel(self.root)  
-        configurar_toplevel(frame_fijo, titulo="Configurar Perfíl", ancho_min=700, alto_min=500, color_fondo="#a0b9f0")
-        
-        #frame_fijo.pack(fill="both", expand=True, padx=5, pady=5)
-        #frame_fijo.propagate(False)
-        
-        frame_config = tk.Frame(frame_fijo, bg="#a0b9f0")
-        frame_config.columnconfigure(0, weight=1)
-        frame_config.columnconfigure(1, weight=1)
-        frame_config.rowconfigure(0, weight=1)
-        frame_config.rowconfigure(1, weight=1)
-        frame_config.pack(fill="both", expand=True)
-        
-        frame_fuente = tk.LabelFrame(frame_config, text="Tipo de letra")
-        # Expande solo el frame de muestra del color.
-        frame_fuente.rowconfigure(1, weight=1)
-        frame_fuente.columnconfigure(1, weight=1)
-        frame_fuente.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        
-        frame_color_fondo = tk.LabelFrame(frame_config, text="Color de fondo")
-        # Expande solo el frame de muestra del color.
-        frame_color_fondo.rowconfigure(1, weight=1)
-        frame_color_fondo.columnconfigure(1, weight=1)
-        frame_color_fondo.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
-        
-        frame_color_fondo_menu = tk.LabelFrame(frame_config, text="Color de fondo del Menu")
-        # Expande solo el frame de muestra del color.
-        frame_color_fondo_menu.rowconfigure(1, weight=1)
-        frame_color_fondo_menu.columnconfigure(1, weight=1)
-        frame_color_fondo_menu.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        
-        frame_logo = tk.LabelFrame(frame_config, text="Logo de la Tienda")
-        # Expande solo el frame de muestra del color.
-        frame_logo.rowconfigure(1, weight=1)
-        frame_logo.columnconfigure(1, weight=1)
-        frame_logo.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
-        
-        
-        # Cambiel Color de la fuente.
-        boton_fuente_color = crear_boton(frame_fuente, texto="Color de la Fuente:",
-                                        ancho=18,
-                                        alto=15,
-                                        comando=lambda:self.seleccionar_color("fuente"))
-        boton_fuente_color.grid(row=0, column=0, padx=10, pady=15, sticky="nsew")
-        label_fuente = tk.Label(frame_fuente
-                                , text="Color de la Fuente:")
-        label_fuente.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        self.frame_fuente_seleccionado = tk.Frame(frame_fuente, width=150, height=75, bg=self.color_fondo_default["fuente"])
-        self.frame_fuente_seleccionado.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
-        
-        # Cambiar Color del Fondo Principal.
-        boton_fondo_color = crear_boton(frame_color_fondo, texto="Color Fondo principal",
-                                        ancho=18,
-                                        alto=15,
-                                        comando=lambda:self.seleccionar_color("fondo"))
-        boton_fondo_color.grid(row=0, column=0, padx=10, pady=15, sticky="nsew")
-        label_fondo = tk.Label(frame_fuente, text="Color del Fondo:")
-        label_fondo.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        self.frame_fondo_seleccionado = tk.Frame(frame_color_fondo, width=150, height=75, bg=self.color_fondo_default["fondo"])
-        self.frame_fondo_seleccionado.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
 
-        # Cambiar Color del Fondo del Menu..
-        boton_fondo_color = crear_boton(frame_color_fondo_menu, texto="Color Fondo Menu",
-                                        ancho=18,
-                                        alto=15,
-                                        comando=lambda:self.seleccionar_color("fondo_menu"))
-        boton_fondo_color.grid(row=0, column=0, padx=10, pady=15, sticky="nsew")
-        label_fondo = tk.Label(frame_color_fondo_menu, text="Color del Fondo:")
-        label_fondo.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        self.frame_fondo_seleccionado_menu = tk.Frame(frame_color_fondo_menu, width=150, height=75, bg=self.color_fondo_default["fondo_menu"])
-        self.frame_fondo_seleccionado_menu.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
-        
-        # Cambiar Imagen
-        boton_fondo_color = crear_boton(frame_logo, texto="Seleccionar Imágen",
-                                        ancho=18,
-                                        alto=15,
-                                        comando=self.cambiar_logo)
-        boton_fondo_color.grid(row=0, column=0, padx=10, pady=15, sticky="nsew")
-        logo_fondo = tk.Label(frame_logo, text="Logo:")
-        logo_fondo.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        self.frame_logo_im = tk.Frame(frame_logo, width=150, height=75, bg=self.color_fondo_default["fondo_img"])
-        self.frame_logo_im.grid(row=1, column=1, padx=15, pady=15, sticky="nsew") 
-        
-        bton_filtar_guardar = crear_boton(frame_fijo,
-            texto="Guardar configuración",
-            ancho=20,
-            alto=30,
-            comando=self.filtrar_config         
-            )
-        bton_filtar_guardar.pack(side="bottom", pady=10, expand=False)
-        
-        
-    def seleccionar_color(self, llave):
-        """Aqui se elige el color del fondo"""
-        #print(f"La Llave es: {llave}")
-        dato = llave
-        select_fondo = colorchooser.askcolor(title="Seleccionar Fondo")
-        if select_fondo:
-            if dato == "fondo":
-                if dato in self.color_fondo_default:
-                    #print(f"La Llave es: {llave} dentro del fondo")
-                    self.color_fondo_default["fondo"] = select_fondo
-                    # print(f"El color de fondo es: {self.color_fondo_default}")
-                    formatos = self.color_fondo_default["fondo"]
-                    color_exadecimal = formatos[1]
-                    # print(f"Los formatos son: {formatos}")
-                    self.frame_fondo_seleccionado.config(bg=color_exadecimal)
-                    self.color_pantalla = select_fondo[1]
-                    self.guardar_configuracion(1)
-                    
-            elif dato == "fuente":   
-                if dato in self.color_fondo_default:
-                    #print(f"La Llave es: {llave}, dentro de la fuente")
-                    self.color_fondo_default["fuente"] = select_fondo
-                    formatos = self.color_fondo_default["fuente"]
-                    color_exadecimal = formatos[1]
-                    self.frame_fuente_seleccionado.config(bg=color_exadecimal)
-                    self.color_letra = select_fondo[1]
-                    self.guardar_configuracion(2)
-                    
-            elif dato == "fondo_menu":   
-                if dato in self.color_fondo_default:
-                    #print(f"La Llave es: {llave}, dentro de la fuente")
-                    self.color_fondo_default["fuente"] = select_fondo
-                    formatos = self.color_fondo_default["fuente"]
-                    color_exadecimal = formatos[1]
-                    self.frame_fondo_seleccionado_menu.config(bg=color_exadecimal)
-                    self.color_menu = select_fondo[1]
-                    self.guardar_configuracion(3)
-                    
-    
+# Valores default (los mismos que usa hoy todo el programa).
+DEFAULTS = {"fondo": "#a0b9f0", "fuente": "#272525",
+            "fondo_menu": "#2C3E50", "fondo_img": "#a0b9f0"}
+
+
+class perfilUsuario:
+    """Configura la apariencia (colores y logo) del negocio actual."""
+
+    def __init__(self, root, nombre_negocio):
+        self.root = root
+        self.nombre_negocio = nombre_negocio
+
+        # Estado en memoria, inicializado con lo guardado en la BD.
+        branding = db_connect.obtener_branding()
+        self.color_pantalla = branding["color_fondo"] or DEFAULTS["fondo"]
+        self.color_letra = branding["color_fuente"] or DEFAULTS["fuente"]
+        self.color_menu = branding["color_menu"] or DEFAULTS["fondo_menu"]
+        self.logo_archivo = branding["logo_archivo"]  # None si nunca se ha subido
+
+        self.interfaz_configuracion()
+
+    # ==================== CONSTRUCCIÓN DE LA INTERFAZ ====================
+
+    def interfaz_configuracion(self):
+        self.ventana = tk.Toplevel(self.root)
+        configurar_toplevel(self.ventana, titulo="Apariencia del Negocio",
+                            ancho_min=760, alto_min=470, color_fondo="#34495e")
+
+        # ---- Título ----
+        tk.Label(self.ventana, text=f"🎨  Apariencia de {self.nombre_negocio}",
+                font=("Arial", 15, "bold"), bg="#34495e", fg="#ecf0f1"
+                ).pack(fill="x", padx=15, pady=(12, 6))
+
+        # ---- Cuerpo: vista previa (izq) + controles (der) ----
+        cuerpo = tk.Frame(self.ventana, bg="#34495e")
+        cuerpo.pack(fill="both", expand=True, padx=15, pady=5)
+
+        # ----- Vista previa -----
+        prev = tk.LabelFrame(cuerpo, text="  Vista previa  ", bg="#34495e",
+                            fg="#ecf0f1", font=("Arial", 10, "bold"))
+        prev.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        # Área de contenido (fondo principal)
+        self.prev_contenido = tk.Frame(prev, bg=self.color_pantalla)
+        self.prev_contenido.pack(fill="both", expand=True, padx=8, pady=8)
+
+        # Logo (o texto) dentro de la vista previa
+        self.prev_logo_label = tk.Label(self.prev_contenido,
+                                        text=self.nombre_negocio,
+                                        font=("Arial", 13, "bold"),
+                                        bg=self.color_pantalla,
+                                        fg=self.color_letra)
+        self.prev_logo_label.pack(pady=10)
+
+        # Etiqueta simulada de "contenido"
+        tk.Label(self.prev_contenido, text="Tu inventario se verá aquí",
+                font=("Arial", 10), bg=self.color_pantalla,
+                fg=self.color_letra).pack(expand=True)
+
+        # Mini-menú lateral sobre el contenido
+        self.prev_menu = tk.Frame(self.prev_contenido, bg=self.color_menu,
+                                width=110)
+        self.prev_menu.place(x=8, rely=0.12, relheight=0.76, width=110)
+        for texto in ["Menú", "Botones", "Aquí"]:
+            tk.Label(self.prev_menu, text="● " + texto, bg=self.color_menu,
+                    fg="#ecf0f1", font=("Arial", 9), anchor="w"
+                    ).pack(fill="x", padx=8, pady=8)
+
+        # ----- Controles -----
+        controles = tk.Frame(cuerpo, bg="#34495e")
+        controles.pack(side="left", fill="both", expand=True)
+
+        self._crear_control_color(
+            controles, "Fondo principal", "fondo", self.color_pantalla)
+        self._crear_control_color(
+            controles, "Menú lateral", "fondo_menu", self.color_menu)
+        self._crear_control_color(
+            controles, "Fuente (texto)", "fuente", self.color_letra)
+
+        # ----- Logo -----
+        marco_logo = tk.LabelFrame(controles, text="  Logo del negocio  ",
+                                    bg="#34495e", fg="#ecf0f1",
+                                    font=("Arial", 10, "bold"))
+        marco_logo.pack(fill="x", pady=(8, 0))
+
+        fila_logo = tk.Frame(marco_logo, bg="#34495e")
+        fila_logo.pack(fill="x", padx=8, pady=8)
+
+        crear_boton(fila_logo, texto="Seleccionar imagen", ancho=16, alto=20,
+                    color_fondo="#2980b9", color_texto="white",
+                    hover_color="#1f6391",
+                    comando=self.cambiar_logo).pack(side="left", padx=(0, 8))
+
+        self.label_estado_logo = tk.Label(
+            fila_logo, text="Sin logo propio" if not self.logo_archivo else "Logo cargado ✔",
+            bg="#34495e", fg="#bdc3c7", font=("Arial", 9))
+        self.label_estado_logo.pack(side="left")
+
+        # Mostrar logo guardado si existe
+        logo_guardado = os.path.join(carpeta_logo_negocio(self.nombre_negocio), "logo.png")
+        if os.path.exists(logo_guardado):
+            self._mostrar_logo(logo_guardado)
+
+        # ----- Botones finales -----
+        fila_botones = tk.Frame(self.ventana, bg="#34495e")
+        fila_botones.pack(fill="x", padx=15, pady=(6, 12))
+
+        crear_boton(fila_botones, texto="Restaurar default", ancho=16, alto=22,
+                    color_fondo="#7f8c8d", color_texto="white",
+                    hover_color="#616a6b",
+                    comando=self.restaurar_default).pack(side="left")
+
+        crear_boton(fila_botones, texto="💾  Guardar configuración",
+                    ancho=22, alto=22, color_fondo="#27ae60", color_texto="white",
+                    hover_color="#1e8449",
+                    comando=self.guardar).pack(side="right")
+
+    def _crear_control_color(self, padre, titulo, llave, color_actual):
+        """Crea una fila: título + muestra de color + botón 'Cambiar'."""
+        marco = tk.LabelFrame(padre, text=f"  {titulo}  ", bg="#34495e",
+                            fg="#ecf0f1", font=("Arial", 10, "bold"))
+        marco.pack(fill="x", pady=5)
+
+        fila = tk.Frame(marco, bg="#34495e")
+        fila.pack(fill="x", padx=8, pady=8)
+
+        # Muestra grande del color actual
+        muestra = tk.Frame(fila, bg=color_actual, width=120, height=30,
+                        relief="groove", bd=2)
+        muestra.pack(side="left", padx=(0, 8))
+        muestra.pack_propagate(False)
+
+        crear_boton(fila, texto="Cambiar", ancho=12, alto=20,
+                    color_fondo="#34495e", color_texto="#ecf0f1",
+                    hover_color="#46637f",
+                    comando=lambda: self.seleccionar_color(llave, muestra)
+                    ).pack(side="left")
+
+        # Guardar referencia de la muestra para actualizarla
+        setattr(self, f"muestra_{llave}", muestra)
+
+    # ==================== ACCIONES ====================
+
+    def seleccionar_color(self, llave, muestra):
+        color = colorchooser.askcolor(title=f"Color de {llave}")
+        if not color or not color[1]:
+            return  # usuario canceló
+
+        hex_color = color[1]
+        if llave == "fondo":
+            self.color_pantalla = hex_color
+        elif llave == "fuente":
+            self.color_letra = hex_color
+        elif llave == "fondo_menu":
+            self.color_menu = hex_color
+
+        muestra.config(bg=hex_color)
+        self._actualizar_preview()
+
     def cambiar_logo(self):
-        """Seleciona una nueva imagen para el logo"""
-        
-        self.ruta = filedialog.askopenfilename(initialdir=DOWLOAD_LOGO)
-        if not self.ruta:  # Si el usuario cancela, no hacer nada
+        ruta = filedialog.askopenfilename(
+            title="Seleccionar logo",
+            filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.gif *.bmp *.ico")]
+        )
+        if not ruta:
             return
 
-        # Redimensionar y guardar referencia
-        self.imagen_actual = redimensionar_imagen(self.ruta, 150, 150)
-        
-        # Si el Label ya existe, actualizar su imagen
-        if hasattr(self, 'label_logo'):
-            os.makedirs("Img/logo_usuario", exist_ok=True)
-            self.label_logo.config(image=self.imagen_actual)
-            
-        else:
-            # Crear el Label la primera vez
-            os.makedirs("Img/logo_usuario", exist_ok=True)
-            self.label_logo = tk.Label(self.frame_logo_im, image=self.imagen_actual, bg=self.color_fondo_default["fondo_img"])
-            self.label_logo.pack(fill="x", expand=True)
-        
-        ruta_carpeta = Path("Img/logo_usuario")
-        
-        if ruta_carpeta:
-            # Borrar todo lo que haya dentro
-            for archivo in ruta_carpeta.iterdir():
-                if archivo.is_file():
-                    archivo.unlink()
-                    
-            shutil.copy(self.ruta, ruta_carpeta)
-            self.guardar_configuracion(4)
-        else:
-            print("No se existe la ruta")
-            
-        
-    def guardar_configuracion(self, numero):
-        """Envia la configuracion a la DB"""
-        
-        match numero:
-            case 1:
-                print(f"El fondo Pantalla es: {self.color_pantalla}")
-                self.conf_aplicada[0]["fondo_pantalla"] = self.color_pantalla
-                self.guardar_config.append(self.conf_aplicada[0])
-            case 2:
-                print(f"El fondo Letra es: {self.color_letra}")
-                self.conf_aplicada[1]["fondo_letra"] = self.color_letra
-                self.guardar_config.append(self.conf_aplicada[1])
-            case 3:
-                print(f"El fondo Menu es: {self.color_menu}")
-                self.conf_aplicada[2]["fondo_menu"] = self.color_menu
-                self.guardar_config.append(self.conf_aplicada[2])
-            case _:
-                print(f"La Imágen seleccionada es: {self.ruta}")
-                self.conf_aplicada[3]["imag_fondo"]  = self.ruta
-                self.guardar_config.append(self.conf_aplicada[3])
-            
-        print(f"Las configuraciones elegidas son: {self.conf_aplicada}")
-        print(f"Las configuraciones elegidas son: {type(self.conf_aplicada)}")
-        
-        
-                
-        print(f"la config es: {self.guardar_config} datos guardados: {len(self.guardar_config)}")
-    
-    def filtrar_config(self):
-        """Comprobar la configuaraciones del usuario y dejar default las no editadas."""
-        #print(f"Dentro de Filtrado")
-        print(f"La inf dentro de la variable conf_aplicada es: {self.conf_aplicada}")
-        
-        if self.conf_aplicada[0]["fondo_pantalla"] == None:
-            pant_principal = self.color_fondo_default["fondo"]
-        else:
-            pant_principal = self.conf_aplicada[0]["fondo_pantalla"] #"#a0b9f0"
-        #print(f"Color de pantalla principal: {pant_principal}")
-        
-        if self.conf_aplicada[1]["fondo_letra"] == None:
-            fuente = self.color_fondo_default["fuente"]    
-        else:
-            fuente = self.conf_aplicada[1]["fondo_letra"]
-        #print(f"Color de fuente: {fuente}")
-        
-        if self.conf_aplicada[2]["fondo_menu"] == None:
-            pantalla_m =  self.conf_aplicada[2]["fondo_menu"]  
-        else:
-            pantalla_m = self.color_fondo_default["fondo_menu"]
-        #print(f"Color de pantalla menu: {pantalla_m}")
-        
-        logo = self.conf_aplicada[3] #if self.conf_aplicada[3] == None else self.color_fondo_default["fondo_img"]
-        #print(f"Logo: {logo}")
-        
-        logo_ruta = logo["imag_fondo"]
-        if logo_ruta:
-            logo_ruta_relativa_plit = logo_ruta.split("/")
-            #print(f"logo_ruta {logo_ruta_relativa_plit}")
-            logo_ruta_relativa = logo_ruta_relativa_plit[-1]
-        else:
-            logo_ruta_relativa = self.color_fondo_default["fondo_img"]
-        
+        carpeta = carpeta_logo_negocio(self.nombre_negocio)
+        destino = os.path.join(carpeta, "logo.png")
+        try:
+            # Conversión real a PNG (soporta jpg, bmp, gif, ico, etc.)
+            from PIL import Image
+            imagen = Image.open(ruta).convert("RGBA")
+            imagen.save(destino, "PNG")
+        except ImportError:
+            # Sin PIL: copia directa (así funciona hoy)
+            shutil.copy(ruta, destino)
+        except Exception as e:
+            messagebox.showerror("⚠️ Error", f"No se pudo guardar el logo: {e}")
+            return
 
-        # print(f"""CONFIGURACIÖN FINAL
-        #     Pantalla Principal : {pant_principal}\n
-        #     Color de la fuente: {fuente}\n
-        #     Pantalla Menú: {pantalla_m}\n
-        #     Logo: {logo_ruta_relativa}""") 
+        self.logo_archivo = "logo.png"
+        self.label_estado_logo.config(text="Logo cargado ✔")
+        self._mostrar_logo(destino)
+        self._actualizar_preview()
 
-        configuracion_usuario = [pant_principal, pantalla_m, fuente, logo_ruta_relativa]
-        #print(f"la configuración final es: {configuracion_usuario}")
-        guardado = db_connect.configuracion_usuario(configuracion_usuario, self.usuario)
-        print(guardado)
-    
-if __name__ == "__main__":
-    root = tk.Tk()
-    probar = perfilUsuario(root, "Ron")
-    root.mainloop()
+    def _mostrar_logo(self, ruta):
+        imagen = redimensionar_imagen(ruta, 90, 90)
+        if imagen is None:
+            return
+        self.imagen_actual = imagen  # mantener referencia para que Tk no la borre
+        self.prev_logo_label.config(image=imagen, text="")
+        self.prev_logo_label.image = imagen
+
+    def restaurar_default(self):
+        """Vuelve a los colores default (aún sin guardar; presiona Guardar para aplicar)."""
+        self.color_pantalla = DEFAULTS["fondo"]
+        self.color_menu = DEFAULTS["fondo_menu"]
+        self.color_letra = DEFAULTS["fuente"]
+        self.muestra_fondo.config(bg=self.color_pantalla)
+        self.muestra_fondo_menu.config(bg=self.color_menu)
+        self.muestra_fuente.config(bg=self.color_letra)
+        self._actualizar_preview()
+
+    def _actualizar_preview(self):
+        """Refleja en la vista previa los colores elegidos al instante."""
+        self.prev_contenido.config(bg=self.color_pantalla)
+        self.prev_menu.config(bg=self.color_menu)
+        self.prev_logo_label.config(bg=self.color_pantalla, fg=self.color_letra)
+        for w in self.prev_contenido.winfo_children():
+            if isinstance(w, tk.Label) and w is not self.prev_logo_label:
+                w.config(bg=self.color_pantalla, fg=self.color_letra)
+        for w in self.prev_menu.winfo_children():
+            if isinstance(w, tk.Label):
+                w.config(bg=self.color_menu)
+
+    def guardar(self):
+        guardado = db_connect.guardar_branding(
+            self.color_pantalla,
+            self.color_menu,
+            self.color_letra,
+            self.logo_archivo
+        )
+        if guardado:
+            messagebox.showinfo(
+                "Guardado",
+                "Apariencia guardada.\nVuelve a entrar al negocio para verla aplicada."
+            )
+            self.ventana.destroy()
+        else:
+            messagebox.showerror("⚠️ Error", "No se pudo guardar la apariencia.")

@@ -3,36 +3,39 @@ import tkinter as tk
 from tkinter import ttk, messagebox, Toplevel
 from tkcalendar import Calendar 
 # from inventario import convertir_a_float
-from recursos import crear_boton, configurar_toplevel
+from recursos import crear_boton, configurar_toplevel, crear_encabezado
 from databasemanager import DataBaseManager
 
 
 class CostosGananciasApp:
-    def __init__(self, root, mostrar_menu_principal, imagen_panel_tk, rol, imagen_tk):
+    def __init__(self, root, mostrar_menu_principal, rol, branding, nombre_negocio):
         self.root = root
         self.mostrar_menu_principal = mostrar_menu_principal
-        self.imagen_panel_tk = imagen_panel_tk
+        self.branding = branding
+        self.imagen_panel_tk = None
+        self.logo_panel_creado = False
         self.rol = rol
-        self.imagen_tk = imagen_tk
+        self.nombre_negocio = nombre_negocio
+        self.imagen_tk = None
         self.db_connect = DataBaseManager()
 
         # Colores consistentes (igual que en kitEmpaques)
         self.colores = {
-            "fondo_principal": "#a0b9f0",  # Azul claro
-            "fondo_menu": "#2C3E50",       # Azul oscuro
-            "fondo_frame": "#a0b9f0",      # Azul claro
+            "fondo_principal": self.branding["fondo"],  # Azul claro
+            "fondo_menu": self.branding["menu"],       # Azul oscuro
+            "fondo_frame": self.branding["fondo"],      # Azul claro
             "boton_guardar": "#4285F4",    # Azul Google
             "boton_volver": "#d32f2f",     # Rojo
             "boton_editar": "#FFC107",    # Amarillo
             "boton_eliminar": "#E74C3C",  # Rojo claro
             "texto_oscuro": "#2C3E50",
-            "texto_claro": "#ffffff",
+            "texto_claro": self.branding["fuente"],
         }
 
         # Inicializar managers
-        self.lote_manager = LoteManager(self.root, self.db_connect, self.colores)
-        self.producto_manager = ProductoManager(self.root, self.db_connect, self.colores)
-        self.historial_manager = HistorialManager(self.root, self.db_connect, self.colores)
+        self.lote_manager = LoteManager(self.root, self.db_connect, self.colores, self.branding, self.nombre_negocio)
+        self.producto_manager = ProductoManager(self.root, self.db_connect, self.colores, self.branding, self.nombre_negocio)
+        self.historial_manager = HistorialManager(self.root, self.db_connect, self.colores, self.branding, self.nombre_negocio)
 
         # Iniciar la interfaz
         self.iniciar_interfaz()
@@ -90,8 +93,16 @@ class CostosGananciasApp:
         )
         self.frame_info.pack(side=tk.RIGHT, fill=tk.Y, padx=3, pady=10)
 
+        self.frame_imagen_panel = tk.Frame(
+            self.frame_menu,
+            bg=self.colores["fondo_menu"],
+            height=100
+        )
+        self.frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        self.frame_imagen_panel.pack_propagate(False)   # que conserve su altura aunque esté vacío
+        
         # Logo en el menú lateral
-        self.crear_logo_panel()
+        #self.crear_logo_panel()
 
         # Título en el frame central
         self.crear_titulo()
@@ -101,32 +112,6 @@ class CostosGananciasApp:
 
         # Contenido inicial (vista por defecto)
         self.mostrar_vista_inicial()
-
-    def crear_logo_panel(self):
-        """Crea el logo en el panel lateral."""
-        frame_imagen_panel = tk.Frame(
-            self.frame_menu,
-            bg=self.colores["fondo_menu"],
-            height=70
-        )
-        frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=20)
-
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(
-                frame_imagen_panel,
-                image=self.imagen_panel_tk,
-                bg=self.colores["fondo_menu"]
-            )
-            label_imagen.pack(side=tk.TOP, pady=10)
-        else:
-            label_texto = tk.Label(
-                frame_imagen_panel,
-                text="Ikigai",
-                font=("Arial", 12, "bold"),
-                bg=self.colores["fondo_menu"],
-                fg=self.colores["texto_claro"]
-            )
-            label_texto.pack(side=tk.TOP, pady=10)
 
     def crear_titulo(self):
         """Crea el título en el frame de contenido."""
@@ -144,6 +129,10 @@ class CostosGananciasApp:
             fg=self.colores["texto_oscuro"]
         )
         self.title_label.pack(pady=10)
+        
+        # Imagen del logo
+        self.imagen_tk = crear_encabezado(self.frame_contenido, self.branding, self.nombre_negocio,
+                            tamano=300, fuente=("Arial", 14, "bold"))
 
     def crear_botones_menu(self):
         """Crea los botones del menú lateral."""
@@ -169,10 +158,10 @@ class CostosGananciasApp:
                 font=("Arial", 10, "bold"),
                 hover_color="#2ECC71",
                 comando=lambda cmd=comando: self.cargar_vista(cmd)
-            ).pack(pady=5, padx=10)
+            ).pack(pady=10, padx=5)
 
         # Botón para volver al menú principal
-        crear_boton(
+        boton_menu_principal = crear_boton(
             self.frame_menu,
             texto="Menú Principal",
             ancho=18,
@@ -184,7 +173,35 @@ class CostosGananciasApp:
             font=("Arial", 10, "bold"),
             hover_color="#222423",
             comando=self.mostrar_menu_principal
-        ).pack(side="bottom", pady=20)
+        )
+        boton_menu_principal.place(rely=0.72, relx=0.5, anchor="center", width=140) # pack(side="bottom", pady=10)
+
+        
+        
+    def crear_logo_panel(self):
+        """Pone el logo pequeño en el panel lateral (frame ya existente)."""
+        self.imagen_panel_tk = crear_encabezado(
+            self.frame_imagen_panel, self.branding, self.nombre_negocio,
+            tamano=70, fuente=("Arial", 12, "bold"),
+        )
+        self.logo_panel_creado = True
+    
+            # if self.imagen_panel_tk:
+            #     label_imagen = tk.Label(
+            #         frame_imagen_panel,
+            #         image=self.imagen_panel_tk,
+            #         bg=self.colores["fondo_menu"]
+            #     )
+            #     label_imagen.pack(side=tk.TOP, pady=10)
+            # else:
+            #     label_texto = tk.Label(
+            #         frame_imagen_panel,
+            #         text="Ikigai",
+            #         font=("Arial", 12, "bold"),
+            #         bg=self.colores["fondo_menu"],
+            #         fg=self.colores["texto_claro"]
+            #     )
+            #     label_texto.pack(side=tk.TOP, pady=10)
 
     def cargar_vista(self, comando):
         """Carga la vista correspondiente según el botón seleccionado."""
@@ -195,6 +212,11 @@ class CostosGananciasApp:
         # # Limpiar el frame de información (opcional)
         # for widget in self.frame_info.winfo_children():
         #     widget.destroy()
+        
+        # Mostrar el logo pequeño en el panel lateral (solo la primera vez)
+        if not self.logo_panel_creado:
+            self.crear_logo_panel()
+            self.logo_panel_creado = True
 
         # Llamar al comando con los parámetros necesarios
         comando(
@@ -228,10 +250,13 @@ class CostosGananciasApp:
         #     bg=self.colores["fondo_principal"],
         #     fg=self.colores["texto_oscuro"]
         # ).pack(pady=10)
-        
+
+##############################################################################################################################
+############################################### LOTEMANAGER ################################################################
+##############################################################################################################################
         
 class LoteManager:
-    def __init__(self, root, db, colores):
+    def __init__(self, root, db, colores, branding, nombre_negocio):
         self.root = root
         self.db_connect = db
         self.colores = colores
@@ -956,9 +981,12 @@ class LoteManager:
         except Exception as e:
             messagebox.showerror("⚠️ Error", f"No se pudo eliminar el lote: {e}")
 
-        
+##############################################################################################################################
+############################################### PRODUCMANAGER ################################################################
+##############################################################################################################################
+
 class ProductoManager:
-    def __init__(self, root, db, colores):
+    def __init__(self, root, db, colores, branding, nombre_negocio):
         self.root = root
         self.db_connect = db
         self.colores = colores
@@ -968,7 +996,7 @@ class ProductoManager:
         # Limpiar el frame de contenido
         for widget in content_frame.winfo_children():
             widget.destroy()
-
+                
         # Frame principal del formulario
         form_frame = tk.LabelFrame(
             content_frame,
@@ -1531,7 +1559,7 @@ class ProductoManager:
             
 
 class HistorialManager:
-    def __init__(self, root, db, colores):
+    def __init__(self, root, db, colores, branding, nombre_negocio):
         self.root = root
         self.db_connect = db
         self.colores = colores
@@ -2008,7 +2036,7 @@ class HistorialManager:
                 mes_entry.get() if opcion_var.get() == "por_mes" else None,
                 form_frame
             )
-        ).grid(row=3, column=0, pady=20, sticky="ew")
+        ).grid(row=3, column=0, pady=20, sticky="w")
 
         # Área para mostrar el historial
         resultado_frame = tk.LabelFrame(

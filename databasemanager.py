@@ -7,13 +7,14 @@ from decimal import Decimal, getcontext
 import json
 import ast
 from typing import List, Dict, Optional, Any, Union, Tuple
-from recursos import DB_PATH
+#from recursos import DB_PATH
+from recursos import DB_ACTUAL
 
-db_path = DB_PATH
+db_path = DB_ACTUAL
 
 class DataBaseManager():
     
-    def __init__(self, db_name: str = db_path):
+    def __init__(self, db_name: str = None):
         """
         Inicializa el manejador de la base de datos.
 
@@ -31,8 +32,11 @@ class DataBaseManager():
         Establece la conexión a la base de datos.
         """
         try:
-            self.connection = sqlite3.connect(self.db_name)
-            print(f"Conección establecida con exito")
+            # self.connection = sqlite3.connect(self.db_name)
+            # print(f"Conección establecida con exito")
+            ruta = self.db_name if self.db_name else db_path["ruta"]
+            self.connection = sqlite3.connect(ruta)
+            print(f"Conección establecida con exito: {ruta}")
         except sqlite3.Error as e:
             messagebox.showerror(f"Error al conectar a la base de datos: {e}")
             
@@ -102,9 +106,14 @@ class DataBaseManager():
         Cierra la conexión a la base de datos.
         """
         try:
+            if self.connection is None:
+                return                    # ← NUEVO: no había nada abierto, nada que cerrar
+            
             if self.in_transaction:
                 self.rollback_transaction()  # Revertir transacciones pendientes al cerrar
+                
             self.connection.close()
+            self.connection = None           # ← NUEVO: dejar claro que ya está cerrada
             print("Base de datos cerrada correctamente.")
         except sqlite3.Error as e:
             messagebox.showerror(f"⚠️ Error", "Problemas al cerrar la base de datos: {e}")
@@ -143,6 +152,9 @@ class DataBaseManager():
 
         except sqlite3.Error as e:
             print(f"Error en consulta SELECT: {e}")
+            
+            print(f"    QUERY: {query}")
+            print(f"    PARAMS: {params}")
             return [] if not fetch_one else None
     
     
@@ -689,6 +701,21 @@ class DataBaseManager():
         resultado = self.select(query, (codigo_producto,), fetch_one=True)
         
         return resultado.get("id_producto") if resultado else None
+    
+    
+    def datos_producto_por_codigo(self, codigo_producto: str) -> Union[Dict[str, Any], None]:
+        """
+        Recupera los datos básicos de un producto por su código (para modo vendedor).
+
+        Args:
+            codigo_producto (str): Código del producto.
+
+        Returns:
+            Dict con nombre, tipo, cantidad y precio_venta, o None si no existe.
+        """
+        query = """SELECT nombre, tipo, cantidad, precio_venta
+                FROM Productos WHERE codigo = ?"""
+        return self.select(query, (codigo_producto,), fetch_one=True)
 
 
 #######################################################################################################################
@@ -925,6 +952,7 @@ class DataBaseManager():
         id_usuario = id_usuario_list[0]["id_usuario"]
         
         if id_usuario:
+            #print(f"UsuarioID= {id_usuario}")
             return id_usuario
         else:
             messagebox.showerror("⚠️ Error", f"El usuario {nombre_usuario} no tiene un ID")
@@ -1845,6 +1873,27 @@ class DataBaseManager():
         
         return codigos_list
     
+    
+    def materiales_comprobar_codigo(self, codigo:str) -> List[any]:
+        """
+        Obtiene los materiales asociados al código si el codigo existe.
+
+        Args:
+            codigo (str): Código del material
+
+        Returns:
+            List[any]: retorna una lista con los datos.
+        """
+        query = "SELECT tipo, tamaño, color, es_por_metro FROM Materiales WHERE codigo = ?"
+        params = codigo
+        materiales = self.select(query, (params,))
+        
+        if not materiales:
+            return None
+        
+        dicc = materiales[0]  # Ya es dict gracias a tu select genérico
+        return dicc["tipo"], dicc["tamaño"], dicc["color"], dicc["es_por_metro"]
+        
     
     def obtener_material_por_codigo(self, codigo) -> str:
         """
@@ -4919,7 +4968,46 @@ class DataBaseManager():
 ########################################## SECCIÓN DE DATOS DE LA TIENDA ##############################################
 #######################################################################################################################
 
-    def guardar_info_tienda(self, tienda: str, direccion: str, id_fiscal: str, telefono: str, correo: str) -> bool:
+    def inicializar_negocio(self, nombre_negocio: str, modo_negocio: str,
+                            usuario: str, clave: str,
+                            pregunta: str, respuesta: str) -> Tuple[bool, str]:
+        """
+        Inicializa un negocio nuevo: crea la fila de Tienda, guarda el modo
+        de negocio y registra el usuario administrador. Todo o nada.
+
+        Args:
+            nombre_negocio (str): Nombre del negocio.
+            modo_negocio (str): 'fabricante' o 'vendedor'.
+            usuario (str): Nombre del usuario administrador.
+            clave (str): Clave del administrador.
+            pregunta (str): Pregunta de seguridad.
+            respuesta (str): Respuesta de seguridad.
+
+        Returns:
+            Tuple[bool, str]: (exito, mensaje).
+        """
+        if not self.existe_info_tienda():
+            # Crear la fila de la Tienda con el modo de negocio desde el inicio
+            self.asegurar_columna_modo_negocio()
+            self.insert("Tienda", {
+                "nombre": nombre_negocio,
+                "direccion": "",
+                "identificacion_fiscal": "",
+                "telefono": "",
+                "email": "",
+                "modo_negocio": modo_negocio
+            })
+
+        # Registrar el administrador
+        exito, mensaje = self.registrar_usuario(usuario, clave, "administrador",
+                                                pregunta, respuesta)
+        if not exito:
+            return False, mensaje
+
+        return True, f"Negocio '{nombre_negocio}' inicializado. Admin: {usuario}."
+    
+    
+    def guardar_info_tienda(self, tienda: str, direccion: str, id_fiscal: str, telefono: str, correo: str, modo: str) -> bool:
         """
         Se Registra la información de la tienda por primera vez.
 
@@ -4938,33 +5026,60 @@ class DataBaseManager():
             "direccion":direccion,
             "identificacion_fiscal":id_fiscal,
             "telefono": telefono,
-            "email":correo
+            "email":correo,
+            "modo":modo
         }
+        print(query)
         id_tienda_ = self.insert("Tienda", query)
-        
+        print(f"El id de la nueva tienda es {id_tienda_}")
         if id_tienda_:
             return id_tienda_
         else:
             return id_tienda_
         
     
-    def datos_registrados_tienda(self) -> List[Tuple[Any]]:
+    def id_tienda(self, correo:str)  -> int:
+        """
+            Optiene los ids de las tiendas o fabrica.
+            Args:
+                correo (str): Correo electroníco de la tienda.
+        Returns:
+            int: Retorna número de id
+        """
+        query = "SELECT id_tienda WHERE email = ?"
+        params = correo
+        
+        id_ = self.select(query, (params,))
+        
+        id_r = id_[0]["id_tienda"]
+        
+        if id_r:
+            return id_r
+        else:
+            messagebox.showerror("ERROR", "No se pudo optener el id.")
+    
+    
+    def datos_registrados_tienda(self, id_tienda:int) -> List[Tuple[Any]]:
         """
         Recuperar la información de la tienda registrada.
-
+        Args:
+            id: Pertenece a la tienda seleccionada
         Returns:
             List[Tuple[Any]]: _description_
         """
-        query =  "SELECT id_tienda, direccion, identificacion_fiscal, telefono, email FROM Tienda WHERE id_tienda = 1"
+        query =  "SELECT id_tienda, nombre, direccion, identificacion_fiscal, telefono, email FROM Tienda WHERE id_tienda = ?"
+        params = id_tienda
         
-        datos_dicc = self.select(query)
+        datos_dicc = self.select(query, (id_tienda,))
         
         campos = [
             "id_tienda",
+            "nombre",
             "direccion",
             "identificacion_fiscal",
             "telefono",
-            "email"
+            "email",
+            "modo"
         ]
         
         datos_tupla = [
@@ -4998,7 +5113,201 @@ class DataBaseManager():
             return  True
         else:
             return False
+    
+    # NUEVO AGREGADO PARA VENTAS
+    def asegurar_columna_modo_negocio(self) -> None:
+        """
+        Agrega la columna 'modo_negocio' a la tabla Tienda si no existe.
+        Compatible con bases de datos ya creadas (ALTER TABLE si hace falta).
+        Valores: 'fabricante' (por defecto) o 'vendedor'.
+        """
+        if not self.connection:
+            self.connect()
+        print(f"Función para crear la columna en Tienda")
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("PRAGMA table_info(Tienda)")
+            columnas = [col[1] for col in cursor.fetchall()]
+            if "modo" not in columnas:
+                cursor.execute(
+                    "ALTER TABLE Tienda ADD COLUMN modo TEXT DEFAULT 'fabricante'"
+                )
+                self.connection.commit()
+        except sqlite3.Error as e:
+            print(f"No se pudo agregar la columna modo_negocio: {e}")
+
+    def guardar_modo_negocio(self, modo: str) -> bool:
+        """
+        Guarda el modo de negocio de la tienda.
+        Args:
+            modo (str): 'fabricante' o 'vendedor'.
+        Returns:
+            bool: True si se guardó correctamente.
+        """
+        if modo not in ("fabricante", "vendedor"):
+            return False
+        print(f"El Modo de negocio es: {modo}")
+        # Garantizar que la columna exista antes de escribir
+        #self.asegurar_columna_modo_negocio()
+
+        if not self.existe_info_tienda():
+            return False
+
+        actualizado = self.update(
+            table="Tienda",
+            updates={"modo": modo},
+            where_condition="id_tienda = 1",
+            where_params=()
+        )
+        return actualizado
+
+    def obtener_modo_negocio(self) -> str:
+        """
+        Devuelve el modo de negocio actual de la tienda.
+        Returns:
+            str: 'fabricante' o 'vendedor'. Por defecto 'fabricante'.
+        """
+        #self.asegurar_columna_modo_negocio()
+        resultado = self.select(
+            "SELECT modo FROM Tienda WHERE id_tienda = 1",
+            fetch_one=True
+        )
+        modo = resultado.get("modo") if resultado else None
+        print(f"El Modo que recupera de la base de datos es: {modo}")
+        return modo if modo in ("fabricante", "vendedor") else "fabricante"
+
+    def existe_info_tienda(self) -> bool:
+        """Comprueba si ya existe el registro de la tienda."""
+        resultado = self.select(
+            "SELECT id_tienda FROM Tienda WHERE id_tienda = 1",
+            fetch_one=True
+        )
+        return resultado is not None
+    
+    
+    def datos_tienda(self, nombre) -> Tuple:
+        """Selecciona los datos de una firma especifica
+
+        Returns:
+            Tuple: Retorna la información de la firma seleccionada
+        """
+        query = "SELECT nombre, direccion, identificacion_fiscal, telefono, email FROM Tienda WHERE nombre = ?"
+        params = nombre
         
+        tienda_datos = self.select(query, (params,))
+        
+        campos = [
+            "nombre",
+            "direccion",
+            "identificacion_fiscal",
+            "telefono",
+            "email"
+        ]
+        
+        datos_tupla_tienda = [
+            tuple(diccionario.get(campo) for campo in campos)
+            for diccionario in tienda_datos
+        ]
+        
+        if datos_tupla_tienda:
+            return datos_tupla_tienda
+        else:
+            print(f"No se puedo obtener la información de {params}")
+            
+    
+    def firmas_registradas(self) -> Tuple:
+        """Toma todas las firmas registradas
+
+        Returns:
+            Tuple:  Retorna tupla con los datos
+        """
+        query = "SELECT nombre FROM Tienda" 
+        
+        firmas = self.select(query)
+        
+        campos = [
+            "nombre"
+        ]
+        
+        firmas_tuplas = [tuple(diccionario.get(campo) for campo in campos)
+                        for diccionario in firmas]
+    
+        if firmas_tuplas:
+            print(f"Firmas obtenidas en base de datos {firmas_tuplas}")
+            return firmas_tuplas
+        else:
+            print(f"No se pudo obtener los nombres de las firmas.")
+            
+            
+        # ==================== BRANDING DEL NEGOCIO (Fase 7) ====================
+
+    def asegurar_columnas_branding(self):
+        """Crea las columnas de branding en Tienda si no existen."""
+        if not self.connection:
+            self.connect()
+        columnas = [
+            ("color_fondo", "TEXT"),
+            ("color_menu", "TEXT"),
+            ("color_fuente", "TEXT"),
+            ("logo_archivo", "TEXT"),
+        ]
+        cursor = self.connection.cursor()
+        for nombre, tipo in columnas:
+            try:
+                cursor.execute(f"ALTER TABLE Tienda ADD COLUMN {nombre} {tipo}")
+                self.connection.commit()
+            except sqlite3.OperationalError:
+                pass  # La columna ya existe
+        cursor.close()
+
+    def guardar_branding(self, color_fondo, color_menu, color_fuente, logo_archivo) -> bool:
+        """Guarda la configuración de branding del negocio en la fila Tienda."""
+        if not self.connection:
+            self.connect()
+        self.asegurar_columnas_branding()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                """
+                UPDATE Tienda
+                SET color_fondo = ?, color_menu = ?, color_fuente = ?, logo_archivo = ?
+                WHERE id_tienda = (SELECT MIN(id_tienda) FROM Tienda)
+                """,
+                (color_fondo, color_menu, color_fuente, logo_archivo)
+            )
+            self.connection.commit()
+            actualizo = cursor.rowcount > 0
+            cursor.close()
+            return actualizo
+        except sqlite3.Error as e:
+            print(f"Error al guardar branding: {e}")
+            return False
+
+    def obtener_branding(self) -> dict:
+        """Devuelve el branding del negocio. Valores None si no se ha configurado."""
+        if not self.connection:
+            self.connect()
+        self.asegurar_columnas_branding()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("""
+                SELECT color_fondo, color_menu, color_fuente, logo_archivo
+                FROM Tienda LIMIT 1
+            """)
+            fila = cursor.fetchone()
+            cursor.close()
+            if fila:
+                return {
+                    "color_fondo": fila[0],
+                    "color_menu": fila[1],
+                    "color_fuente": fila[2],
+                    "logo_archivo": fila[3],
+                }
+        except sqlite3.Error as e:
+            print(f"Error al obtener branding: {e}")
+        return {"color_fondo": "#a0b9f0", "color_menu": "#2C3E50",
+                "color_fuente": "#272525", "logo_archivo": "#a0b9f0"}   
+    
 
 #######################################################################################################################
 ############################# SECCIÓN DE UMBRAL Y ALERTAS DE MATERIALES Y PRODUCTOS ###################################
@@ -5027,11 +5336,15 @@ class DataBaseManager():
         if umbrales_tupla:
             return umbrales_tupla
         else:
-            return False
+            return []
     
     
     def verificar_stock_bajo(self):
         umbrales = self.obtener_umbrales_alertas()
+        
+        # Blindaje: sin umbrales configurados no hay alertas posibles
+        if not umbrales:
+            return []
         
         alertas = []
         item = None
@@ -5039,10 +5352,10 @@ class DataBaseManager():
         for tipo, id_item, umbral in umbrales:
             #print(f"El Umbral es: {umbral}")
             if tipo == 'material':
-                query = "SELECT nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?"
+                query = "SELECT codigo, nombre, tipo, tamaño, color, stock FROM Materiales WHERE id_material = ?"
                 umbral_materiales = self.select(query, (id_item,))
                 campos = [
-                    "nombre", "tipo", "tamaño", "color", "stock"
+                    "codigo", "nombre", "tipo", "tamaño", "color", "stock"
                 ]
                 item = [
                     tuple(diccionario.get(campo) for campo in campos)
@@ -5066,9 +5379,10 @@ class DataBaseManager():
                 if cantidad_actual <= umbral:
                     if tipo == 'material':
                         #print(f"El material es: {item[0]}")
-                        nombre, tipo_material, tamaño, color, cantidad = item[0]
+                        codigo, nombre, tipo_material, tamaño, color, cantidad = item[0]
                         alertas.append({
                             'tipo': tipo,
+                            'codigo': codigo,
                             'nombre': nombre,
                             'tipo_material': tipo_material,
                             'tamaño': tamaño,
@@ -5173,7 +5487,11 @@ class DataBaseManager():
                 return id_umbral_item
             else:
                 return False
-            
+
+#######################################################################################################################
+########################################## PERSONALIZACIÓN DE LA SESIÓN ###############################################
+#######################################################################################################################
+          
 
 #######################################################################################################################
 ########################################## PERSONALIZACIÓN DE LA SESIÓN ###############################################
@@ -5304,4 +5622,6 @@ if __name__ == "__main__":
     #probar.actualizar_empaque("BT-2", 20, 8.5, 0.425)
     #probar.comprabar_estado_facturacion()
     #probar.eliminar_producto_bd("Probando_descontado_cm")
-    probar.configuracion_usuario([{'fondo_pantalla': "ffffff"}, {'fondo_letra': None}, {'fondo_menu': None}, {'imag_fondo': None}])
+    #probar.configuracion_usuario([{'fondo_pantalla': "ffffff"}, {'fondo_letra': None}, {'fondo_menu': None}, {'imag_fondo': None}])
+    #probar.firmas_registradas()
+    probar.id_usuario_nombre_actual("admin")

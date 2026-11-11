@@ -3,68 +3,70 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 #from db import encontrar_facturas #actualizar_en_bd, obtener_materiales, buscar_en_bd, encotrar_notas_entrega, 
-from recursos import LOGO_PATH, crear_boton, configurar_toplevel
+from recursos import LOGO_PATH, crear_boton, configurar_toplevel, crear_encabezado
 #from inventario import convertir_a_float
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
-def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usuario_actual):
+def busqueda_articulos(root, volver_menu, branding, nombre_negocio, imagen_buscar_tk, usuario_actual):
     # Limpiar el frame de contenido
     for widget in root.winfo_children():
         widget.destroy()
 
     # panel izquierdo
-    frame_menu = tk.Frame(root, bg="#2C3E50", width=200, height=800)
+    frame_menu = tk.Frame(root, bg=branding["menu"], width=200, height=800)
     frame_menu.pack(side=tk.LEFT, fill=tk.Y)
     frame_menu.pack_propagate(False)
     
     # Frame para imagen del panel izquierdo
-    frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+    frame_imagen_panel = tk.Frame(frame_menu, bg=branding["menu"], height=70)
     frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
     
     # Crear frame_contenido (para formularios)
-    frame_contenido = tk.Frame(root, bg="#a0b9f0", width=600, height=800)
+    frame_contenido = tk.Frame(root, bg=branding["fondo"], width=600, height=800)
     frame_contenido.pack(expand=True, fill=tk.BOTH, side=tk.RIGHT)
     
-    frame_titulo = tk.Frame(frame_contenido, bg="#a0b9f0")
+    frame_titulo = tk.Frame(frame_contenido, bg=branding["fondo"])
     frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
     
     # frame para Imagen buscar del panel derecho 
-    frame_imagen = tk.Frame(frame_contenido, bg="#a0b9f0")
+    frame_imagen = tk.Frame(frame_contenido, bg=branding["fondo"])
     frame_imagen.pack(expand=True)
     
     # Imagen del Logo para el panel izquierdo
-    if imagen_panel_tk:
-        label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg="#2C3E50")
-        label_imagen.pack(side=tk.LEFT, padx=70)
-    else:
-        label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-        label_texto.pack(side=tk.LEFT, padx=30)
+    crear_encabezado(frame_imagen_panel, branding, nombre_negocio,
+                        tamano=70, fuente=("Arial", 12, "bold"))
+    # if imagen_panel_tk:
+    #     label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg="#2C3E50")
+    #     label_imagen.pack(side=tk.LEFT, padx=70)
+    # else:
+    #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
+    #     label_texto.pack(side=tk.LEFT, padx=30)
 
     # Título
     title_label = tk.Label(
         frame_titulo,
         text="Módulo de Busqueda",
         font=("Arial", 16, "bold"),
-        bg="#a0b9f0",
-        fg="#2C3E50"
+        bg=branding["fondo"],
+        fg=branding["fuente"]
     )
     title_label.pack(pady=15)
     
     # Imagen buscar para el panel derecho
     if imagen_buscar_tk:
-        tk.Label(frame_imagen, image=imagen_buscar_tk, bg="#a0b9f0").pack(pady=20)
+        tk.Label(frame_imagen, image=imagen_buscar_tk, bg=branding["fondo"]).pack(pady=20)
     else:
-        tk.Label(frame_imagen, text="Ikigai Designs", font=("Arial", 24), bg="#a0b9f0").pack(pady=20)
+        tk.Label(frame_imagen, text="Ikigai Designs", font=("Arial", 24), bg=branding["fondo"]).pack(pady=20)
 
     # Crear un frame para el formulario de búsqueda
-    form_frame = tk.Frame(frame_contenido, bg="#a0b9f0", padx=20, pady=20)
+    form_frame = tk.Frame(frame_contenido, bg=branding["fondo"], padx=20, pady=20)
     form_frame.place(relx=0.5, rely=0.1, anchor=tk.N)
 
     #tk.Label(frame_contenido, text="Buscador de Artículos", width=30, font=16, bg="#6876f5").place(relx=0.5, rely=0.03, anchor=tk.CENTER)
 
     # Campo para seleccionar el tipo de búsqueda
-    tk.Label(form_frame, text="Buscar por:", bg="#8e98f5").grid(row=0, column=0, sticky="e")
+    tk.Label(form_frame, text="Buscar por:", bg=branding["fondo"]).grid(row=0, column=0, sticky="e")
     tipo_busqueda = ttk.Combobox(form_frame, values=["Todos los Materiales",
                                                     "Proveedor especifico", 
                                                     "Factura Proveedor",
@@ -79,7 +81,7 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
     tipo_busqueda.grid(row=0, column=1, pady=5)
 
     # Campo para ingresar el valor de búsqueda
-    tk.Label(form_frame, text="Valor de búsqueda:", bg="#8e98f5").grid(row=1, column=0, sticky="e")
+    tk.Label(form_frame, text="Valor de búsqueda:", bg=branding["fondo"]).grid(row=1, column=0, sticky="e")
     valor_busqueda_entry = tk.Entry(form_frame, width=30)
     valor_busqueda_entry.grid(row=1, column=1, pady=5)
     
@@ -115,7 +117,7 @@ def busqueda_articulos(root, volver_menu, imagen_panel_tk, imagen_buscar_tk, usu
     # Botón para volver al menú
     crear_boton(
         frame_menu,
-        texto="Volver al Menú",
+        texto="Menú principal",
         color_texto="white",
         ancho=20,
         alto=30,

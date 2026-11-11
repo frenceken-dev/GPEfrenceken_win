@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
-from recursos import crear_boton, configurar_toplevel
+from recursos import crear_boton, configurar_toplevel, crear_encabezado
 from decimal import Decimal, getcontext
 from databasemanager import DataBaseManager
 from empaqueManager import CrearEmpaques
@@ -11,10 +11,15 @@ import json
 db_connect = DataBaseManager()
 
 class InventarioManager:
-    def __init__(self, root, imagen_panel_tk, volver_menu):
+    def __init__(self, root, branding, nombre_negocio, volver_menu, modo_negocio="fabricante"):
         self.root = root
-        self.imagen_panel_tk = imagen_panel_tk
+        self.imagen_panel_tk = None # imagen_panel_tk
+        self.branding = branding
+        self.nombre_negocio_actual = nombre_negocio
         self.volver_menu = volver_menu
+        self.modo_negocio = modo_negocio          # ← NUEVO: 'fabricante' o 'vendedor'
+        self.es_vendedor = (modo_negocio == "vendedor")   # ← NUEVO: interruptor 
+        
         self.id_usuario_creador = None
         self.nombre_usuario_creador = None
         self.materiales_temporales = []
@@ -28,7 +33,7 @@ class InventarioManager:
         self.total_actual = []
         self.exite_codigo = False
         self.db_connect = DataBaseManager()  # Asegúrate de que DataBaseManager esté importado
-        self.agregar_empaque = CrearEmpaques(root, imagen_panel_tk, volver_menu)
+        self.agregar_empaque = CrearEmpaques(root, branding, nombre_negocio, volver_menu)
         self.son_metros = None
         self.emb_metros = None
 
@@ -53,11 +58,11 @@ class InventarioManager:
 
     def crear_interfaz_principal(self):
         # Frame principal
-        self.frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=600)
+        self.frame = tk.Frame(self.root, bg=self.branding["fondo"], width=800, height=600)
         self.frame.pack(fill=tk.BOTH, expand=True)
 
         # Panel izquierdo
-        self.frame_menu = tk.Frame(self.frame, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        self.frame_menu = tk.Frame(self.frame, bg=self.branding["menu"], width=200, height=800, bd=3, relief="solid")
         self.frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         self.frame_menu.pack_propagate(False)
 
@@ -65,11 +70,11 @@ class InventarioManager:
         self.crear_logo_panel()
 
         # Frame inferior dentro del menú lateral
-        self.frame_inferior = tk.Frame(self.frame_menu, bg="#2C3E50")
+        self.frame_inferior = tk.Frame(self.frame_menu, bg=self.branding["menu"])
         self.frame_inferior.pack(side="bottom", fill="x", pady=20)
 
         # Frame de título
-        self.frame_titulo = tk.Frame(self.frame, bg="#a0b9f0")
+        self.frame_titulo = tk.Frame(self.frame, bg=self.branding["fondo"])
         self.frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
 
         # Título
@@ -77,28 +82,30 @@ class InventarioManager:
             self.frame_titulo,
             text="Aumento de inventario por facturas",
             font=("Arial", 16, "bold"),
-            bg="#a0b9f0",
-            fg="#2C3E50"
+            bg=self.branding["fondo"],
+            fg=self.branding["fuente"]
         )
         self.title_label.pack(pady=15)
 
     def crear_logo_panel(self):
-        frame_imagen_panel = tk.Frame(self.frame_menu, bg="#2C3E50", height=70)
+        frame_imagen_panel = tk.Frame(self.frame_menu, bg=self.branding["menu"], height=70)
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
-            label_imagen.pack(side=tk.LEFT, padx=70)
-        else:
-            label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-            label_texto.pack(side=tk.LEFT, padx=70)
+        crear_encabezado(frame_imagen_panel, self.branding, self.nombre_negocio_actual,
+                            tamano=70, fuente=("Arial", 70, "bold")) 
+        # if self.imagen_panel_tk:
+        #     label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
+        #     label_imagen.pack(side=tk.LEFT, padx=70)
+        # else:
+        #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
+        #     label_texto.pack(side=tk.LEFT, padx=70)
 
     def crear_formulario_factura(self):
-        self.form_frame = tk.Frame(self.frame, bg="#a0b9f0", padx=20, pady=20)
+        self.form_frame = tk.Frame(self.frame, bg=self.branding["fondo"], padx=20, pady=20)
         self.form_frame.place(relx=0.5, rely=0.1, anchor=tk.N)
 
         # Campos de la factura
-        tk.Label(self.form_frame, text="Proveedor:", bg="#a0b9f0").grid(row=0, column=0, sticky="e")
+        tk.Label(self.form_frame, text="Proveedor:", bg=self.branding["fondo"]).grid(row=0, column=0, sticky="e")
         self.proveedor_combobox = ttk.Combobox(self.form_frame, width=28)
         self.proveedor_combobox.grid(row=0, column=1, pady=5)
 
@@ -109,11 +116,11 @@ class InventarioManager:
         self.proveedor_combobox.bind('<KeyRelease>', self.actualizar_opciones_proveedores)
 
         # Campos de número de factura y fecha
-        tk.Label(self.form_frame, text="Número de Factura:", bg="#a0b9f0").grid(row=1, column=0, sticky="e")
+        tk.Label(self.form_frame, text="Número de Factura:", bg=self.branding["fondo"]).grid(row=1, column=0, sticky="e")
         self.factura_entry = tk.Entry(self.form_frame, width=30)
         self.factura_entry.grid(row=1, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Fecha (DD.MM.AAAA):", bg="#a0b9f0").grid(row=2, column=0, sticky="e")
+        tk.Label(self.form_frame, text="Fecha (DD.MM.AAAA):", bg=self.branding["fondo"]).grid(row=2, column=0, sticky="e")
         self.fecha_entry = tk.Entry(self.form_frame, width=30)
         self.fecha_entry.grid(row=2, column=1, pady=5)
 
@@ -127,15 +134,22 @@ class InventarioManager:
 
     def crear_botones_accion(self):
         # Botón Agregar Material
+        if self.es_vendedor:
+            texto_boton = "Agregar Producto"
+            comando_boton = lambda: self.agregar_producto_terminado_temporal(self.frame)
+        else:
+            texto_boton = "Agregar Material"
+            comando_boton = lambda: self.agregar_material_temporal(self.frame)
+            
         self.btn_agregar_material = crear_boton(
             self.form_frame,
-            texto="Agregar Material",
+            texto=texto_boton,
             ancho=20,
             alto=25,
             color_fondo="#073EAD",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
-            comando=lambda: self.agregar_material_temporal(self.frame),
+            comando=comando_boton,
             state=tk.DISABLED
         )
         self.btn_agregar_material.grid(row=3, column=0, pady=20)
@@ -146,7 +160,7 @@ class InventarioManager:
             ancho=20,
             alto=25,
             color_fondo="#9E6D3F",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=lambda: self.agregar_empaque_temporal(self.frame),
             state=tk.DISABLED
@@ -160,7 +174,7 @@ class InventarioManager:
             ancho=20,
             alto=25,
             color_fondo="#324f98",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=lambda: [
                 self.actualizar_datos_factura(),
@@ -177,7 +191,7 @@ class InventarioManager:
             ancho=20,
             alto=25,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=lambda: [
                 self.actualizar_datos_factura(),
@@ -192,7 +206,7 @@ class InventarioManager:
                     ancho=20,
                     alto=25,
                     color_fondo="#DEE90D",
-                    color_texto="white",
+                    color_texto=self.branding["fuente"],
                     font=("Arial", 11, "bold"),
                     hover_color="#2ECC71",
                     comando=lambda: self.guardar_borrador(),
@@ -206,7 +220,7 @@ class InventarioManager:
             ancho=20,
             alto=25,
             color_fondo="#324f98",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=self.mostrar_borradores_pendientes
         )
@@ -219,7 +233,7 @@ class InventarioManager:
             ancho=20,
             alto=25,
             color_fondo="#913131",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=self.volver_menu
         )
@@ -240,8 +254,13 @@ class InventarioManager:
 
     def actualizar_estado_botones(self, proveedor, num_factura, fecha):
         estado_activo = self.validar_campos_obligatorios(proveedor, num_factura, fecha)
-        botones = [self.btn_agregar_material, self.btn_agregar_empaque, self.btn_mostrar_datos,
+        # botones = [self.btn_agregar_material, self.btn_agregar_empaque, self.btn_mostrar_datos,
+        #         self.btn_guardar_factura, self.btn_guardar_borrador, self.btn_ver_borradores]
+        
+        botones = [self.btn_agregar_material, self.btn_mostrar_datos,
                 self.btn_guardar_factura, self.btn_guardar_borrador, self.btn_ver_borradores]
+        if hasattr(self, "btn_agregar_empaque"):
+            botones.insert(1, self.btn_agregar_empaque)
 
         for boton in botones:
             if hasattr(boton, "set_state"):
@@ -273,7 +292,8 @@ class InventarioManager:
         else:
             messagebox.showerror("Error", "Fecha inválida. Usa DD.MM.AAAA y asegúrate de que exista.")
             return  #  NUEVO AGREGADO PARA PROBAR
-
+                
+                
     def agregar_material_temporal(self, frame_contenido):
         cod_materiales = self.db_connect.obtener_codigo_materiales()
 
@@ -325,7 +345,7 @@ class InventarioManager:
 
         def auto_completar_entry(event):
             codigo = codigo_entry.get()
-            nombre, tipo, tamaño, color = self.db_connect.obtener_material_por_codigo(codigo)
+            nombre, tipo, tamaño, color= self.db_connect.obtener_material_por_codigo(codigo)
 
             if nombre or tipo or tamaño or color:
                 nombre_entry.delete(0, tk.END)
@@ -337,20 +357,58 @@ class InventarioManager:
                 tipo_entry.insert(0, tipo)
                 tamaño_entry.insert(0, tamaño)
                 color_entry.insert(0, color)
-        
+                
         def es_por_metros(event):
             # Capturamos la selección del usuario.
             self.son_metros = es_por_metro.get()
             #print(f"Es <> {self.son_metros}")
 
+        def verificar_codigo_material(codigo):
+            """Compara los datos de la BD con los entrys.
+            Retorna True si el código NO existe o si los datos coinciden.
+            Retorna False (con aviso) si el código existe con datos diferentes."""
+            resultado = db_connect.materiales_comprobar_codigo(codigo)
+
+            if resultado is None:
+                return True  # Código nuevo, todo bien
+
+            tipo_db, tamaño_db, color_db, metros_db = resultado
+
+            # Normalizar None → "" para comparar sin explosiones
+            tipo_db = tipo_db or ""
+            tamaño_db = tamaño_db or ""
+            color_db = color_db or ""
+            metros_db = metros_db or ""
+
+            es_metros = es_por_metro.get()  # Siempre leer el combobox actual
+
+            if (tipo_db == tipo_entry.get() and
+                tamaño_db == tamaño_entry.get() and
+                color_db == color_entry.get() and
+                metros_db == es_metros):
+                return True  # Mismo material, sin problema
+            else:
+                messagebox.showwarning(
+                    "⚠️ Código asignado",
+                    f"El código '{codigo}' ya pertenece a un material con otros datos:\n\n"
+                    f"Material Guardado → Tipo: {tipo_db} | Tamaño: {tamaño_db} | Color: {color_db} | Por metro: {metros_db}\n"
+                    f"Material Ingresado → Tipo: {tipo_entry.get()} | Tamaño: {tamaño_entry.get()} | "
+                    f"Color: {color_entry.get()} | Por metro: {es_metros}"
+                )
+                return False
+            
         codigo_entry["postcommand"] = filtrar_codigos_postcommand
         codigo_entry.bind("<<ComboboxSelected>>", lambda event: auto_completar_entry(event))
         codigo_entry.bind("<KeyRelease>", lambda event: filtrar_codigos_key(event))
         es_por_metro.bind("<<ComboboxSelected>>", lambda event: es_por_metros(event))
-        
-        
+                
         def guardar_material():
             codigo = codigo_entry.get()
+            
+            # ✅ Verificación con los campos ya llenos por el usuario
+            if not verificar_codigo_material(codigo):
+                return  # No guardar si hay conflicto
+            
             precio = self.convertir_a_float(precio_entry.get())
             cantidad = self.convertir_a_float(stock_entry.get())
             costo_unitario = precio / cantidad if cantidad != 0 else 0
@@ -394,7 +452,7 @@ class InventarioManager:
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=guardar_material
         )
@@ -406,12 +464,104 @@ class InventarioManager:
             ancho=30,
             alto=30,
             color_fondo="#fa4242",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=borrar_campos
         )
         boton_borrar_campos.grid(row=9, column=0, columnspan=2, padx=15, pady=10)
         
+    
+    def agregar_producto_terminado_temporal(self, frame_contenido):
+        """Modo vendedor: ventana para ingresar un producto terminado comprado al proveedor."""
+        producto_window = tk.Toplevel(frame_contenido)
+        configurar_toplevel(producto_window, titulo="Agregar Producto Terminado", ancho_min=320, alto_min=340, color_fondo="#101113")
+
+        # Campos del producto
+        tk.Label(producto_window, text="Código:", bg="#101113", fg="#ffffff").grid(row=0, column=0, padx=10, pady=5)
+        codigo_entry = tk.Entry(producto_window, width=25)
+        codigo_entry.grid(row=0, column=1, padx=10, pady=5)
+
+        tk.Label(producto_window, text="Nombre:", bg="#101113", fg="#ffffff").grid(row=1, column=0, padx=10, pady=5)
+        nombre_entry = tk.Entry(producto_window, width=25)
+        nombre_entry.grid(row=1, column=1, padx=10, pady=5)
+
+        tk.Label(producto_window, text="Tipo Artículo:", bg="#101113", fg="#ffffff").grid(row=2, column=0, padx=10, pady=5)
+        tipo_entry = tk.Entry(producto_window, width=25)
+        tipo_entry.grid(row=2, column=1, padx=10, pady=5)
+
+        tk.Label(producto_window, text="Cantidad comprada:", bg="#101113", fg="#ffffff").grid(row=3, column=0, padx=10, pady=5)
+        cantidad_entry = tk.Entry(producto_window, width=25)
+        cantidad_entry.grid(row=3, column=1, padx=10, pady=5)
+
+        tk.Label(producto_window, text="Precio total pagado:", bg="#101113", fg="#ffffff").grid(row=4, column=0, padx=10, pady=5)
+        precio_entry = tk.Entry(producto_window, width=25)
+        precio_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        tk.Label(producto_window, text="Precio de venta (€/unidad):", bg="#101113", fg="#ffffff").grid(row=5, column=0, padx=10, pady=5)
+        precio_venta_entry = tk.Entry(producto_window, width=25)
+        precio_venta_entry.grid(row=5, column=1, padx=10, pady=5)
+
+        def auto_completar(event=None):
+            """Si el código ya existe, rellenar nombre/tipo y sugerir el precio de venta actual."""
+            datos = self.db_connect.datos_producto_por_codigo(codigo_entry.get())
+            if datos:
+                nombre_entry.delete(0, tk.END); nombre_entry.insert(0, datos["nombre"] or "")
+                tipo_entry.delete(0, tk.END); tipo_entry.insert(0, datos["tipo"] or "")
+                if not precio_venta_entry.get():
+                    precio_venta_entry.insert(0, str(datos["precio_venta"]))
+                messagebox.showinfo("Producto existente",
+                    f"El stock actual es {datos['cantidad']} unidades.\nLa cantidad comprada se SUMARÁ al stock.")
+        codigo_entry.bind("<FocusOut>", auto_completar)
+
+        def guardar_producto():
+            codigo = codigo_entry.get().strip()
+            nombre = nombre_entry.get().strip()
+            tipo = tipo_entry.get().strip()
+            cantidad = self.convertir_a_float(cantidad_entry.get())
+            precio_total = self.convertir_a_float(precio_entry.get())
+            precio_venta = self.convertir_a_float(precio_venta_entry.get())
+
+            if not codigo or not nombre or cantidad <= 0 or precio_total <= 0:
+                messagebox.showerror("⚠️ Error", "Código, nombre, cantidad y precio total son obligatorios.")
+                return
+
+            costo_unitario = precio_total / cantidad if cantidad else 0
+
+            producto = {
+                "codigo": codigo,
+                "nombre": nombre,
+                "tipo": tipo,
+                "stock": cantidad,          # cantidad comprada
+                "precio": precio_total,     # lo pagado al proveedor
+                "costo_unitario": round(costo_unitario, 4),
+                "precio_venta": precio_venta
+            }
+            # Se agrega a productos_temporales (se guarda al confirmar la factura)
+            self.productos_temporales.append(producto)
+            # Y también a materiales_temporales con claves compatibles,
+            # para que "Ver Datos Ingresados" y el total de la factura funcionen igual.
+            self.materiales_temporales.append({
+                "codigo": codigo, "nombre": nombre, "tipo": tipo,
+                "tamaño": "", "color": "", "stock": cantidad,
+                "precio": precio_total, "costo_unitario": round(costo_unitario, 4),
+                "es_por_metro": "No",
+                "precio_venta": precio_venta      # ← NUEVO: clave para reconstruir al cargar borrador
+            })
+
+            messagebox.showinfo("Éxito", f"Producto {codigo} agregado temporalmente.")
+            producto_window.destroy()
+
+        crear_boton(
+            producto_window,
+            texto="Guardar Producto",
+            ancho=30, alto=30,
+            color_fondo="#4283fa",
+            color_texto=self.branding["fuente"],
+            font=("Arial", 11, "bold"),
+            comando=guardar_producto
+        ).grid(row=6, column=0, columnspan=2, padx=15, pady=10)
+    
+    
     def agregar_empaque_temporal(self, frame_contenido):
         cod_empaques = self.db_connect.codigo_empaques()  # Llega una tupla
 
@@ -520,7 +670,7 @@ class InventarioManager:
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=guardar_material
         )
@@ -532,7 +682,7 @@ class InventarioManager:
             ancho=30,
             alto=30,
             color_fondo="#fa4242",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=borrar_campos
         )
@@ -676,7 +826,33 @@ class InventarioManager:
                         material["costo_unitario"],
                         material["es_por_metro"]
                     )
-                    
+            
+            # --- Modo vendedor: guardar productos terminados ---
+            for producto in self.productos_temporales:
+                id_existente = db_connect.obtener_id_producto_por_codigo(producto["codigo"])
+                if id_existente:
+                    # El producto ya existe: sumar stock y actualizar precio de venta
+                    db_connect.incrementar_stock_producto(id_existente, int(producto["stock"]))
+                    if producto["precio_venta"]:
+                        db_connect.actualizar_precio_venta(producto["precio_venta"], id_existente)
+                else:
+                    # Producto nuevo: se registra sin materiales ni empaques (reventa)
+                    db_connect.insertar_producto(
+                        producto["codigo"],
+                        producto["nombre"],
+                        producto["tipo"],
+                        producto["costo_unitario"],   # costo = precio compra unitario
+                        producto["precio_venta"],
+                        [],                            # materiales_usados: vacío
+                        0,                             # tiempo_fabricacion
+                        int(producto["stock"]),
+                        "Producto comprado a proveedor",  # descripcion
+                        []                             # empaque: vacío
+                    )
+
+            # Limpiar productos temporales (junto a los demás clears al final del try)
+            self.productos_temporales.clear()
+                
             # Marcar el borrador como finalizado si existía
             id_borrador = db_connect.existe_borrador_factura(self.datos_factura["numero_factura"])
             if id_borrador:
@@ -688,6 +864,7 @@ class InventarioManager:
             self.materiales_temporales.clear()
             self.materia_prima.clear()
             self.empaques_temporales.clear()
+            self.productos_temporales.clear()
 
         except Exception as e:
             messagebox.showerror("⚠️ Error", f"No se pudo guardar: {e}")
@@ -805,6 +982,20 @@ class InventarioManager:
                             if mp["codigo"] == codigo:
                                 self.materia_prima[k] = material
                                 break
+                        
+                        # --- Modo vendedor: sincronizar también productos terminados ---
+                        if self.es_vendedor:
+                            for k, prod in enumerate(self.productos_temporales):
+                                if prod["codigo"] == codigo:
+                                    self.productos_temporales[k] = {
+                                        **prod,          # conservar precio_venta, etc.
+                                        "nombre": nombre,
+                                        "tipo": tipo,
+                                        "stock": self.convertir_a_float(cantidad),
+                                        "precio": self.convertir_a_float(precio),
+                                        "costo_unitario": self.convertir_a_float(precio_unit),
+                                    }
+                                    break
                             
                         if i < len(self.total_actual):
                             self.total_actual[i] = self.convertir_a_float(precio)
@@ -829,6 +1020,7 @@ class InventarioManager:
             self.materiales_temporales = [m for m in self.materiales_temporales if m["codigo"] != codigo_a_eliminar]
             self.materia_prima = [m for m in self.materia_prima if m["codigo"] != codigo_a_eliminar]
             self.empaques_temporales = [m for m in self.empaques_temporales if m["codigo"] != codigo_a_eliminar]
+            self.productos_temporales = [p for p in self.productos_temporales if p["codigo"] != codigo_a_eliminar]   # ← NUEVO
 
             self.total_actual = [t for i, t in enumerate(self.total_actual) if i < len(self.materiales_temporales)]
 
@@ -880,7 +1072,7 @@ class InventarioManager:
             ancho=20,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando= lambda : guardar_cambios()
         )
@@ -892,7 +1084,7 @@ class InventarioManager:
             ancho=20,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=eliminar_dato
         )
@@ -900,11 +1092,11 @@ class InventarioManager:
 
         boton_cerrar = crear_boton(
             frame_botones,
-            texto="Volver",
+            texto="Volver Menu",
             ancho=30,
             alto=30,
             color_fondo="#913131",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=cerrar_ventana
         )
@@ -1025,6 +1217,7 @@ class InventarioManager:
         self.materiales_temporales.clear()
         self.materia_prima.clear()
         self.empaques_temporales.clear()
+        self.productos_temporales.clear()          # ← NUEVO
 
         # Cargar datos de la factura
         self.proveedor_combobox.set(borrador["proveedor"] or "")
@@ -1045,6 +1238,22 @@ class InventarioManager:
                 if empaque.get("es_por_metro") is None:
                     empaque["es_por_metro"] = "No"
                     
+            # --- Modo vendedor: reconstruir productos terminados del borrador ---
+            if self.es_vendedor:
+                self.productos_temporales = [
+                    {
+                        "codigo": mat["codigo"],
+                        "nombre": mat["nombre"],
+                        "tipo": mat.get("tipo", ""),
+                        "stock": mat["stock"],
+                        "precio": mat["precio"],
+                        "costo_unitario": mat["costo_unitario"],
+                        "precio_venta": mat.get("precio_venta", 0.0)
+                    }
+                    for mat in self.materiales_temporales
+                    if "precio_venta" in mat   # solo entradas de producto terminado
+                ]
+
         except json.JSONDecodeError:
             messagebox.showerror("⚠️ Error", "El borrador contiene datos corruptos.")
             return

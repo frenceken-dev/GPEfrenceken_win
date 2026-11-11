@@ -1,6 +1,6 @@
 import tkinter as tk
 from databasemanager import DataBaseManager
-from recursos import crear_boton
+from recursos import crear_boton, crear_encabezado
 import ast
 from tkinter import simpledialog
 import tkinter as tk
@@ -9,20 +9,22 @@ from tkinter import ttk, messagebox
 class kitEmpaques:
     """Maneja la creación de diferentes Kit de empaques usando los materiales de empaques"""
 
-    def __init__(self, root, imagen_panel_tk, volver_menu, usuario):
+    def __init__(self, root, branding, nombre_negocio, volver_menu, usuario):
         self.db_connect = DataBaseManager()
         self.root = root
-        self.imagen_panel_tk = imagen_panel_tk
+        #self.imagen_panel_tk = None  # imagen_panel_tk
+        self.branding = branding
+        self.nombre_negocio_actual = nombre_negocio
         self.volver_menu = volver_menu
         self.usuario = usuario
         self.colores = {
-            "fondo_principal": "#a0b9f0",  # Azul muy claro
-            "fondo_menu": "#2C3E50",       # Azul oscuro
-            "fondo_frame": "#a0b9f0",      # Azul claro
+            "fondo_principal": self.branding["fondo"],  # Azul muy claro
+            "fondo_menu": self.branding["menu"],       # Azul oscuro
+            "fondo_frame": self.branding["fondo"],      # Azul claro
             "boton_guardar": "#4285F4",    # Azul Google
             "boton_volver": "#d32f2f",     # Rojo
             "texto_oscuro": "#2C3E50",
-            "texto_claro": "#ffffff",
+            "texto_claro": self.branding["fuente"],
         }
 
     def limpiar_pantalla(self):
@@ -244,7 +246,7 @@ class kitEmpaques:
 
         # Botón para volver al menú
         self.boton_cerrar = crear_boton(self.frame_menu,
-            texto="Volver",
+            texto="Volver Menu",
             ancho=30,
             alto=30,
             relieve="raised",
@@ -255,7 +257,7 @@ class kitEmpaques:
             hover_color="#222423",
             comando=self.cerrar_ventana
         )
-        self.boton_cerrar.pack(side="bottom", pady=40)
+        self.boton_cerrar.pack(side="bottom", padx=10, pady=40)
 
     def habilitar_boton_editar_eliminar(self, event):
         """Habilita el botón de editar si hay un kit seleccionado"""
@@ -513,22 +515,25 @@ class kitEmpaques:
         )
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=20)
 
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(
-                frame_imagen_panel,
-                image=self.imagen_panel_tk,
-                bg=self.colores["fondo_menu"]
-            )
-            label_imagen.pack(side=tk.TOP, pady=10)
-        else:
-            label_texto = tk.Label(
-                frame_imagen_panel,
-                text="Ikigai",
-                font=("Arial", 12, "bold"),
-                bg=self.colores["fondo_menu"],
-                fg=self.colores["texto_claro"]
-            )
-            label_texto.pack(side=tk.TOP, pady=10)
+        crear_encabezado(frame_imagen_panel, self.branding, self.nombre_negocio_actual,
+                            tamano=70, fuente=("Arial", 12, "bold"))
+        
+        # if self.imagen_panel_tk:
+        #     label_imagen = tk.Label(
+        #         frame_imagen_panel,
+        #         image=self.imagen_panel_tk,
+        #         bg=self.colores["fondo_menu"]
+        #     )
+        #     label_imagen.pack(side=tk.TOP, pady=10)
+        # else:
+        #     label_texto = tk.Label(
+        #         frame_imagen_panel,
+        #         text="Ikigai",
+        #         font=("Arial", 12, "bold"),
+        #         bg=self.colores["fondo_menu"],
+        #         fg=self.colores["texto_claro"]
+        #     )
+        #     label_texto.pack(side=tk.TOP, pady=10)
             
 
     def crear_kit(self, usuario, codigo_kit):

@@ -1,43 +1,47 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from recursos import LOGO_PATH, crear_boton
+from recursos import LOGO_PATH, crear_boton, crear_encabezado
 from databasemanager import DataBaseManager
 
 # instacia db
 db_connect = DataBaseManager()
 
 class VentanaIncrementarStock:
-    def __init__(self, root, imagen_panel_tk, volver_menu):
+    def __init__(self, root, branding, nombre_negocio_actual, volver_menu):
         for widget in root.winfo_children():
             widget.destroy()
 
         self.root = root
+        self.branding = branding
+        self.nombre_negocio = nombre_negocio_actual
         
         # Crear frame_contenido (para formularios)
-        self.frame_contenido = tk.Frame(self.root, bg="#a0b9f0", width=600, height=800)
+        self.frame_contenido = tk.Frame(self.root, bg=branding["fondo"], width=600, height=800)
         self.frame_contenido.place(relx=0.5, rely=0.3, anchor=tk.N)
 
         # Panel izquierdo
-        frame_menu = tk.Frame(self.root, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        frame_menu = tk.Frame(self.root, bg=branding["menu"], width=200, height=800, bd=3, relief="solid")
         frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         frame_menu.pack_propagate(False)
             
-        frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+        frame_imagen_panel = tk.Frame(frame_menu, bg=branding["menu"], height=70)
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
         # Imagen del Logo para el panel izquierdo
-        if imagen_panel_tk:
-            label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg="#2C3E50")
-            label_imagen.pack(side=tk.LEFT, padx=70)
-        else:
-            label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-            label_texto.pack(side=tk.LEFT, padx=70)
+        crear_encabezado(frame_imagen_panel, branding, nombre_negocio_actual,
+                            tamano=70, fuente=("Arial", 12, "bold"))
+        # if imagen_panel_tk:
+        #     label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg=branding["fondo"])
+        #     label_imagen.pack(side=tk.LEFT, padx=70)
+        # else:
+        #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg=branding["fondo"])
+        #     label_texto.pack(side=tk.LEFT, padx=70)
 
         # Frame inferior dentro del menú lateral
-        frame_inferior = tk.Frame(frame_menu, bg="#2C3E50")
+        frame_inferior = tk.Frame(frame_menu, bg=branding["menu"])
         frame_inferior.pack(side="bottom", fill="x", pady=20)  # <- este pady sí separa del borde inferior
 
-        self.frame_titulo = tk.Frame(self.root, bg="#a0b9f0")
+        self.frame_titulo = tk.Frame(self.root, bg=branding["fondo"])
         self.frame_titulo.place(relx=0.5, rely=0.02, anchor=tk.N)
         
         # Título
@@ -45,18 +49,18 @@ class VentanaIncrementarStock:
             self.frame_titulo,
             text="Incrementar Stock de Producto",
             font=("Arial", 16, "bold"),
-            bg="#a0b9f0",
-            fg="#2C3E50"
+            bg=branding["fondo"],
+            fg=branding["fuente"]
         )
         self.title_label.pack(pady=15)
         
-        self.label_producto = tk.Label(self.frame_contenido, text="Seleccione el producto:", bg="#a0b9f0")
+        self.label_producto = tk.Label(self.frame_contenido, text="Seleccione el producto:", bg=branding["fondo"])
         self.label_producto.grid(row=0, column=0, padx=10, pady=10)
 
         self.combobox_productos = ttk.Combobox(self.frame_contenido, state="readonly")
         self.combobox_productos.grid(row=0, column=1, padx=10, pady=10)
 
-        self.label_cantidad = tk.Label(self.frame_contenido, text="Cantidad a incrementar:", bg="#a0b9f0")
+        self.label_cantidad = tk.Label(self.frame_contenido, text="Cantidad a incrementar:", bg=branding["fondo"])
         self.label_cantidad.grid(row=1, column=0, padx=10, pady=10)
 
         self.entry_cantidad = ttk.Entry(self.frame_contenido)
@@ -64,7 +68,7 @@ class VentanaIncrementarStock:
 
         self.boton_incrementar = crear_boton(self.frame_contenido, 
                 texto="Incrementar Stock", 
-                ancho=130,
+                ancho=30,
                 alto=30,
                 color_fondo="#4373C7",                
                 color_texto="white",
@@ -80,8 +84,8 @@ class VentanaIncrementarStock:
         # Botón para volver
         self.back_button = crear_boton(
             frame_inferior,
-            texto="Volver",
-            ancho=130,
+            texto="Volver Menu",
+            ancho=30,
             alto=30,
             color_fondo="#913131",                
             color_texto="white",

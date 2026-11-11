@@ -6,35 +6,42 @@ import sqlite3
 
 from datetime import datetime
 from PIL import Image, ImageTk
-from recursos import LOGO_PATH, crear_boton, configurar_toplevel
+from recursos import LOGO_PATH, crear_boton, configurar_toplevel, crear_encabezado
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
 class VentanaVentas:
-    def __init__(self, root, usuario_actual, volver_menu, mostra_pantalla=True):
+    def __init__(self, root, usuario_actual, volver_menu, branding, nombre_negocio, mostra_pantalla=True):
         self.root = root
         self.usuario_actual = usuario_actual  # ID del usuario logueado
         self.logo_path = LOGO_PATH  # Imagen del Logo
         self.factura_id = None
+        self.branding = branding
+        self.nombre_negocio = nombre_negocio
+        
+        
         # Cargar logo para redimencionar a 50px
-        try:
-            self.imagen_panel = Image.open(self.logo_path)
-            self.imagen_panel_resize = self.imagen_panel.resize((60, 60), Image.LANCZOS)
-            self.imagen_panel_tk = ImageTk.PhotoImage(self.imagen_panel_resize)
-        except Exception as e:
-            #print(f"Error al cargar la imagen: {e}")
-            self.imagen_panel_tk = tk.Label(self.root, text="Ikigai Designs", font=("Arial", 24), bg="#f0f0f0").pack(pady=20)
+        # try:
+        #     self.imagen_panel = Image.open(self.logo_path)
+        #     self.imagen_panel_resize = self.imagen_panel.resize((60, 60), Image.LANCZOS)
+        #     self.imagen_panel_tk = ImageTk.PhotoImage(self.imagen_panel_resize)
+        # except Exception as e:
+        #     #print(f"Error al cargar la imagen: {e}")
+        #     self.imagen_panel_tk = tk.Label(self.root, text="Ikigai Designs", font=("Arial", 24), bg="#f0f0f0").pack(pady=20)
 
         for widget in self.root.winfo_children():
             widget.destroy()
         
         # Frame para los botones (lado izquierdo)
-        frame_menu = tk.Frame(self.root, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        frame_menu = tk.Frame(self.root, bg=self.branding["menu"], width=200, height=800, bd=3, relief="solid")
         frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         frame_menu.pack_propagate(False)
         
-        frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+        frame_imagen_panel = tk.Frame(frame_menu, bg=self.branding["menu"], height=70)
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+        
+        crear_encabezado(frame_imagen_panel, branding, nombre_negocio,
+                            tamano=70, fuente=("Arial", 70, "bold"))
         
         crear_boton(
         frame_menu,
@@ -54,12 +61,12 @@ class VentanaVentas:
         ).pack(side=tk.LEFT, padx=30, pady=50)
         
         # Imagen del Logo para el panel izquierdo
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
-            label_imagen.pack(side=tk.LEFT, padx=70)
-        else:
-            label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-            label_texto.pack(side=tk.LEFT, padx=30)
+        # if self.imagen_panel_tk:
+        #     label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
+        #     label_imagen.pack(side=tk.LEFT, padx=70)
+        # else:
+        #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
+        #     label_texto.pack(side=tk.LEFT, padx=30)
         
         self.id_venta_actual = None
         
@@ -334,7 +341,7 @@ class VentanaVentas:
             ancho_min=400,
             alto_min=400
         )
-        ventana_cliente.configure(bg="#a0b9f0")
+        ventana_cliente.configure(bg=self.branding["fondo"])
 
         # Frame para el formulario
         frame_formulario = tk.LabelFrame(ventana_cliente, text="Datos del Cliente", padx=10, pady=10)

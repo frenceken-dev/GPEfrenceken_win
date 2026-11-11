@@ -25,11 +25,81 @@ def resource_path(relative_path: str) -> str:
 
 
 # Rutas de imágenes y base de datos.
-DB_PATH = '/home/frenceken/Escritorio/GPEfrencekenApp-Win/GPEfrencekenApp-win/ikigai_inventario.db'
+#DB_PATH = '/home/frenceken/Escritorio/GPEfrencekenApp-solo-ventas-Win/GPEfrencekenApp-soloVentas-Win/ikigai_inventario.db'
+
+# --- Rutas de base de datos por perfil de negocio ---
+CARPETA_DATOS = resource_path("db")
+DB_PATH = os.path.join(CARPETA_DATOS, "ikigai_inventario.db")   # BD por defecto (compatibilidad)
+PERFILES_PATH = os.path.join(CARPETA_DATOS, "perfiles.json")
+print(f"Ruta del perfiles: {PERFILES_PATH}")
+# Ruta de la BD activa. Se establece al elegir el perfil de negocio al arrancar.
+# Si nunca se elige (p. ej. pruebas antiguas), cae en DB_PATH.
 LOGO_PATH = resource_path("Img/logo/logo_ikigai.png")
+DB_ACTUAL = {"ruta": DB_PATH}
+
+LOGO_ACTUAL = {"ruta": LOGO_PATH}
+
+
+def _slug(nombre) -> str:
+    """Convierte un nombre de negocio en un nombre seguro para archivos/carpetas.
+    Acepta str o StringVar (los Combobox de Tkinter guardan StringVar)."""
+    if nombre is None:
+        return "negocio"
+    # Si viene un StringVar u otro widget variable, extraer su texto.
+    if hasattr(nombre, "get"):
+        try:
+            nombre = nombre.get()
+        except Exception:
+            nombre = str(nombre)
+    nombre = str(nombre).strip().lower()
+    if not nombre:
+        return "negocio"
+    seguro = "".join(
+        c if c.isalnum() else "_"
+        for c in nombre
+    ).strip("_")
+    return seguro or "negocio"
+
+
+def carpeta_logo_negocio(nombre_negocio: str) -> str:
+    """Carpeta donde vive el logo de un negocio: Img/logos/<negocio>/"""
+    carpeta = os.path.join(os.path.dirname(DB_ACTUAL["ruta"]), "..", "Img", "logos", _slug(nombre_negocio))
+    carpeta = os.path.abspath(carpeta)
+    os.makedirs(carpeta, exist_ok=True)
+    return carpeta
+
+
+def ruta_logo_negocio(nombre_negocio: str, usar_default: bool = False):
+    """Ruta del logo del negocio indicado.
+    Si no existe y usar_default=True, devuelve el logo Ikigai default.
+    Si no existe y usar_default=False, devuelve None (para mostrar el nombre)."""
+    carpeta = carpeta_logo_negocio(nombre_negocio)
+    logo = os.path.join(carpeta, "logo.png")
+    if os.path.exists(logo):
+        return logo
+    return LOGO_ACTUAL["ruta"] if usar_default else None
+
+
 IMAGEN_BUSQUEDA_PATH = resource_path('Img/busqueda/img-busqueda.png')
 ICO_PATH = resource_path('ini.icns')
 DOWLOAD_LOGO = resource_path("/home/frenceken/Imágenes")
+IMAGEN_GPEFRENCEKENAPP = "Img/logo/mi_logo.png"
+
+
+def crear_encabezado(frame, branding, nombre_negocio,
+                    tamano=150, fuente=("Arial", 18, "bold")):
+    """Muestra el logo del negocio o su nombre si no hay logo.
+    Devuelve la imagen cargada (o None) para mantener la referencia."""
+    logo = branding.get("logo")
+    imagen = redimensionar_imagen(logo, tamano, tamano) if logo else None  # tamano=ancho tamano=alto
+    if imagen:
+        lbl = tk.Label(frame, image=imagen, bg=branding["fondo"])
+        lbl.image = imagen  # evitar que el garbage collector la borre
+    else:
+        lbl = tk.Label(frame, text=nombre_negocio, font=fuente,
+                    bg=branding["fondo"], fg=branding["fuente"])
+    lbl.pack(pady=15)
+    return imagen
 
 
 # --- Función auxiliar para oscurecer colores ---

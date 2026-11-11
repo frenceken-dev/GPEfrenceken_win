@@ -32,6 +32,7 @@ env/
 config.ini
 secrets.json
 *.env
+*.build/
 
 # Archivos generados por PSEINT (si los guardas en la misma carpeta)
 *.psc
@@ -40,7 +41,18 @@ secrets.json
 MEGA/
 Descargas/
 Documentos/
+Img/
+db/
+historial_ganancias/
+historial_costo/
+gutschrift_original/
+gutschrift_copia/
+fake_modules/jaraco/
+factura_original/
+factura_copia/
+
 
 # Archivos de log y resultados de pruebas
 *.log
 test_results/
+*.sqbpro

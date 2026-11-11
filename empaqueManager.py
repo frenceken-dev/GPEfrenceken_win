@@ -1,13 +1,15 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-from recursos import configurar_toplevel, crear_boton
+from recursos import configurar_toplevel, crear_boton, crear_encabezado
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
 class CrearEmpaques():
-    def __init__(self, root, imagen_panel_tk, volver_menu):
+    def __init__(self, root, branding, nombre_negocio_actual, volver_menu):
         self.root = root
-        self.imagen_panel_tk = imagen_panel_tk
+        self.branding = branding
+        self.nombre_negocio_actual = nombre_negocio_actual
+        #self.imagen_panel_tk = None  # imagen_panel_tk
         self.volver_menu = volver_menu
         self.precio = []
         self.cantidad = []
@@ -25,18 +27,18 @@ class CrearEmpaques():
         """Crea un registro nuevo para crear el tipo de empaque"""
         self.limpiar_pantalla()
         
-        self.emp_frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=800)
+        self.emp_frame = tk.Frame(self.root, bg=self.branding["fondo"], width=800, height=800)
         self.emp_frame.pack(fill=tk.BOTH, expand=True)
         #configurar_toplevel(self.emp_frame, titulo="Gestión de Empaques:", color_fondo="#101113")
         
-        self.frame_menu = tk.Frame(self.emp_frame, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        self.frame_menu = tk.Frame(self.emp_frame, bg=self.branding["menu"], width=200, height=800, bd=3, relief="solid")
         self.frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         self.frame_menu.pack_propagate(False)
         
         self.crear_logo_panel()
         
         # Frame de título
-        self.frame_titulo = tk.Frame(self.emp_frame, bg="#a0b9f0")
+        self.frame_titulo = tk.Frame(self.emp_frame, bg=self.branding["fondo"])
         self.frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
 
         # Título
@@ -44,12 +46,12 @@ class CrearEmpaques():
             self.frame_titulo,
             text="Crear nuevo Empaque",
             font=("Arial", 16, "bold"),
-            bg="#a0b9f0",
-            fg="#2C3E50"
+            bg=self.branding["fondo"],
+            fg=self.branding["fuente"]
         )
         self.title_label.pack(pady=15)
         
-        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Nuevo kit de Empaque.", bg="#a0b9f0")
+        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Nuevo kit de Empaque.", bg=self.branding["fondo"])
         self.frame_campos.pack(pady=20, padx=20, fill="both", expand=False)
         
         # Configurar el frame_campos para centrar el contenido
@@ -59,23 +61,23 @@ class CrearEmpaques():
         self.frame_campos.grid_columnconfigure(3, weight=1)  # Columna vacía a la derecha.
 
         # Campos de entrada (centrados)
-        tk.Label(self.frame_campos, text="Crear un código:", bg="#a0b9f0", fg="#2C3E50").grid(row=0, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Crear un código:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=0, column=1, pady=5, sticky="ns")
         codigo_entry = tk.Entry(self.frame_campos, width=25)
         codigo_entry.grid(row=1, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Nombre de este Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=2, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Nombre de este Empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=2, column=1, pady=5, sticky="ns")
         nombre_entry = tk.Entry(self.frame_campos, width=25)
         nombre_entry.grid(row=3, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Tamaño del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=4, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Tamaño del empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=4, column=1, pady=5, sticky="ns")
         tamaño_entry = tk.Entry(self.frame_campos, width=25)
         tamaño_entry.grid(row=5, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Cantidad del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=6, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Cantidad del empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=6, column=1, pady=5, sticky="ns")
         cantidad_entry = tk.Entry(self.frame_campos, width=25)
         cantidad_entry.grid(row=7, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Precio total:", bg="#a0b9f0", fg="#2C3E50").grid(row=8, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Precio total:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=8, column=1, pady=5, sticky="ns")
         precio_entry = tk.Entry(self.frame_campos, width=25)
         precio_entry.grid(row=9, column=1, sticky="ns")
 
@@ -86,7 +88,7 @@ class CrearEmpaques():
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=lambda: self.comprobar_datos(codigo_entry.get(), 
                                                 nombre_entry.get(),
@@ -98,26 +100,28 @@ class CrearEmpaques():
         
         boton_cerrar = crear_boton(
             self.frame_menu,
-            texto="Volver",
+            texto=" Volver Menu",
             ancho=30,
             alto=30,
             color_fondo="#913131",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=self.cerrar_ventana
         )
-        boton_cerrar.pack(side="bottom", padx=5)
+        boton_cerrar.pack(side="bottom", padx=10)
         
     def crear_logo_panel(self):
-        frame_imagen_panel = tk.Frame(self.frame_menu, bg="#2C3E50", height=70)
+        frame_imagen_panel = tk.Frame(self.frame_menu, bg=self.branding["menu"], height=70)
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
-            label_imagen.pack(side=tk.LEFT, padx=70)
-        else:
-            label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-            label_texto.pack(side=tk.LEFT, padx=70)
+        self.imagen_panel_tk = crear_encabezado(frame_imagen_panel, self.branding, self.nombre_negocio_actual,
+                                                tamano=70, fuente=("Arial", 12, "bold"))
+        # if self.imagen_panel_tk:
+        #     label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
+        #     label_imagen.pack(side=tk.LEFT, padx=70)
+        # else:
+        #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
+        #     label_texto.pack(side=tk.LEFT, padx=70)
             
     def comprobar_datos(self, codigo_entry, nombre_entry, tamaño_entry, cantidad_entry, precio_entry):
         """Comprobar que todos los campos contengan información"""
@@ -170,18 +174,18 @@ class CrearEmpaques():
         """
         Actualiza en la base de datos el stock actual de un empaque
         """
-        self.emp_frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=800)
+        self.emp_frame = tk.Frame(self.root, bg=self.branding["fondo"], width=800, height=800)
         self.emp_frame.pack(fill=tk.BOTH, expand=True)
         #configurar_toplevel(self.emp_frame, titulo="Gestión de Empaques:", color_fondo="#101113")
         
-        self.frame_menu = tk.Frame(self.emp_frame, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        self.frame_menu = tk.Frame(self.emp_frame, bg=self.branding["menu"], width=200, height=800, bd=3, relief="solid")
         self.frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         self.frame_menu.pack_propagate(False)
         
         self.crear_logo_panel()
         
         # Frame de título
-        self.frame_titulo = tk.Frame(self.emp_frame, bg="#a0b9f0")
+        self.frame_titulo = tk.Frame(self.emp_frame, bg=self.branding["fondo"])
         self.frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
 
         # Título
@@ -189,12 +193,12 @@ class CrearEmpaques():
             self.frame_titulo,
             text="Registrar Material de Empaque",
             font=("Arial", 16, "bold"),
-            bg="#a0b9f0",
-            fg="#2C3E50"
+            bg=self.branding["fondo"],
+            fg=self.branding["fuente"]
         )
         self.title_label.pack(pady=15)
         
-        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Actualizar Stock de Empaques.", bg="#a0b9f0")
+        self.frame_campos = tk.LabelFrame(self.emp_frame, text="Actualizar Stock de Empaques.", bg=self.branding["fondo"])
         self.frame_campos.pack(pady=20, padx=20, fill="both", expand=False)
         
         # Configurar el frame_campos para centrar el contenido
@@ -204,12 +208,12 @@ class CrearEmpaques():
         self.frame_campos.grid_columnconfigure(3, weight=1)  # Columna vacía a la derecha
 
         # Campos de entrada (centrados)
-        tk.Label(self.frame_campos, text="Código del Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=0, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Código del Empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=0, column=1, pady=5, sticky="ns")
         self.codigo_entry = tk.Entry(self.frame_campos, width=25)
         self.codigo_entry.grid(row=1, column=1, sticky="ns")
 
         self.nombre_empaque_var = tk.StringVar()
-        tk.Label(self.frame_campos, text="Nombre de Empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=2, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Nombre de Empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=2, column=1, pady=5, sticky="ns")
         self.nombre_combobox = ttk.Combobox(self.frame_campos, textvariable=self.nombre_empaque_var, state="readonly", width=25)
         self.nombre_combobox.grid(row=3, column=1, sticky="ns")
         self.nombre_combobox['values'] = db_connect.selecion_empaques()  # ["Bolsa Plástica", "Caja de Cartón", ...]
@@ -219,15 +223,15 @@ class CrearEmpaques():
             "<<ComboboxSelected>>",
             lambda event: self.rellenar_campos(self.nombre_empaque_var.get()))
         
-        tk.Label(self.frame_campos, text="Tamaño del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=4, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Tamaño del empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=4, column=1, pady=5, sticky="ns")
         self.tamaño_entry = tk.Entry(self.frame_campos, width=25)
         self.tamaño_entry.grid(row=5, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Cantidad del empaque:", bg="#a0b9f0", fg="#2C3E50").grid(row=6, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Cantidad del empaque:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=6, column=1, pady=5, sticky="ns")
         self.cantidad_entry = tk.Entry(self.frame_campos, width=25)
         self.cantidad_entry.grid(row=7, column=1, sticky="ns")
 
-        tk.Label(self.frame_campos, text="Precio total:", bg="#a0b9f0", fg="#2C3E50").grid(row=8, column=1, pady=5, sticky="ns")
+        tk.Label(self.frame_campos, text="Precio total:", bg=self.branding["fondo"], fg=self.branding["fuente"]).grid(row=8, column=1, pady=5, sticky="ns")
         self.precio_entry = tk.Entry(self.frame_campos, width=25)
         self.precio_entry.grid(row=9, column=1, sticky="ns")
         
@@ -245,7 +249,7 @@ class CrearEmpaques():
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=lambda: comprobar()
         )
@@ -257,7 +261,7 @@ class CrearEmpaques():
             ancho=30,
             alto=30,
             color_fondo="#4283fa",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando= lambda : self.registro_nuevo()
         )
@@ -265,11 +269,11 @@ class CrearEmpaques():
         
         boton_cerrar = crear_boton(
             self.frame_menu,
-            texto="Volver",
+            texto="Volver Menu",
             ancho=30,
             alto=30,
             color_fondo="#913131",
-            color_texto="white",
+            color_texto=self.branding["fuente"],
             font=("Arial", 11, "bold"),
             comando=self.cerrar_ventana
         )

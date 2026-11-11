@@ -1,17 +1,19 @@
 import tkinter as tk
 import json
 from tkinter import messagebox, simpledialog, ttk
-from recursos import crear_boton, configurar_toplevel
+from recursos import crear_boton, configurar_toplevel, crear_encabezado
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
 class ProductoManager:
     """Clase para gestionar la creación, edición y visualización de productos."""
 
-    def __init__(self, root, imagen_panel_tk, volver_menu):
+    def __init__(self, root, branding, nombre_negocio_actual, volver_menu):
         #print("¡NUEVA INSTANCIA DE ProductoManager CREADA!")  # Depuración
         self.root = root
-        self.imagen_panel_tk = imagen_panel_tk
+        #self.imagen_panel_tk = None
+        self.branding = branding
+        self.nombre_negocio_actual = nombre_negocio_actual
         self.volver_menu = volver_menu
         self.id_usuario_creador = None
         self.nombre_usuario_creador = None
@@ -53,26 +55,29 @@ class ProductoManager:
         self.tamaños_unicos = list(set(self.tamaño_material))
 
         # Crear el frame principal
-        frame = tk.Frame(self.root, bg="#a0b9f0", width=800, height=600)
+        frame = tk.Frame(self.root, bg=self.branding["fondo"], width=800, height=600)
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Panel izquierdo
-        frame_menu = tk.Frame(frame, bg="#2C3E50", width=200, height=800, bd=3, relief="solid")
+        frame_menu = tk.Frame(frame, bg=self.branding["menu"], width=200, height=800, bd=3, relief="solid")
         frame_menu.pack(side=tk.LEFT, fill=tk.Y)
         frame_menu.pack_propagate(False)
 
         # Imagen del logo
-        frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+        frame_imagen_panel = tk.Frame(frame_menu, bg=self.branding["fondo"], height=70)
         frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
-        if self.imagen_panel_tk:
-            label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg="#2C3E50")
-            label_imagen.pack(side=tk.LEFT, padx=70)
-        else:
-            label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-            label_texto.pack(side=tk.LEFT, padx=70)
+        
+        crear_encabezado(frame_imagen_panel, self.branding, self.nombre_negocio_actual,
+                            tamano=70, fuente=("Arial", 70, "bold"))
+        # if self.imagen_panel_tk:
+        #     label_imagen = tk.Label(frame_imagen_panel, image=self.imagen_panel_tk, bg=self.branding["fondo"])
+        #     label_imagen.pack(side=tk.LEFT, padx=70)
+        # else:
+        #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg=self.branding["fondo"])
+        #     label_texto.pack(side=tk.LEFT, padx=70)
 
         # Frame inferior del menú lateral
-        frame_inferior = tk.Frame(frame_menu, bg="#2C3E50")
+        frame_inferior = tk.Frame(frame_menu, bg=self.branding["menu"])
         frame_inferior.pack(side="bottom", fill="x", pady=20)
 
         # Botón para volver
@@ -90,50 +95,50 @@ class ProductoManager:
         back_button.pack(side="bottom", padx=30, pady=30)
 
         # Frame del título
-        frame_titulo = tk.Frame(frame, bg="#a0b9f0")
+        frame_titulo = tk.Frame(frame, bg=self.branding["fondo"])
         frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
         title_label = tk.Label(
             frame_titulo,
             text="Creación de Nuevos Productos",
             font=("Arial", 16, "bold"),
-            bg="#a0b9f0",
-            fg="#2C3E50"
+            bg=self.branding["fondo"],
+            fg=self.branding["fuente"]
         )
         title_label.pack(pady=15)
 
         # Formulario para crear el producto
-        self.form_frame = tk.Frame(frame, bg="#a0b9f0", padx=20, pady=20)
+        self.form_frame = tk.Frame(frame, bg=self.branding["fondo"], padx=20, pady=20)
         self.form_frame.place(relx=0.5, rely=0.1, anchor=tk.N)
 
         # Campos del formulario (usando grid)
-        tk.Label(self.form_frame, text="Código del producto:", bg="#a0b9f0", anchor="w").grid(row=0, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Código del producto:", bg=self.branding["fondo"], anchor="w").grid(row=0, column=0, sticky="w", pady=1)
         self.codigo_entry = tk.Entry(self.form_frame, width=30)
         self.codigo_entry.grid(row=0, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Tipo (Pulsera/Collar/Aretes/Llavero):", bg="#a0b9f0").grid(row=1, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Tipo (Pulsera/Collar/Aretes/Llavero):", bg=self.branding["fondo"]).grid(row=1, column=0, sticky="w", pady=1)
         self.tipo_combobox = ttk.Combobox(self.form_frame, values=["pulsera", "collar", "aretes", "llavero"], width=28)
         self.tipo_combobox.grid(row=1, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Descripción:", bg="#a0b9f0").grid(row=2, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Descripción:", bg=self.branding["fondo"]).grid(row=2, column=0, sticky="w", pady=1)
         self.descripcion_entry = tk.Entry(self.form_frame, width=30)
         self.descripcion_entry.grid(row=2, column=1, pady=5)
 
-        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg="#a0b9f0").grid(row=3, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Tiempo de fabricación (minutos):", bg=self.branding["fondo"]).grid(row=3, column=0, sticky="w", pady=1)
         self.tiempo_entry = tk.Entry(self.form_frame, width=30)
         self.tiempo_entry.grid(row=3, column=1, pady=5)
         self.tiempo_entry.insert(0, "5")
 
-        tk.Label(self.form_frame, text="Cantidad Creada:", bg="#a0b9f0").grid(row=4, column=0, sticky="w", pady=1)
+        tk.Label(self.form_frame, text="Cantidad Creada:", bg=self.branding["fondo"]).grid(row=4, column=0, sticky="w", pady=1)
         self.cantidad_creada_entry = tk.Entry(self.form_frame, width=30)
         self.cantidad_creada_entry.grid(row=4, column=1, pady=5)
         self.cantidad_creada_entry.insert(0, "1")
 
         # Frame para los empaques (dentro de tu formulario)
-        self.frame_empaques = tk.LabelFrame(self.form_frame, text="Selecciona Empaques", bg="#a0b9f0", padx=10, pady=10)
+        self.frame_empaques = tk.LabelFrame(self.form_frame, text="Selecciona Empaques", bg=self.branding["fondo"], padx=10, pady=10)
         self.frame_empaques.grid(row=10, column=0, columnspan=2, sticky="ew", pady=10)
 
         # Combobox para seleccionar empaques
-        tk.Label(self.frame_empaques, text="Empaque:", bg="#a0b9f0").pack(anchor="w")
+        tk.Label(self.frame_empaques, text="Empaque:", bg=self.branding["fondo"]).pack(anchor="w")
         self.combobox_empaque = ttk.Combobox(self.frame_empaques, state="readonly", width=30)
         self.combobox_empaque.pack(fill=tk.X, pady=5)
         codigos, self.items_kit_empaque, self.costo_kit_empaque = db_connect.selecion_kit_empaques()  # ["KIT-1", "KIT-2", ...]
@@ -156,7 +161,7 @@ class ProductoManager:
             self.frame_empaques,
             text="", #"Selecciona un empaque para ver su descripción.",
             wraplength=500,
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             justify="left"
         )
         self.descripcion_empaque.pack(fill=tk.X, pady=5)
@@ -591,7 +596,7 @@ class ProductoManager:
             codigo = codigo_var.get()
             if not codigo:
                 return
-            nombre, tipo, tamaño, color, = db_connect.obtener_material_por_codigo(codigo)
+            nombre, tipo, tamaño, color = db_connect.obtener_material_por_codigo(codigo)
             if not nombre:
                 return
             color_var.set(color)
@@ -832,7 +837,7 @@ class ProductoManager:
         precio_sugerido = (self.costo_produccion * 2.5) + tiempo_trabajo
 
         resumen_window = tk.Toplevel(self.root)
-        configurar_toplevel(resumen_window, titulo="Resumen del Producto", color_fondo="#a0b9f0", ancho_min=500, alto_min=650)
+        configurar_toplevel(resumen_window, titulo="Resumen del Producto", color_fondo=self.branding["fondo"], ancho_min=500, alto_min=650)
         
         # Crear un LabelFrame para el resumen
         resumen_frame = tk.LabelFrame(
@@ -840,7 +845,7 @@ class ProductoManager:
             text=" RESUMEN DEL PRODUCTO ",
             font=("Arial", 11, "bold"),
             fg="#333333",
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             padx=10,
             pady=10
         )
@@ -858,7 +863,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Código:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -867,8 +872,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{self.codigo_producto}",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -877,7 +882,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Tipo:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -886,8 +891,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{self.tipo_producto}",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -896,7 +901,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Descripción:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -905,7 +910,7 @@ class ProductoManager:
             resumen_frame,
             text=f"{descripcion_corta}",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             wraplength=300,  # Ajusta el ancho según tu ventana
             anchor="w",
             justify=tk.LEFT
@@ -915,7 +920,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Kit de Empaque:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -924,8 +929,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{len(self.empaques_seleccionados)}",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -934,7 +939,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Materiales usados:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -943,8 +948,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{len(self.materiales_usados)}",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -953,7 +958,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Costo de producción:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -962,8 +967,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{self.costo_produccion:.2f} €",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -972,7 +977,7 @@ class ProductoManager:
             resumen_frame,
             text=f"Precio sin costo de envío:",
             font=("Arial", 10),
-            bg="#a0b9f0",
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -981,8 +986,8 @@ class ProductoManager:
             resumen_frame,
             text=f"{precio_sugerido:.2f} €",
             font=("Arial", 10, "bold"),
-            fg="#2a5aaa",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             anchor="w",
             justify=tk.LEFT
         ).pack(anchor="w", pady=2)
@@ -992,8 +997,8 @@ class ProductoManager:
             resumen_window,
             text=" Costo de Envío y Precio Final ",
             font=("Arial", 11, "bold"),
-            fg="#333333",
-            bg="#a0b9f0",
+            fg=self.branding["fuente"],
+            bg=self.branding["fondo"],
             padx=10,
             pady=10
         ).pack(padx=10, pady=5, fill=tk.X)
@@ -1002,8 +1007,8 @@ class ProductoManager:
             resumen_window,
             text="Ingresa el costo de envío:",
             font=("Arial", 10),
-            bg="#a0b9f0",
-            fg="#333333"
+            bg=self.branding["fondo"],
+            fg=self.branding["fuente"]
         ).pack(pady=5)
 
         costo_envio_entry = tk.Entry(resumen_window, font=("Arial", 10))
@@ -1017,7 +1022,7 @@ class ProductoManager:
             resumen_window,
             text="Precio de venta (con IVA):",
             font=("Arial", 10),
-            fg="#a0b9f0"
+            fg=self.branding["fuente"]
         ).pack(pady=5)
 
         precio_entry = tk.Entry(resumen_window, font=("Arial", 10))

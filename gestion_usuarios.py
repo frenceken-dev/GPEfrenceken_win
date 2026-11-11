@@ -2,46 +2,48 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 #from db import eliminar_usuario_bd # registrar_usuario, buscar_usuarios, actualizar_usuario, 
-from recursos import crear_boton, configurar_toplevel
+from recursos import crear_boton, configurar_toplevel, crear_encabezado
 from keygen_user import validar_clave_segura
 from databasemanager import DataBaseManager
 
 db_connect = DataBaseManager()
-def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
+def gestion_usuarios(root, mostrar_menu_principal, branding, nombre_negocio):#, rol):
     # Limpiar el frame principal
     for widget in root.winfo_children():
         widget.destroy()
 
     # Frame principal
-    frame = tk.Frame(root, bg="#a0b9f0", width=600, height=800)
+    frame = tk.Frame(root, bg=branding["fondo"], width=600, height=800)
     frame.pack(fill=tk.BOTH, expand=True)
 
     # Panel izquierdo (menú lateral)
-    frame_menu = tk.Frame(frame, bg="#2C3E50", width=200, height=800)
+    frame_menu = tk.Frame(frame, bg=branding["menu"], width=200, height=800)
     frame_menu.pack(side=tk.LEFT, fill=tk.Y)
     frame_menu.pack_propagate(False)
     
     # Frame para imagen del panel izquierdo
-    frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+    frame_imagen_panel = tk.Frame(frame_menu, bg=branding["menu"], height=70)
     frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
     
     # Imagen del Logo para el panel izquierdo
-    if imagen_panel_tk:
-        label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg="#2C3E50")
-        label_imagen.pack(side=tk.LEFT, padx=70)
-    else:
-        label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg="#2C3E50")
-        label_texto.pack(side=tk.LEFT, padx=30)
+    imagen_panel_tk = crear_encabezado(frame_imagen_panel, branding, nombre_negocio,
+                        tamano=70, fuente=("Arial", 12, "bold"))
+    # if imagen_panel_tk:
+    #     label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg=branding["menu"])
+    #     label_imagen.pack(side=tk.LEFT, padx=70)
+    # else:
+    #     label_texto = tk.Label(frame_imagen_panel, text="Ikigai", font=("Arial", 10), bg=branding["menu"])
+    #     label_texto.pack(side=tk.LEFT, padx=30)
     
     # Frame para los controles
-    control_frame = tk.Frame(frame, bg="#a0b9f0", padx=20, pady=10)
+    control_frame = tk.Frame(frame, bg=branding["fondo"], padx=20, pady=10)
     control_frame.pack(fill=tk.BOTH, expand=True)
         
-    frame_titulo = tk.Frame(control_frame, bg="#a0b9f0")
+    frame_titulo = tk.Frame(control_frame, bg=branding["fondo"])
     frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
     
     # Frame central para centrar el contenido
-    center_frame = tk.Frame(control_frame, bg="#a0b9f0")
+    center_frame = tk.Frame(control_frame, bg=branding["fondo"])
     center_frame.pack(expand=True)
 
     # Título
@@ -49,29 +51,29 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
         frame_titulo,
         text="Crear un nuevo Usuario",
         font=("Arial", 16, "bold"),
-        bg="#a0b9f0",
-        fg="#2C3E50"
+        bg=branding["fondo"],
+        fg=branding["fuente"]
     )
     title_label.pack(pady=15)
     
     # Campos para gestionar usuarios
-    tk.Label(center_frame, text="Nombre de Usuario:", bg="#a0b9f0").grid(row=0, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Nombre de Usuario:", bg=branding["fondo"]).grid(row=0, column=0, sticky="e", pady=5)
     nuevo_usuario_entry = tk.Entry(center_frame, width=30)
     nuevo_usuario_entry.grid(row=0, column=1, pady=5)
     
-    tk.Label(center_frame, text="Pregunta de seguridad:", bg="#a0b9f0").grid(row=1, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Pregunta de seguridad:", bg=branding["fondo"]).grid(row=1, column=0, sticky="e", pady=5)
     pregunta_seguridad_entry = tk.Entry(center_frame, width=30)
     pregunta_seguridad_entry.grid(row=1, column=1, pady=5)
     
-    tk.Label(center_frame, text="Respuesta a pregunta de seguridad:", bg="#a0b9f0").grid(row=2, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Respuesta a pregunta de seguridad:", bg=branding["fondo"]).grid(row=2, column=0, sticky="e", pady=5)
     respuesta_seguridad_entry = tk.Entry(center_frame, width=30)
     respuesta_seguridad_entry.grid(row=2, column=1, pady=5)
 
-    tk.Label(center_frame, text="Contraseña:", bg="#a0b9f0").grid(row=3, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Contraseña:", bg=branding["fondo"]).grid(row=3, column=0, sticky="e", pady=5)
     nueva_contrasena_entry = tk.Entry(center_frame, width=30, show="*")
     nueva_contrasena_entry.grid(row=3, column=1, pady=5)
 
-    tk.Label(center_frame, text="Rol:", bg="#a0b9f0").grid(row=4, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Rol:", bg=branding["fondo"]).grid(row=4, column=0, sticky="e", pady=5)
     rol_combobox = ttk.Combobox(center_frame, values=["administrador", "usuario", "invitado"], width=28)
     rol_combobox.grid(row=4, column=1, pady=5)
 
@@ -99,7 +101,7 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
                 if exito:
                     messagebox.showinfo("Registro Exitoso", f"{mensaje_registro}")
                     limpiar_pantalla() 
-                    mostrar_menu_principal
+                    mostrar_menu_principal()
                 else:
                     messagebox.showerror("Error de Registro", f"{mensaje_registro}")
             else:
@@ -136,13 +138,13 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
         hover_color="#2ECC71",
         #activeforeground="black",
         #bg=0,
-        comando=lambda: formulario_buscar_usuario(root, mostrar_menu_principal, imagen_panel_tk),
+        comando=lambda: formulario_buscar_usuario(root, mostrar_menu_principal, imagen_panel_tk, branding, nombre_negocio),
         #width=18
-    ).pack(pady=80)
+    ).pack(padx=10, pady=80)
     
     crear_boton(
         frame_menu,
-        texto="Volver al Menú",
+        texto="Menú principal",
         ancho=30,
         alto=30,
         color_fondo="#913131",                
@@ -158,40 +160,40 @@ def gestion_usuarios(root, mostrar_menu_principal, imagen_panel_tk):#, rol):
     ).pack(side=tk.LEFT, padx=30, pady=40)
 
 # Formulario para la busqueda de usuario.
-def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
+def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk, branding, nombre_negocio):
     # Limpiar el frame principal
     for widget in root.winfo_children():
         widget.destroy()
 # Frame principal
-    frame = tk.Frame(root, bg="#a0b9f0", width=600, height=800)
+    frame = tk.Frame(root, bg=branding["fondo"], width=600, height=800)
     frame.pack(fill=tk.BOTH, expand=True)
 
     # Panel izquierdo (menú lateral)
-    frame_menu = tk.Frame(frame, bg="#2C3E50", width=200, height=800)
+    frame_menu = tk.Frame(frame, bg=branding["menu"], width=200, height=800)
     frame_menu.pack(side=tk.LEFT, fill=tk.Y)
     frame_menu.pack_propagate(False)
     
     # Frame para imagen del panel izquierdo
-    frame_imagen_panel = tk.Frame(frame_menu, bg="#2C3E50", height=70)
+    frame_imagen_panel = tk.Frame(frame_menu, bg=branding["menu"], height=70)
     frame_imagen_panel.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
     
     # Imagen del Logo para el panel izquierdo
     if imagen_panel_tk:
-        label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg="#2C3E50")
+        label_imagen = tk.Label(frame_imagen_panel, image=imagen_panel_tk, bg=branding["fondo"])
         label_imagen.pack(side=tk.LEFT, padx=70)
     else:
-        label_texto = tk.Label(frame_imagen_panel, text="Ikigai Designs", font=("Arial", 10), bg="#2C3E50")
+        label_texto = tk.Label(frame_imagen_panel, text="Ikigai Designs", font=("Arial", 10), bg=branding["menu"])
         label_texto.pack(side=tk.LEFT, padx=30)
     
     # Frame para los controles
-    control_frame = tk.Frame(frame, bg="#a0b9f0", padx=20, pady=10)
+    control_frame = tk.Frame(frame, bg=branding["fondo"], padx=20, pady=10)
     control_frame.pack(fill=tk.BOTH, expand=True)
         
-    frame_titulo = tk.Frame(control_frame, bg="#a0b9f0")
+    frame_titulo = tk.Frame(control_frame, bg=branding["fondo"])
     frame_titulo.pack(side=tk.TOP, fill=tk.X, pady=15)
     
     # Frame central para centrar el contenido
-    center_frame = tk.Frame(control_frame, bg="#a0b9f0")
+    center_frame = tk.Frame(control_frame, bg=branding["fondo"])
     center_frame.pack(expand=True)
 
     # Título
@@ -199,13 +201,13 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
         frame_titulo,
         text="Crear un nuevo Usuario",
         font=("Arial", 16, "bold"),
-        bg="#a0b9f0",
-        fg="#2C3E50"
+        bg=branding["fondo"],
+        fg=branding["fuente"]
     )
     title_label.pack(pady=15)
 
     # Campo para ingresar el valor de búsqueda
-    tk.Label(center_frame, text="Buscar usuario:", bg="#a0b9f0").grid(row=0, column=0, sticky="e", pady=5)
+    tk.Label(center_frame, text="Buscar usuario:", bg=branding["fondo"]).grid(row=0, column=0, sticky="e", pady=5)
     valor_busqueda_entry = tk.Entry(center_frame, width=30)
     valor_busqueda_entry.grid(row=0, column=1, pady=5)
 
@@ -213,7 +215,7 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
     def realizar_busqueda():
         valor = valor_busqueda_entry.get()
         resultados = db_connect.buscar_usuarios(valor)
-        mostrar_resultados_usuarios(resultados, root, volver_menu)
+        mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk, branding, nombre_negocio)
 
     # Botón para realizar la búsqueda
     crear_boton(center_frame, 
@@ -233,7 +235,7 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
 
     # Botón para volver al menú
     crear_boton(frame_menu,
-        texto="Volver al Menú",
+        texto="Volver Menú",
         ancho=30,
         alto=30,
         color_fondo="#913131",                
@@ -244,12 +246,12 @@ def formulario_buscar_usuario(root, volver_menu, imagen_panel_tk):
         hover_color="#222423",
         #activeforeground="black",
         #bg=0,
-        comando=lambda: gestion_usuarios(root, volver_menu, imagen_panel_tk),
+        comando=lambda: gestion_usuarios(root, volver_menu, branding, nombre_negocio),
         
     ).pack(side=tk.LEFT, padx=30, pady=40)
 
 # Mostrar los resultados de la busqueda.  
-def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
+def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk, branding, nombre_negocio):
     if not resultados:
         messagebox.showinfo("Resultado", "No se encontraron usuarios.")
         return
@@ -295,7 +297,8 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
         if selected_item:
             item = tree.item(selected_item)
             usuario = item['values']
-            formulario_editar_usuario(root, volver_menu, usuario[0], usuario[1], usuario[2])
+            resultados_window.destroy()   # ← cerrar resultados antes de editar
+            formulario_editar_usuario(root, volver_menu, usuario[0], usuario[1], usuario[2], imagen_panel_tk, branding, nombre_negocio)
         else:
             messagebox.showerror("⚠️ Error", "Selecciona un usuario para editar.")
 
@@ -311,7 +314,7 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
                 if eliminado:
                     messagebox.showinfo("✅ Éxito", f"Usuario {usuario_id} eliminado correctamente.")
                     resultados_window.destroy()
-                    formulario_buscar_usuario(root, volver_menu, imagen_panel_tk)
+                    formulario_buscar_usuario(root, volver_menu, imagen_panel_tk, branding, nombre_negocio)
                 else:
                     messagebox.showerror("⚠️ Error", f"El usuario {usuario_id} no se pudo eliminar.")
         else:
@@ -331,7 +334,7 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
             #activeforeground="black",
             #bg=0, 
             comando=editar_usuario, 
-            ).pack(side="bottom", pady=5)
+            ).pack(side="bottom", padx=5, pady=5)
     
     crear_boton(resultados_window, 
             texto="Eliminar Usuario", 
@@ -347,102 +350,170 @@ def mostrar_resultados_usuarios(resultados, root, volver_menu, imagen_panel_tk):
             #bg=0,
             comando=eliminar_usuario, 
             
-            ).pack(side="bottom", pady=5)
+            ).pack(side="bottom", padx=5, pady=5)
     
 # Editar datos de usuario.
-def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol):
-    # Limpiar el frame principal
-    for widget in root.winfo_children():
-        widget.destroy()
+# def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol):
+#     # Limpiar el frame principal
+#     for widget in root.winfo_children():
+#         widget.destroy()
 
-    # Crear un frame para el formulario de edición
-    form_frame = tk.Frame(root, bg="#a0b9f0", padx=20, pady=20)
-    form_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+#     # Crear un frame para el formulario de edición
+#     form_frame = tk.Frame(root, bg=branding["fondo"], padx=20, pady=20)
+#     form_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     
-    # Frame para los botones (lado izquierdo)
-    frame_botones = tk.Frame(root, bg="#2C3E50", width=200, height=800, bd=3, borderwidth=3, relief="solid")
-    frame_botones.pack(side=tk.LEFT, fill=tk.Y)
-    frame_botones.pack_propagate(False)
+#     # Frame para los botones (lado izquierdo)
+#     frame_botones = tk.Frame(root, bg=branding["menu"], width=200, height=800, bd=3, borderwidth=3, relief="solid")
+#     frame_botones.pack(side=tk.LEFT, fill=tk.Y)
+#     frame_botones.pack_propagate(False)
 
-    # Campos para editar el usuario
-    tk.Label(form_frame, text="Nombre de Usuario:", bg="#a0b9f0").grid(row=0, column=0, sticky="e", pady=5)
-    usuario_entry = tk.Entry(form_frame, width=30)
+#     # Campos para editar el usuario
+#     tk.Label(form_frame, text="Nombre de Usuario:", bg=branding["fondo"]).grid(row=0, column=0, sticky="e", pady=5)
+#     usuario_entry = tk.Entry(form_frame, width=30)
+#     usuario_entry.grid(row=0, column=1, pady=5)
+#     usuario_entry.insert(0, nombre_usuario)
+
+#     tk.Label(form_frame, text="Rol:", bg=branding["fondo"]).grid(row=1, column=0, sticky="e", pady=5)
+#     rol_combobox = ttk.Combobox(form_frame, values=["administrador", "usuario", "invitado"], width=28)
+#     rol_combobox.grid(row=1, column=1, pady=5)
+#     rol_combobox.set(rol)
+
+#     tk.Label(form_frame, text="Contraseña (dejar vacío para no cambiar):", bg=branding["fondo"]).grid(row=2, column=0, sticky="e", pady=5)
+#     contrasena_entry = tk.Entry(form_frame, width=30, show="*")
+#     contrasena_entry.grid(row=2, column=1, pady=5)
+    
+#     tk.Label(form_frame, text="Pregunta de seguridad:", bg=branding["fondo"]).grid(row=3, column=0, sticky="e", pady=5)
+#     pregunta_entry = tk.Entry(form_frame, width=30)
+#     pregunta_entry.grid(row=3, column=1, pady=5)
+    
+#     tk.Label(form_frame, text="Respuesta de seguridad:", bg=branding["fondo"]).grid(row=4, column=0, sticky="e", pady=5)
+#     respuesta_entry = tk.Entry(form_frame, width=30)
+#     respuesta_entry.grid(row=4, column=1, pady=5)
+    
+
+#     # Función para actualizar el usuario
+#     def actualizar():
+#         nuevo_usuario = usuario_entry.get()
+#         nuevo_rol = rol_combobox.get()
+#         nueva_contrasena = contrasena_entry.get()
+#         nueva_pregunta = pregunta_entry.get()
+#         nueva_respuesta = respuesta_entry.get()
+
+#         if nuevo_usuario and nuevo_rol:
+#             db_connect.actualizar_usuario(id_usuario, nuevo_usuario, nuevo_rol, nueva_pregunta, nueva_respuesta, nueva_contrasena if nueva_contrasena else None)
+#             volver_menu()
+#         else:
+#             messagebox.showerror("⚠️ Error", "El nombre de usuario y el rol son obligatorios.")
+
+#     # Botón para actualizar el usuario
+#     crear_boton(form_frame,
+#             texto="Actualizar", 
+#             ancho=30,
+#             alto=30,
+#             color_fondo="#2f367c",                
+#             color_texto="white",
+#             font=("Arial", 11, "bold"),
+#             #bd=0,
+#             #relief=tk.FLAT,
+#             hover_color="#2ECC71",
+#             #activeforeground="black",
+#             #bg=0,
+#             comando=actualizar, 
+#             ).grid(row=5, column=0, columnspan=2, pady=10)
+
+#     # Botón para volver al menú
+#     crear_boton(frame_botones, 
+#             texto="Volver al Menú",
+#             ancho=30,
+#             alto=30,
+#             color_fondo="#913131",                
+#             color_texto="white",
+#             font=("Arial", 11, "bold"),
+#             #bd=0,
+#             #relief=tk.FLAT,
+#             hover_color="#222423",
+#             #activeforeground="black",
+#             #bg=0, 
+#             comando=volver_menu, 
+#             ).pack(side=tk.LEFT, padx=30, pady=40)
+
+# Editar datos de usuario.
+def formulario_editar_usuario(root, volver_menu, id_usuario, nombre_usuario, rol, imagen_panel_tk, branding, nombre_negocio):
+    """Ventana emergente para editar un usuario. No toca la pantalla principal:
+    el menú lateral y su logo quedan intactos detrás."""
+
+    ventana_editar = tk.Toplevel(root)
+    configurar_toplevel(ventana_editar, titulo="Editar Usuario",
+                        ancho_min=520, alto_min=330, color_fondo=branding["fondo"])
+
+    form_frame = tk.Frame(ventana_editar, bg=branding["fondo"], padx=20, pady=20)
+    form_frame.pack(fill="both", expand=True)
+
+    # Campos (idénticos a los que tenías, solo cambia root → form_frame)
+    tk.Label(form_frame, text="Nombre de Usuario:", bg=branding["fondo"]).grid(row=0, column=0, sticky="e", pady=5)
+    usuario_entry = tk.Entry(form_frame, width=25)
     usuario_entry.grid(row=0, column=1, pady=5)
     usuario_entry.insert(0, nombre_usuario)
 
-    tk.Label(form_frame, text="Rol:", bg="#a0b9f0").grid(row=1, column=0, sticky="e", pady=5)
-    rol_combobox = ttk.Combobox(form_frame, values=["administrador", "usuario", "invitado"], width=28)
+    tk.Label(form_frame, text="Rol:", bg=branding["fondo"]).grid(row=1, column=0, sticky="e", pady=5)
+    rol_combobox = ttk.Combobox(form_frame, values=["administrador", "usuario", "invitado"], width=23)
     rol_combobox.grid(row=1, column=1, pady=5)
     rol_combobox.set(rol)
 
-    tk.Label(form_frame, text="Contraseña (dejar vacío para no cambiar):", bg="#a0b9f0").grid(row=2, column=0, sticky="e", pady=5)
-    contrasena_entry = tk.Entry(form_frame, width=30, show="*")
+    tk.Label(form_frame, text="Contraseña (dejar vacío para no cambiar):", bg=branding["fondo"]).grid(row=2, column=0, sticky="e", pady=5)
+    contrasena_entry = tk.Entry(form_frame, width=25, show="*")
     contrasena_entry.grid(row=2, column=1, pady=5)
-    
-    tk.Label(form_frame, text="Pregunta de seguridad:", bg="#a0b9f0").grid(row=3, column=0, sticky="e", pady=5)
-    pregunta_entry = tk.Entry(form_frame, width=30)
-    pregunta_entry.grid(row=3, column=1, pady=5)
-    
-    tk.Label(form_frame, text="Respuesta de seguridad:", bg="#a0b9f0").grid(row=4, column=0, sticky="e", pady=5)
-    respuesta_entry = tk.Entry(form_frame, width=30)
-    respuesta_entry.grid(row=4, column=1, pady=5)
-    
 
-    # Función para actualizar el usuario
+    tk.Label(form_frame, text="Pregunta de seguridad:", bg=branding["fondo"]).grid(row=3, column=0, sticky="e", pady=5)
+    pregunta_entry = tk.Entry(form_frame, width=25)
+    pregunta_entry.grid(row=3, column=1, pady=5)
+
+    tk.Label(form_frame, text="Respuesta de seguridad:", bg=branding["fondo"]).grid(row=4, column=0, sticky="e", pady=5)
+    respuesta_entry = tk.Entry(form_frame, width=25)
+    respuesta_entry.grid(row=4, column=1, pady=5)
+
     def actualizar():
         nuevo_usuario = usuario_entry.get()
         nuevo_rol = rol_combobox.get()
-        nueva_contrasena = contrasena_entry.get()
-        nueva_pregunta = pregunta_entry.get()
-        nueva_respuesta = respuesta_entry.get()
-
         if nuevo_usuario and nuevo_rol:
-            db_connect.actualizar_usuario(id_usuario, nuevo_usuario, nuevo_rol, nueva_pregunta, nueva_respuesta, nueva_contrasena if nueva_contrasena else None)
-            volver_menu()
+            db_connect.actualizar_usuario(
+                id_usuario, nuevo_usuario, nuevo_rol,
+                pregunta_entry.get(), respuesta_entry.get(),
+                contrasena_entry.get() if contrasena_entry.get() else None
+            )
+            ventana_editar.destroy()
+            # Reabrir la búsqueda para ver el usuario actualizado
+            formulario_buscar_usuario(root, volver_menu, imagen_panel_tk, branding, nombre_negocio)
         else:
             messagebox.showerror("⚠️ Error", "El nombre de usuario y el rol son obligatorios.")
 
-    # Botón para actualizar el usuario
     crear_boton(form_frame,
-            texto="Actualizar", 
-            ancho=30,
-            alto=30,
-            color_fondo="#2f367c",                
-            color_texto="white",
-            font=("Arial", 11, "bold"),
-            #bd=0,
-            #relief=tk.FLAT,
-            hover_color="#2ECC71",
-            #activeforeground="black",
-            #bg=0,
-            comando=actualizar, 
-            ).grid(row=5, column=0, columnspan=2, pady=10)
+        texto="Actualizar",
+        ancho=30, alto=30,
+        color_fondo="#2f367c", color_texto="white",
+        font=("Arial", 11, "bold"),
+        hover_color="#2ECC71",
+        comando=actualizar,
+    ).grid(row=5, column=0, columnspan=2, pady=10)
 
-    # Botón para volver al menú
-    crear_boton(frame_botones, 
-            texto="Volver al Menú",
-            ancho=30,
-            alto=30,
-            color_fondo="#913131",                
-            color_texto="white",
-            font=("Arial", 11, "bold"),
-            #bd=0,
-            #relief=tk.FLAT,
-            hover_color="#222423",
-            #activeforeground="black",
-            #bg=0, 
-            comando=volver_menu, 
-            ).pack(side=tk.LEFT, padx=30, pady=40)
+    crear_boton(form_frame,
+        texto="Cancelar",
+        ancho=30, alto=30,
+        color_fondo="#913131", color_texto="white",
+        font=("Arial", 11, "bold"),
+        hover_color="#222423",
+        comando=ventana_editar.destroy,
+    ).grid(row=6, column=0, columnspan=2, pady=5)
 
 # Se actualiza la clave olvidada
-def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
+def actualizar_clave(frame, usuario, branding):  # viene de frame_clave_olvidada
     # Limpiar el frame principal
     def cerrar_toplevels(frame):
         for ventana in frame.winfo_children():
             if isinstance(ventana, tk.Toplevel):
                 ventana.destroy()
     
-    def validar_guardar_clave(frame, usuario, clave_1_entry, clave_2_entry):        
+    def validar_guardar_clave(frame, usuario, clave_1_entry, clave_2_entry, branding):        
         clave1 = clave_1_entry.get().strip()
         clave2 = clave_2_entry.get().strip()
         
@@ -451,14 +522,14 @@ def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
             
             if clave1 and clave2:
                 if clave2 == clave1:
-                    guardar_nueva_clave(frame, usuario, clave1)
+                    guardar_nueva_clave(frame, usuario, clave1, branding)
                 else:
                     messagebox.showerror("⚠️ Error", "Las claves deben ser iguales en ambos campos.")
             else:
                 messagebox.showerror("⚠️ Error", "Por favor, completa ambos campos.")
             
             
-    def guardar_nueva_clave(frame, usuario, nueva_clave):
+    def guardar_nueva_clave(frame, usuario, nueva_clave, branding):
         
         if nueva_clave:
             recuperada, mensaje = db_connect.restablecer_clave(usuario, nueva_clave)
@@ -489,12 +560,12 @@ def actualizar_clave(frame, usuario):  # viene de frame_clave_olvidada
         ancho=20,
         alto=20,
         color_fondo="#4B82F0",                
-        color_texto="white",
+        color_texto=branding["fuente"],
         font=("Arial", 10, "bold"),
         #bd=0,
         #relief=tk.FLAT,
         hover_color="#2ECC71",
         #activeforeground="black",
-        comando=lambda : validar_guardar_clave(frame, usuario, clave_1_entry, clave_2_entry),
+        comando=lambda : validar_guardar_clave(frame, usuario, clave_1_entry, clave_2_entry, branding),
         ).grid(row=4, column=0, columnspan=2, padx=15, pady=10, sticky="")
         
