@@ -282,8 +282,24 @@ class PantallaPrincipal:
         tk.Button(frame, text="Crear nuevo negocio", font=("Arial", 11),
                 bg="#1B8420", fg="white", command=nuevo_negocio).pack(pady=5, ipadx=10)
         tk.Button(frame, text="Eliminar negocio", font=("Arial", 11),
-                bg="#913131", fg="white", command=eliminar_negocio).pack(pady=5, ipadx=10)
-        
+                bg="#913131", fg="white", command=eliminar_negocio).pack(pady=10, ipadx=10)
+        crear_boton(
+                frame,
+                texto="Salir del programa", 
+                ancho=20,
+                alto=30,
+                color_fondo="#913131",                
+                color_texto="white",
+                font=("Arial", 11, "bold"),
+                #bd=0,
+                #relief=tk.FLAT,
+                hover_color="#222423",
+                #activeforeground="black",
+                #bg=0,
+                comando=self.on_closing
+                
+            ).pack(pady=50)
+
 
     def pantalla_login(self):
         """Pantalla de inicio de sesión."""
@@ -527,6 +543,12 @@ class PantallaPrincipal:
             comando=toplevel.destroy,
         ).pack(pady=10)
     
+    
+    def cerrar_sesion(self):
+        if messagebox.askokcancel("Finalizar Sesión", "¿Deseas salir de la Sesión?"):
+            self.pantalla_seleccion_perfil()
+    
+    
     def salir_programa(self):
         db_connect.close()
         self.root.quit()
@@ -694,10 +716,10 @@ class PantallaPrincipal:
             # ).pack(pady=10)
             crear_boton(
                 frame_botones,
-                texto="Salir", 
+                texto="Cerrar Sesión", 
                 ancho=30,
                 alto=30,
-                color_fondo="#913131",                
+                color_fondo="#BD5703",                
                 color_texto="white",
                 font=("Arial", 11, "bold"),
                 #bd=0,
@@ -705,7 +727,7 @@ class PantallaPrincipal:
                 hover_color="#222423",
                 #activeforeground="black",
                 #bg=0,
-                comando=self.on_closing
+                comando=self.cerrar_sesion
                 
             ).pack(pady=100)
         
@@ -769,7 +791,7 @@ class PantallaPrincipal:
                 font=("Arial", 11, "bold"),
                 hover_color="#6A1FB1",
                 comando=lambda: perfilUsuario(frame_principal, self.nombre_negocio_actual)
-            ).pack(pady=30)
+            ).pack(pady=10)
             
             # Eliminar datos
             crear_boton(
@@ -787,6 +809,23 @@ class PantallaPrincipal:
                 #bg=0,
                 comando=lambda: eliminar_datos(frame_principal, self.mostrar_menu_principal, self.branding, self.nombre_negocio_actual),
             
+            ).pack(pady=10)
+            
+            crear_boton(
+                frame_botones,
+                texto="Salir del programa", 
+                ancho=30,
+                alto=30,
+                color_fondo="#913131",                
+                color_texto="white",
+                font=("Arial", 11, "bold"),
+                #bd=0,
+                #relief=tk.FLAT,
+                hover_color="#222423",
+                #activeforeground="black",
+                #bg=0,
+                comando=self.on_closing
+                
             ).pack(pady=10)
         
         # Asociar la función on_closing al evento de cierre de la ventana
