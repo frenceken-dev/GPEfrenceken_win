@@ -639,7 +639,7 @@ class PantallaPrincipal:
         
         # Botones del menú principal
         #tk.Label(self.root, text=rol, font=("Arial", 14), bg="#a0b9f0").pack(pady=10)
-        if self.rol == "administrador" or self.rol == "usuario" or "admin":
+        if self.rol == "administrador" or self.rol == "usuario":
             crear_boton(
                 frame_botones,
                 texto="Gestión de Inventario",
@@ -731,7 +731,7 @@ class PantallaPrincipal:
                 
             ).pack(pady=100)
         
-        if self.rol == "administrador" or "admin":
+        if self.rol == "administrador":
             # Crear usuario.
             crear_boton(
                 frame_botones,
